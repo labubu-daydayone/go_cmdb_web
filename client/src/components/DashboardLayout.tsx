@@ -66,17 +66,17 @@ export default function DashboardLayout({
           {navigationItems.map((item) => {
             const isActive = location === item.href;
             return (
-              <Link key={item.href} href={item.href}>
-                <a
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                    isActive
-                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                      : 'text-sidebar-foreground hover:bg-sidebar-accent/10'
-                  }`}
-                >
-                  <span className="text-xl">{item.icon}</span>
-                  {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
-                </a>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
+                  isActive
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/10'
+                }`}
+              >
+                <span className="text-xl">{item.icon}</span>
+                {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
               </Link>
             );
           })}
@@ -109,8 +109,8 @@ export default function DashboardLayout({
                   <div key={index} className="flex items-center gap-2">
                     {index > 0 && <ChevronRight size={16} className="text-muted-foreground" />}
                     {crumb.href ? (
-                      <Link href={crumb.href}>
-                        <a className="text-primary hover:underline">{crumb.label}</a>
+                      <Link href={crumb.href} className="text-primary hover:underline">
+                        {crumb.label}
                       </Link>
                     ) : (
                       <span className="text-foreground font-medium">{crumb.label}</span>
