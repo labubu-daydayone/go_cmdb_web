@@ -293,7 +293,7 @@ export default function Websites() {
               </div>
 
               {/* 表单内容 */}
-              <div className="p-6 pb-24 space-y-3">
+              <div className="p-6 pb-24 space-y-3" style={{paddingTop: '0px', paddingBottom: '0px'}}>
                 {/* 基本信息 */}
                 <div className="space-y-2">
                   <div>
