@@ -120,6 +120,7 @@ export default function DashboardLayout({
                           <Link
                             key={child.href}
                             href={child.href!}
+                            onClick={() => setExpandedMenu(null)}
                             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
                               isChildActive
                                 ? 'bg-sidebar-accent text-sidebar-accent-foreground'

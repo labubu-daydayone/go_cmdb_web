@@ -9,7 +9,8 @@ import { Plus, Edit2, Trash2, Zap, X } from 'lucide-react';
 
 type SortField = 'domain' | 'cname' | 'lineGroup' | 'https' | 'status';
 type SortOrder = 'asc' | 'desc';
-type ConfigTab = 'origin' | 'redirect' | 'template' | 'https' | 'cache';
+type ConfigTab = 'https' | 'cache';
+type AddFormTab = 'origin' | 'redirect' | 'template';
 
 interface FormData {
   domain: string;
@@ -23,6 +24,7 @@ interface FormData {
   hstsEnabled: boolean;
   certificateType: 'manual' | 'auto';
   certificateData: string;
+  privateKeyData: string;
   cacheRules: string;
 }
 
@@ -35,7 +37,8 @@ export default function Websites() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [configTab, setConfigTab] = useState<ConfigTab>('origin');
+  const [configTab, setConfigTab] = useState<ConfigTab>('https');
+  const [addFormTab, setAddFormTab] = useState<AddFormTab>('origin');
   const [templatePage, setTemplatePage] = useState(1);
   const [listPage, setListPage] = useState(1);
   const itemsPerPage = 10;
@@ -52,6 +55,7 @@ export default function Websites() {
     hstsEnabled: false,
     certificateType: 'auto',
     certificateData: '',
+    privateKeyData: '',
     cacheRules: '',
   });
 
@@ -105,7 +109,7 @@ export default function Websites() {
   const resetForm = () => {
     setShowAddForm(false);
     setEditingId(null);
-    setConfigTab('origin');
+    setAddFormTab('origin');
     setTemplatePage(1);
     setFormData({
       domain: '',
@@ -119,6 +123,7 @@ export default function Websites() {
       hstsEnabled: false,
       certificateType: 'auto',
       certificateData: '',
+      privateKeyData: '',
       cacheRules: '',
     });
   };
@@ -158,11 +163,11 @@ export default function Websites() {
       hstsEnabled: false,
       certificateType: 'auto',
       certificateData: '',
+      privateKeyData: '',
       cacheRules: '',
     });
     setEditingId(website.id);
     setShowAddForm(true);
-    setConfigTab('origin');
   };
 
   const handleDeleteWebsite = (websiteId: string) => {
@@ -565,14 +570,32 @@ export default function Websites() {
                       />
                       <span className="text-xs font-medium text-foreground">HTTPS</span>
                     </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.httpsForceRedirect}
+                        onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
+                        className="w-4 h-4 rounded border-border"
+                      />
+                      <span className="text-xs font-medium text-foreground">HTTPS强制跳转</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.hstsEnabled}
+                        onChange={(e) => setFormData({ ...formData, hstsEnabled: e.target.checked })}
+                        className="w-4 h-4 rounded border-border"
+                      />
+                      <span className="text-xs font-medium text-foreground">HSTS</span>
+                    </label>
                   </div>
 
-                  {/* 配置切换按钮 */}
+                  {/* 配置切换按马 */}
                   <div className="flex gap-2 border-b border-border overflow-x-auto">
                     <button
-                      onClick={() => setConfigTab('origin')}
+                      onClick={() => setAddFormTab('origin')}
                       className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
-                        configTab === 'origin'
+                        addFormTab === 'origin'
                           ? 'text-primary border-primary'
                           : 'text-muted-foreground border-transparent hover:text-foreground'
                       }`}
@@ -580,9 +603,9 @@ export default function Websites() {
                       回源配置
                     </button>
                     <button
-                      onClick={() => setConfigTab('redirect')}
+                      onClick={() => setAddFormTab('redirect')}
                       className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
-                        configTab === 'redirect'
+                        addFormTab === 'redirect'
                           ? 'text-primary border-primary'
                           : 'text-muted-foreground border-transparent hover:text-foreground'
                       }`}
@@ -590,9 +613,9 @@ export default function Websites() {
                       重定向
                     </button>
                     <button
-                      onClick={() => setConfigTab('template')}
+                      onClick={() => setAddFormTab('template')}
                       className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
-                        configTab === 'template'
+                        addFormTab === 'template'
                           ? 'text-primary border-primary'
                           : 'text-muted-foreground border-transparent hover:text-foreground'
                       }`}
@@ -602,7 +625,7 @@ export default function Websites() {
                   </div>
 
                   {/* 回源配置内容 */}
-                  {configTab === 'origin' && (
+                  {addFormTab === 'origin' && (
                     <div className="space-y-3">
                       <div>
                         <button onClick={handleAddOriginIP} className="text-primary text-xs hover:text-primary/80 font-medium">
@@ -637,7 +660,7 @@ export default function Websites() {
                   )}
 
                   {/* 重定向内容 */}
-                  {configTab === 'redirect' && (
+                  {addFormTab === 'redirect' && (
                     <div className="space-y-3">
                       <div className="flex gap-2 items-end">
                         <input
@@ -660,7 +683,7 @@ export default function Websites() {
                   )}
 
                   {/* 使用分组内容 */}
-                  {configTab === 'template' && (
+                  {addFormTab === 'template' && (
                     <div className="space-y-3">
                       <table className="w-full text-xs border-collapse">
                         <thead>
