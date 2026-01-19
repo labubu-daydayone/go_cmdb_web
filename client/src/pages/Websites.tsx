@@ -306,7 +306,7 @@ export default function Websites() {
               </div>
 
               {/* 表单内容 */}
-              <div className="p-6 space-y-6">
+              <div className="p-6 space-y-6 pb-24">
                 {/* 基本信息 */}
                 <div className="space-y-4">
                   <div>
@@ -364,7 +364,7 @@ export default function Websites() {
                         : 'text-muted-foreground border-transparent hover:text-foreground'
                     }`}
                   >
-                    使用回源分组
+                    使用分组
                   </button>
                 </div>
 
@@ -473,7 +473,7 @@ export default function Websites() {
               </div>
 
               {/* 底部按钮 */}
-              <div className="sticky bottom-0 bg-background border-t border-border px-6 py-4 flex gap-2 justify-end">
+              <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border px-6 py-4 flex gap-2 justify-end">
                 <Button variant="outline" onClick={resetForm} className="text-sm">
                   取消
                 </Button>
