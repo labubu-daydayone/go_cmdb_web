@@ -583,7 +583,7 @@ export default function Websites() {
                     <select
                       value={formData.cacheRules}
                       onChange={(e) => setFormData({ ...formData, cacheRules: e.target.value })}
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-40 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="">-- 请选择缓存规则 --</option>
                       <option value="首页缓存">首页缓存</option>
