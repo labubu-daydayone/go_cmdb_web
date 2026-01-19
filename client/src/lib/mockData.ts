@@ -45,6 +45,25 @@ export interface ServerInfo {
   lastCheck: string;
 }
 
+export interface Website {
+  id: string;
+  domain: string;
+  cname: string;
+  lineGroup: string;
+  https: 'enabled' | 'disabled';
+  status: 'active' | 'inactive' | 'maintenance';
+  createdDate: string;
+}
+
+export interface LineGroup {
+  id: string;
+  name: string;
+  description: string;
+  cname: string;
+  nodeCount: number;
+  createdDate: string;
+}
+
 // 生成假域名数据
 export const generateMockDomains = (): Domain[] => {
   const statuses: Array<'active' | 'inactive' | 'expired'> = ['active', 'active', 'active', 'inactive', 'expired'];
@@ -203,6 +222,60 @@ export const generateMockServers = (): ServerInfo[] => {
       disk: 45,
       os: 'Ubuntu 22.04',
       lastCheck: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+    },
+  ];
+};
+
+// 生成网站列表
+export const generateMockWebsites = (): Website[] => {
+  const lineGroups = ['华东线路', '华北线路', '华南线路', '国际线路'];
+  const domains = ['example.com', 'myapp.io', 'company.cn', 'service.net', 'platform.org', 'cloud.dev', 'api.tech', 'data.ai', 'web.store', 'mobile.app'];
+  
+  return domains.map((domain, index) => ({
+    id: `website-${index + 1}`,
+    domain,
+    cname: `${domain.split('.')[0]}.cdn.example.com`,
+    lineGroup: lineGroups[index % lineGroups.length],
+    https: index % 2 === 0 ? 'enabled' : 'disabled',
+    status: ['active', 'active', 'active', 'inactive', 'maintenance'][index % 5] as 'active' | 'inactive' | 'maintenance',
+    createdDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  }));
+};
+
+// 生成线路分组
+export const generateMockLineGroups = (): LineGroup[] => {
+  return [
+    {
+      id: 'line-1',
+      name: '华东线路',
+      description: '覆盖上海、浙江、江苏等地区',
+      cname: 'east.cdn.example.com',
+      nodeCount: 12,
+      createdDate: '2025-01-01',
+    },
+    {
+      id: 'line-2',
+      name: '华北线路',
+      description: '覆盖北京、天津、河北等地区',
+      cname: 'north.cdn.example.com',
+      nodeCount: 8,
+      createdDate: '2025-01-02',
+    },
+    {
+      id: 'line-3',
+      name: '华南线路',
+      description: '覆盖广东、深圳、福建等地区',
+      cname: 'south.cdn.example.com',
+      nodeCount: 10,
+      createdDate: '2025-01-03',
+    },
+    {
+      id: 'line-4',
+      name: '国际线路',
+      description: '覆盖香港、新加坡、日本等地区',
+      cname: 'intl.cdn.example.com',
+      nodeCount: 6,
+      createdDate: '2025-01-04',
     },
   ];
 };
