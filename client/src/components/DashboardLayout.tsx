@@ -62,7 +62,8 @@ export default function DashboardLayout({
       if (item.children) {
         const hasActiveChild = item.children.some(child => child.href === location);
         if (hasActiveChild) {
-          setExpandedMenu(item.label);
+          // 只在菜单未展开时才更新状态，避免不必要的重新渲染
+          setExpandedMenu(prev => prev === item.label ? prev : item.label);
           return;
         }
       }
