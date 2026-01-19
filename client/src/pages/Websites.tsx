@@ -361,38 +361,41 @@ export default function Websites() {
               {editingId ? (
                 // 编辑表单
                 <div className="space-y-3">
-                  <div className="space-y-2">
-                    <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">线路组</label>
-                      <select
-                        value={formData.lineGroup}
-                        onChange={(e) => setFormData({ ...formData, lineGroup: e.target.value })}
-                        className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                      >
-                        <option>线路1</option>
-                        <option>线路2</option>
-                        <option>线路3</option>
-                        <option>线路4</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">域名</label>
-                      <input
-                        type="text"
-                        value={formData.domain}
-                        onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                        placeholder="输入域名"
-                        className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">回源地址</label>
-                      <input
-                        type="text"
-                        placeholder="输入回源地址"
-                        className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
+                  {/* 第一排：域名 */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-medium text-foreground whitespace-nowrap">域名：</label>
+                    <input
+                      type="text"
+                      value={formData.domain}
+                      onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+                      placeholder="输入域名"
+                      className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  
+                  {/* 第二排：线路组 */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-medium text-foreground whitespace-nowrap">线路组：</label>
+                    <select
+                      value={formData.lineGroup}
+                      onChange={(e) => setFormData({ ...formData, lineGroup: e.target.value })}
+                      className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option>线路1</option>
+                      <option>线路2</option>
+                      <option>线路3</option>
+                      <option>线路4</option>
+                    </select>
+                  </div>
+                  
+                  {/* 第三排：回源地址 */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-medium text-foreground whitespace-nowrap">回源地址：</label>
+                    <input
+                      type="text"
+                      placeholder="输入回源地址"
+                      className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
                   </div>
 
                   {/* 编辑表单的 Tab */}
