@@ -133,6 +133,20 @@ export default function Nodes() {
     return <span className="ml-1 text-primary text-xs">{sortOrder === 'asc' ? '↑' : '↓'}</span>;
   };
 
+  const handleToggleSubIPEnabled = (nodeId: string, subIPId: string) => {
+    setNodes(nodes.map(node => {
+      if (node.id === nodeId) {
+        return {
+          ...node,
+          subIPs: (node.subIPs || []).map(subip => 
+            subip.id === subIPId ? { ...subip, enabled: !subip.enabled } : subip
+          )
+        };
+      }
+      return node;
+    }));
+  };
+
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'online':
@@ -307,11 +321,16 @@ export default function Nodes() {
                             <input
                               type="checkbox"
                               checked={subip.enabled}
-                              disabled
-                              className="w-4 h-4 cursor-not-allowed"
+                              onChange={() => handleToggleSubIPEnabled(node.id, subip.id)}
+                              className="w-4 h-4 cursor-pointer"
                             />
                             <code className="text-xs font-mono text-muted-foreground">{subip.ip}</code>
                             <span className="text-xs text-muted-foreground">({subip.createdDate})</span>
+                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                              subip.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {subip.enabled ? '已启用' : '已禁用'}
+                            </span>
                           </div>
                           <button
                             onClick={() => handleDeleteSubIP(node.id, subip.id)}
