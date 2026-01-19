@@ -294,7 +294,7 @@ export default function Websites() {
         {/* H5 风格的表单 */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-end z-50">
-            <Card className="w-1/2 rounded-t-2xl border-0 p-0 h-1/2 overflow-y-auto bg-background/95 backdrop-blur-md">
+            <Card className="w-full rounded-t-2xl border-0 p-0 h-1/2 overflow-y-auto bg-background/95 backdrop-blur-md">
               {/* 表单头部 */}
               <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-foreground">添加网站</h2>
