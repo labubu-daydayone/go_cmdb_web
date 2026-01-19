@@ -7,7 +7,7 @@ import { Plus, Edit2, Trash2, Zap, X } from 'lucide-react';
 
 type SortField = 'domain' | 'cname' | 'lineGroup' | 'https' | 'status';
 type SortOrder = 'asc' | 'desc';
-type ConfigTab = 'origin' | 'redirect';
+type ConfigTab = 'origin' | 'redirect' | 'template';
 
 export default function Websites() {
   const [websites, setWebsites] = useState<Website[]>(generateMockWebsites());
@@ -25,6 +25,7 @@ export default function Websites() {
     redirectEnabled: false,
     redirectUrl: '',
     redirectStatusCode: 301 as 301 | 302,
+    template: '',
   });
 
   const handleSelectWebsite = (websiteId: string) => {
@@ -84,6 +85,7 @@ export default function Websites() {
       redirectEnabled: false,
       redirectUrl: '',
       redirectStatusCode: 301,
+      template: '',
     });
   };
 
@@ -294,10 +296,10 @@ export default function Websites() {
         {/* H5 风格的表单 */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-end z-50">
-            <Card className="w-full rounded-t-2xl border-0 p-0 h-1/2 overflow-y-auto bg-background/95 backdrop-blur-md">
+            <Card className="w-full rounded-t-2xl border-0 p-0 h-2/3 overflow-y-auto bg-background/95 backdrop-blur-md">
               {/* 表单头部 */}
               <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-foreground">添加网站</h2>
+                <h2 className="text-base font-bold text-foreground">添加网站</h2>
                 <button onClick={resetForm} className="p-1 hover:bg-secondary rounded transition-colors">
                   <X size={20} className="text-muted-foreground" />
                 </button>
@@ -308,21 +310,21 @@ export default function Websites() {
                 {/* 基本信息 */}
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">域名</label>
+                    <label className="block text-xs font-medium text-foreground mb-2">域名</label>
                     <input
                       type="text"
                       value={formData.domain}
                       onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                       placeholder="输入域名"
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">线路</label>
+                    <label className="block text-xs font-medium text-foreground mb-2">线路</label>
                     <select
                       value={formData.lineGroup}
                       onChange={(e) => setFormData({ ...formData, lineGroup: e.target.value })}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option>线路1</option>
                       <option>线路2</option>
@@ -336,7 +338,7 @@ export default function Websites() {
                 <div className="flex gap-2 border-b border-border">
                   <button
                     onClick={() => setConfigTab('origin')}
-                    className={`flex-1 px-4 py-3 font-medium text-center transition-colors border-b-2 ${
+                    className={`flex-1 px-4 py-2 font-medium text-center text-sm transition-colors border-b-2 ${
                       configTab === 'origin'
                         ? 'text-primary border-primary'
                         : 'text-muted-foreground border-transparent hover:text-foreground'
@@ -346,7 +348,7 @@ export default function Websites() {
                   </button>
                   <button
                     onClick={() => setConfigTab('redirect')}
-                    className={`flex-1 px-4 py-3 font-medium text-center transition-colors border-b-2 ${
+                    className={`flex-1 px-4 py-2 font-medium text-center text-sm transition-colors border-b-2 ${
                       configTab === 'redirect'
                         ? 'text-primary border-primary'
                         : 'text-muted-foreground border-transparent hover:text-foreground'
@@ -354,16 +356,26 @@ export default function Websites() {
                   >
                     重定向
                   </button>
+                  <button
+                    onClick={() => setConfigTab('template')}
+                    className={`flex-1 px-4 py-2 font-medium text-center text-sm transition-colors border-b-2 ${
+                      configTab === 'template'
+                        ? 'text-primary border-primary'
+                        : 'text-muted-foreground border-transparent hover:text-foreground'
+                    }`}
+                  >
+                    使用模版
+                  </button>
                 </div>
 
                 {/* 回源配置内容 */}
                 {configTab === 'origin' && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <label className="block text-sm font-medium text-foreground">回源地址</label>
+                      <label className="block text-xs font-medium text-foreground">回源地址</label>
                       <button
                         onClick={handleAddOriginIP}
-                        className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 transition-colors"
+                        className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
                       >
                         <Plus size={14} />
                         添加 IP
@@ -377,19 +389,19 @@ export default function Websites() {
                             value={ip.ip}
                             onChange={(e) => handleOriginIPChange(index, 'ip', e.target.value)}
                             placeholder="输入 IP 地址"
-                            className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                           <input
                             type="text"
                             value={ip.remark}
                             onChange={(e) => handleOriginIPChange(index, 'remark', e.target.value)}
                             placeholder="备注（如：主源站）"
-                            className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                           {formData.originIPs.length > 1 && (
                             <button
                               onClick={() => handleRemoveOriginIP(index)}
-                              className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                              className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm"
                             >
                               删除
                             </button>
@@ -409,17 +421,41 @@ export default function Websites() {
                         value={formData.redirectUrl}
                         onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
                         placeholder="输入重定向 URL"
-                        className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                       <select
                         value={formData.redirectStatusCode}
                         onChange={(e) => setFormData({ ...formData, redirectStatusCode: parseInt(e.target.value) as 301 | 302 })}
-                        className="px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         <option value={301}>301</option>
                         <option value={302}>302</option>
                       </select>
                     </div>
+                  </div>
+                )}
+
+                {/* 使用模版内容 */}
+                {configTab === 'template' && (
+                  <div className="space-y-3">
+                    {[
+                      { id: '1', name: '标准回源', description: '使用标准回源配置' },
+                      { id: '2', name: '高可用回源', description: '多源站高可用配置' },
+                      { id: '3', name: '加速回源', description: '优化加速的回源配置' },
+                    ].map((template) => (
+                      <div
+                        key={template.id}
+                        onClick={() => setFormData({ ...formData, template: template.id })}
+                        className={`p-3 border rounded-lg cursor-pointer transition-colors text-sm ${
+                          formData.template === template.id
+                            ? 'border-primary bg-primary/10'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <div className="font-medium text-foreground">{template.name}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{template.description}</div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
