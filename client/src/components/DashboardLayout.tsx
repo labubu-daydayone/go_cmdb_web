@@ -131,10 +131,12 @@ export default function DashboardLayout({
                       {item.children!.map((child) => {
                         const isChildActive = location === child.href;
                         return (
-                          <Link
+                          <button
                             key={child.href}
-                            href={child.href!}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
+                            onClick={() => {
+                              window.history.pushState(null, '', child.href!);
+                            }}
+                            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
                               isChildActive
                                 ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                                 : 'text-sidebar-foreground hover:bg-sidebar-accent/10'
@@ -142,7 +144,7 @@ export default function DashboardLayout({
                           >
                             <span>{child.icon}</span>
                             {child.label}
-                          </Link>
+                          </button>
                         );
                       })}
                     </div>
