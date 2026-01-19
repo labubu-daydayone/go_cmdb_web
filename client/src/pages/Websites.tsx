@@ -100,7 +100,7 @@ export default function Websites() {
         originConfig: {
           id: `origin-${Date.now()}`,
           websiteId: `website-${Date.now()}`,
-          originIPs: formData.originIPs
+          originIPs: formData.redirectEnabled ? [] : formData.originIPs
             .filter(o => o.ip.trim())
             .map((o, i) => ({
               id: `origin-ip-${Date.now()}-${i}`,
@@ -293,8 +293,8 @@ export default function Websites() {
 
         {/* H5 风格的表单 */}
         {showAddForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-end z-50">
-            <Card className="w-full rounded-t-2xl border-0 p-0 max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-end z-50">
+            <Card className="w-1/2 rounded-t-2xl border-0 p-0 max-h-[90vh] overflow-y-auto bg-background/95 backdrop-blur-md">
               {/* 表单头部 */}
               <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-foreground">添加网站</h2>
@@ -371,14 +371,14 @@ export default function Websites() {
                     </div>
                     {formData.originIPs.map((ip, index) => (
                       <div key={index} className="space-y-2">
-                        <input
-                          type="text"
-                          value={ip.ip}
-                          onChange={(e) => handleOriginIPChange(index, 'ip', e.target.value)}
-                          placeholder="输入 IP 地址"
-                          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
                         <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={ip.ip}
+                            onChange={(e) => handleOriginIPChange(index, 'ip', e.target.value)}
+                            placeholder="输入 IP 地址"
+                            className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
                           <input
                             type="text"
                             value={ip.remark}
@@ -408,34 +408,36 @@ export default function Websites() {
                         type="checkbox"
                         id="redirectEnabled"
                         checked={formData.redirectEnabled}
-                        onChange={(e) => setFormData({ ...formData, redirectEnabled: e.target.checked })}
+                        onChange={(e) => {
+                          setFormData({ 
+                            ...formData, 
+                            redirectEnabled: e.target.checked,
+                            originIPs: e.target.checked ? [] : formData.originIPs
+                          });
+                        }}
                         className="w-4 h-4 cursor-pointer"
                       />
-                      <label htmlFor="redirectEnabled" className="text-sm font-medium text-foreground cursor-pointer">
+                      <label htmlFor="redirectEnabled" className="text-sm font-medium text-foreground cursor-pointer flex-1">
                         启用重定向
                       </label>
                     </div>
                     {formData.redirectEnabled && (
                       <>
-                        <div>
-                          <label className="block text-sm font-medium text-foreground mb-2">重定向地址</label>
+                        <div className="flex gap-2">
                           <input
                             type="text"
                             value={formData.redirectUrl}
                             onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
                             placeholder="输入重定向 URL"
-                            className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-foreground mb-2">重定向状态码</label>
                           <select
                             value={formData.redirectStatusCode}
                             onChange={(e) => setFormData({ ...formData, redirectStatusCode: parseInt(e.target.value) as 301 | 302 })}
-                            className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           >
-                            <option value={301}>301 (永久重定向)</option>
-                            <option value={302}>302 (临时重定向)</option>
+                            <option value={301}>301</option>
+                            <option value={302}>302</option>
                           </select>
                         </div>
                       </>
