@@ -297,7 +297,7 @@ export default function CacheSettings() {
         {/* 添加/编辑表单 */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black/30 flex items-end z-50 animate-in fade-in duration-200">
-            <Card className="w-full rounded-t-2xl border-0 p-0 h-auto max-h-2/3 overflow-y-auto bg-background animate-in slide-in-from-bottom duration-300">
+            <Card className="w-1/2 rounded-t-2xl border-0 p-0 h-auto max-h-2/3 overflow-y-auto bg-background animate-in slide-in-from-bottom duration-300 ml-auto">
               {/* 表单头部 */}
               <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
                 <h2 className="text-base font-bold text-foreground">
@@ -323,7 +323,7 @@ export default function CacheSettings() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="例如：首页缓存"
-                    className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-48 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
@@ -357,7 +357,7 @@ export default function CacheSettings() {
                         </div>
 
                         {/* 规则 */}
-                        <div className="flex items-center gap-2 flex-1">
+                        <div className="flex items-center gap-2">
                           <label className="text-sm font-medium text-foreground w-12 flex-shrink-0">
                             规则:
                           </label>
@@ -372,7 +372,7 @@ export default function CacheSettings() {
                                 ? '/api/'
                                 : 'png|jpg'
                             }
-                            className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-40 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                         </div>
 
