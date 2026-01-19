@@ -294,7 +294,7 @@ export default function Websites() {
         {/* H5 风格的表单 */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-end z-50">
-            <Card className="w-1/2 rounded-t-2xl border-0 p-0 max-h-[90vh] overflow-y-auto bg-background/95 backdrop-blur-md">
+            <Card className="w-1/2 rounded-t-2xl border-0 p-0 h-1/2 overflow-y-auto bg-background/95 backdrop-blur-md">
               {/* 表单头部 */}
               <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-foreground">添加网站</h2>
@@ -403,45 +403,23 @@ export default function Websites() {
                 {/* 重定向配置内容 */}
                 {configTab === 'redirect' && (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex gap-2">
                       <input
-                        type="checkbox"
-                        id="redirectEnabled"
-                        checked={formData.redirectEnabled}
-                        onChange={(e) => {
-                          setFormData({ 
-                            ...formData, 
-                            redirectEnabled: e.target.checked,
-                            originIPs: e.target.checked ? [] : formData.originIPs
-                          });
-                        }}
-                        className="w-4 h-4 cursor-pointer"
+                        type="text"
+                        value={formData.redirectUrl}
+                        onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
+                        placeholder="输入重定向 URL"
+                        className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                       />
-                      <label htmlFor="redirectEnabled" className="text-sm font-medium text-foreground cursor-pointer flex-1">
-                        启用重定向
-                      </label>
+                      <select
+                        value={formData.redirectStatusCode}
+                        onChange={(e) => setFormData({ ...formData, redirectStatusCode: parseInt(e.target.value) as 301 | 302 })}
+                        className="px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value={301}>301</option>
+                        <option value={302}>302</option>
+                      </select>
                     </div>
-                    {formData.redirectEnabled && (
-                      <>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={formData.redirectUrl}
-                            onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
-                            placeholder="输入重定向 URL"
-                            className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                          />
-                          <select
-                            value={formData.redirectStatusCode}
-                            onChange={(e) => setFormData({ ...formData, redirectStatusCode: parseInt(e.target.value) as 301 | 302 })}
-                            className="px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                          >
-                            <option value={301}>301</option>
-                            <option value={302}>302</option>
-                          </select>
-                        </div>
-                      </>
-                    )}
                   </div>
                 )}
               </div>
