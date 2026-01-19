@@ -363,7 +363,7 @@ export default function Websites() {
                 <div className="space-y-3">
                   {/* 第一排：域名 */}
                   <div className="flex items-center gap-2">
-                    <label className="text-xs font-medium text-foreground whitespace-nowrap">域名：</label>
+                    <label className="text-xs font-medium text-foreground w-16 flex-shrink-0">域名：</label>
                     <input
                       type="text"
                       value={formData.domain}
@@ -373,9 +373,9 @@ export default function Websites() {
                     />
                   </div>
                   
-                  {/* 第二排：线路组 */}
+                  {/* 第二排：线路 */}
                   <div className="flex items-center gap-2">
-                    <label className="text-xs font-medium text-foreground whitespace-nowrap">线路组：</label>
+                    <label className="text-xs font-medium text-foreground w-16 flex-shrink-0">线路：</label>
                     <select
                       value={formData.lineGroup}
                       onChange={(e) => setFormData({ ...formData, lineGroup: e.target.value })}
@@ -390,7 +390,7 @@ export default function Websites() {
                   
                   {/* 第三排：回源地址 */}
                   <div className="flex items-center gap-2">
-                    <label className="text-xs font-medium text-foreground whitespace-nowrap">回源地址：</label>
+                    <label className="text-xs font-medium text-foreground w-16 flex-shrink-0">回源地址：</label>
                     <input
                       type="text"
                       placeholder="输入回源地址"
@@ -425,24 +425,26 @@ export default function Websites() {
                   {/* HTTPS 配置内容 */}
                   {configTab === 'https' && (
                     <div className="space-y-3">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.httpsForceRedirect}
-                          onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
-                        />
-                        <span className="text-xs font-medium text-foreground">HTTPS强制跳转</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.hstsEnabled}
-                          onChange={(e) => setFormData({ ...formData, hstsEnabled: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
-                        />
-                        <span className="text-xs font-medium text-foreground">开启HSTS</span>
-                      </label>
+                      <div className="flex items-center gap-6">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.httpsForceRedirect}
+                            onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
+                            className="w-4 h-4 rounded border-border"
+                          />
+                          <span className="text-xs font-medium text-foreground">HTTPS强制跳转</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.hstsEnabled}
+                            onChange={(e) => setFormData({ ...formData, hstsEnabled: e.target.checked })}
+                            className="w-4 h-4 rounded border-border"
+                          />
+                          <span className="text-xs font-medium text-foreground">开启HSTS</span>
+                        </label>
+                      </div>
                       <div className="space-y-1">
                         <label className="block text-xs font-medium text-foreground">证书配置</label>
                         <div className="flex gap-4">
