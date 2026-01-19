@@ -110,17 +110,17 @@ export default function Domains() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* 域名列表 */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-2">
             <Card className="border border-border overflow-hidden">
               <div className="px-6 py-3 border-b border-border flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
                   {selectedDomains.size > 0 ? `已选择 ${selectedDomains.size} 个` : `共 ${filteredDomains.length} 个`}
                 </span>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-auto text-sm">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border bg-secondary/30">
                       <th className="text-center py-3 px-4 font-semibold text-foreground w-12">
