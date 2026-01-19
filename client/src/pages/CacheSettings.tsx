@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, ChevronDown, ChevronRight } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 
 interface CacheSetting {
   id: string;
   name: string;
   description: string;
-  ttl: number;
+  ruleType: 'file' | 'directory';
   pattern: string;
+  ttl: number;
   addedTime: string;
 }
 
@@ -18,24 +19,27 @@ const mockCacheSettings: CacheSetting[] = [
     id: '1',
     name: '首页缓存',
     description: '首页静态内容缓存',
-    ttl: 3600,
+    ruleType: 'directory',
     pattern: '/',
+    ttl: 3600,
     addedTime: '2026-01-15 10:30:00',
   },
   {
     id: '2',
     name: '图片缓存',
     description: '图片资源长期缓存',
+    ruleType: 'file',
+    pattern: 'png|jpg|gif',
     ttl: 86400,
-    pattern: '*.jpg|*.png|*.gif',
     addedTime: '2026-01-14 14:20:00',
   },
   {
     id: '3',
     name: 'API缓存',
     description: 'API 接口响应缓存',
+    ruleType: 'directory',
+    pattern: '/api/',
     ttl: 300,
-    pattern: '/api/*',
     addedTime: '2026-01-13 09:15:00',
   },
 ];
@@ -43,14 +47,16 @@ const mockCacheSettings: CacheSetting[] = [
 interface FormData {
   name: string;
   description: string;
-  ttl: number;
+  ruleType: 'file' | 'directory';
   pattern: string;
+  ttl: number;
 }
 
 export default function CacheSettings() {
   const [settings, setSettings] = useState<CacheSetting[]>(mockCacheSettings);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [listPage, setListPage] = useState(1);
   const itemsPerPage = 10;
@@ -58,16 +64,18 @@ export default function CacheSettings() {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
-    ttl: 3600,
+    ruleType: 'directory',
     pattern: '',
+    ttl: 3600,
   });
 
   const resetForm = () => {
     setFormData({
       name: '',
       description: '',
-      ttl: 3600,
+      ruleType: 'directory',
       pattern: '',
+      ttl: 3600,
     });
     setEditingId(null);
     setShowAddForm(false);
@@ -87,8 +95,9 @@ export default function CacheSettings() {
                 ...s,
                 name: formData.name,
                 description: formData.description,
-                ttl: formData.ttl,
+                ruleType: formData.ruleType,
                 pattern: formData.pattern,
+                ttl: formData.ttl,
               }
             : s
         )
@@ -98,8 +107,9 @@ export default function CacheSettings() {
         id: Date.now().toString(),
         name: formData.name,
         description: formData.description,
-        ttl: formData.ttl,
+        ruleType: formData.ruleType,
         pattern: formData.pattern,
+        ttl: formData.ttl,
         addedTime: new Date().toLocaleString('zh-CN'),
       };
       setSettings([newSetting, ...settings]);
@@ -112,8 +122,9 @@ export default function CacheSettings() {
     setFormData({
       name: setting.name,
       description: setting.description,
-      ttl: setting.ttl,
+      ruleType: setting.ruleType,
       pattern: setting.pattern,
+      ttl: setting.ttl,
     });
     setEditingId(setting.id);
     setShowAddForm(true);
@@ -127,7 +138,7 @@ export default function CacheSettings() {
 
   const filteredSettings = settings.filter((s) =>
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.pattern.toLowerCase().includes(searchTerm.toLowerCase())
+    s.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const paginatedSettings = filteredSettings.slice(
@@ -175,46 +186,98 @@ export default function CacheSettings() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-secondary/50">
-                  <th className="px-6 py-3 text-left font-semibold text-foreground">名称</th>
+                  <th className="px-6 py-3 text-left font-semibold text-foreground w-12"></th>
+                  <th className="px-6 py-3 text-left font-semibold text-foreground">缓存名称</th>
                   <th className="px-6 py-3 text-left font-semibold text-foreground">说明</th>
-                  <th className="px-6 py-3 text-left font-semibold text-foreground">匹配规则</th>
-                  <th className="px-6 py-3 text-left font-semibold text-foreground">缓存时长(秒)</th>
-                  <th className="px-6 py-3 text-left font-semibold text-foreground">添加时间</th>
                   <th className="px-6 py-3 text-center font-semibold text-foreground">操作</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedSettings.length > 0 ? (
                   paginatedSettings.map((setting) => (
-                    <tr key={setting.id} className="border-b border-border hover:bg-secondary/30 transition-colors">
-                      <td className="px-6 py-3 text-foreground font-medium">{setting.name}</td>
-                      <td className="px-6 py-3 text-muted-foreground">{setting.description}</td>
-                      <td className="px-6 py-3 text-muted-foreground font-mono text-xs">{setting.pattern}</td>
-                      <td className="px-6 py-3 text-foreground">{setting.ttl}</td>
-                      <td className="px-6 py-3 text-muted-foreground text-xs">{setting.addedTime}</td>
-                      <td className="px-6 py-3 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                    <div key={setting.id}>
+                      <tr className="border-b border-border hover:bg-secondary/30 transition-colors">
+                        <td className="px-6 py-3 text-center">
                           <button
-                            onClick={() => handleEditSetting(setting)}
+                            onClick={() =>
+                              setExpandedId(expandedId === setting.id ? null : setting.id)
+                            }
                             className="p-1 hover:bg-secondary rounded transition-colors"
-                            title="编辑"
                           >
-                            <Edit2 size={16} className="text-muted-foreground" />
+                            {expandedId === setting.id ? (
+                              <ChevronDown size={16} className="text-muted-foreground" />
+                            ) : (
+                              <ChevronRight size={16} className="text-muted-foreground" />
+                            )}
                           </button>
-                          <button
-                            onClick={() => handleDeleteSetting(setting.id)}
-                            className="p-1 hover:bg-secondary rounded transition-colors"
-                            title="删除"
-                          >
-                            <Trash2 size={16} className="text-destructive" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                        <td className="px-6 py-3 text-foreground font-medium">{setting.name}</td>
+                        <td className="px-6 py-3 text-muted-foreground">{setting.description}</td>
+                        <td className="px-6 py-3 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => handleEditSetting(setting)}
+                              className="p-1 hover:bg-secondary rounded transition-colors"
+                              title="编辑"
+                            >
+                              <Edit2 size={16} className="text-muted-foreground" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSetting(setting.id)}
+                              className="p-1 hover:bg-secondary rounded transition-colors"
+                              title="删除"
+                            >
+                              <Trash2 size={16} className="text-destructive" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* 展开的详细信息 */}
+                      {expandedId === setting.id && (
+                        <tr className="border-b border-border bg-secondary/10">
+                          <td colSpan={4} className="px-6 py-4">
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                  <label className="block text-sm font-medium text-foreground mb-2">
+                                    匹配规则类型
+                                  </label>
+                                  <div className="text-sm text-muted-foreground px-3 py-2 bg-background rounded-lg border border-border">
+                                    {setting.ruleType === 'directory' ? '目录' : '文件'}
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-foreground mb-2">
+                                    规则
+                                  </label>
+                                  <div className="text-sm text-muted-foreground px-3 py-2 bg-background rounded-lg border border-border font-mono">
+                                    {setting.pattern}
+                                  </div>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-foreground mb-2">
+                                  TTL (秒)
+                                </label>
+                                <div className="text-sm text-muted-foreground px-3 py-2 bg-background rounded-lg border border-border">
+                                  {setting.ttl}
+                                </div>
+                              </div>
+                              <div className="pt-2 border-t border-border">
+                                <p className="text-xs text-muted-foreground">
+                                  添加时间：{setting.addedTime}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </div>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                    <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
                       暂无缓存设置
                     </td>
                   </tr>
@@ -294,23 +357,57 @@ export default function CacheSettings() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    匹配规则 <span className="text-destructive">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.pattern}
-                    onChange={(e) => setFormData({ ...formData, pattern: e.target.value })}
-                    placeholder="例如：/*.jpg|*.png 或 /api/*"
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">支持通配符 * 和 | 分隔多个规则</p>
+                <div className="border-t border-border pt-4">
+                  <h3 className="text-sm font-semibold text-foreground mb-4">匹配规则</h3>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        类型 <span className="text-destructive">*</span>
+                      </label>
+                      <select
+                        value={formData.ruleType}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            ruleType: e.target.value as 'file' | 'directory',
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="directory">目录</option>
+                        <option value="file">文件</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        规则 <span className="text-destructive">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.pattern}
+                        onChange={(e) => setFormData({ ...formData, pattern: e.target.value })}
+                        placeholder={
+                          formData.ruleType === 'directory'
+                            ? '例如：/api/'
+                            : '例如：png|jpg'
+                        }
+                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground mb-4">
+                    {formData.ruleType === 'directory'
+                      ? '目录示例：/api/ 或 /static/'
+                      : '文件示例：png|jpg|gif 或 js|css'}
+                  </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    缓存时长(秒)
+                    TTL (缓存时长，秒)
                   </label>
                   <input
                     type="number"
@@ -319,6 +416,7 @@ export default function CacheSettings() {
                     min="1"
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">默认值：3600 秒（1 小时）</p>
                 </div>
               </div>
 
