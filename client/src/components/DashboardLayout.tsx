@@ -9,6 +9,7 @@ import * as React from 'react';
 import { Link, useLocation } from 'wouter';
 import { Menu, X, ChevronRight, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useMenu } from '@/contexts/MenuContext';
 
 interface Breadcrumb {
   label: string;
@@ -53,7 +54,7 @@ export default function DashboardLayout({
   currentPage = '仪表板',
 }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
+  const { expandedMenu, setExpandedMenu } = useMenu();
   const [location] = useLocation();
 
   // 仅在初始加载时自动展开包含当前路由的父菜单，之后菜单状态由用户控制
