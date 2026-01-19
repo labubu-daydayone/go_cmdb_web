@@ -8,10 +8,17 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { generateMockLineGroups, LineGroup } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Edit2, Trash2, Network } from 'lucide-react';
+import { Plus, Edit2, Trash2, Network, X } from 'lucide-react';
 
 type SortField = 'name' | 'description' | 'cname' | 'nodeCount';
 type SortOrder = 'asc' | 'desc';
+
+interface FormData {
+  name: string;
+  domain: string;
+  nodeGroups: string[];
+  cname: string;
+}
 
 export default function LineGroups() {
   const [lineGroups] = useState<LineGroup[]>(generateMockLineGroups());
@@ -19,6 +26,13 @@ export default function LineGroups() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    domain: '',
+    nodeGroups: [],
+    cname: '',
+  });
 
   const handleSelectLineGroup = (lineGroupId: string) => {
     const newSelected = new Set(selectedLineGroups);
@@ -75,6 +89,30 @@ export default function LineGroups() {
     return <span className="ml-1 text-primary text-xs">{sortOrder === 'asc' ? '↑' : '↓'}</span>;
   };
 
+  // 生成随机 CNAME
+  const generateCNAME = () => {
+    const randomStr = Math.random().toString(36).substring(2, 8);
+    return `cdn-${randomStr}.example.com`;
+  };
+
+  const handleAddNodeGroup = (nodeGroupId: string) => {
+    const newNodeGroups = formData.nodeGroups.includes(nodeGroupId)
+      ? formData.nodeGroups.filter(id => id !== nodeGroupId)
+      : [...formData.nodeGroups, nodeGroupId];
+    setFormData({ ...formData, nodeGroups: newNodeGroups });
+  };
+
+  const handleSubmit = () => {
+    console.log('Submit form:', formData);
+    setShowForm(false);
+    setFormData({ name: '', domain: '', nodeGroups: [], cname: '' });
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setFormData({ name: '', domain: '', nodeGroups: [], cname: '' });
+  };
+
   const breadcrumbs = [
     { label: '首页', href: '/' },
     { label: '网站管理' },
@@ -87,7 +125,7 @@ export default function LineGroups() {
         {/* 页面标题和操作 */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">线路分组</h1>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setShowForm(true)}>
             <Plus size={16} />
             添加线路分组
           </Button>
@@ -196,6 +234,113 @@ export default function LineGroups() {
             </table>
           </div>
         </Card>
+
+        {/* 添加线路分组表单 */}
+        {showForm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-2xl max-h-3/4 overflow-y-auto border border-border">
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <h2 className="text-lg font-bold text-foreground">添加线路分组</h2>
+                <button onClick={handleCancel} className="p-1 hover:bg-secondary rounded transition-colors">
+                  <X size={20} className="text-muted-foreground" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* 名称 */}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-medium text-foreground whitespace-nowrap">名称：</label>
+                  <input
+                    type="text"
+                    placeholder="输入线路分组名称"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-48 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                {/* DNS 配置的域名选项 */}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-medium text-foreground whitespace-nowrap">DNS 域名：</label>
+                  <select
+                    value={formData.domain}
+                    onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+                    className="w-48 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">-- 请选择域名 --</option>
+                    <option value="example.com">example.com</option>
+                    <option value="api.example.com">api.example.com</option>
+                    <option value="cdn.example.com">cdn.example.com</option>
+                  </select>
+                </div>
+
+                {/* 解析记录（CNAME） */}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-medium text-foreground whitespace-nowrap">解析记录：</label>
+                  <input
+                    type="text"
+                    placeholder="CNAME 记录"
+                    value={formData.cname}
+                    onChange={(e) => setFormData({ ...formData, cname: e.target.value })}
+                    className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setFormData({ ...formData, cname: generateCNAME() })}
+                    className="text-xs"
+                  >
+                    生成
+                  </Button>
+                </div>
+
+                {/* 添加的节点 */}
+                <div>
+                  <label className="text-xs font-medium text-foreground block mb-3">添加的节点：</label>
+                  <div className="space-y-2 pl-4">
+                    {['节点分组1', '节点分组2', '节点分组3', '节点分组4'].map((nodeGroup, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`nodegroup-${index}`}
+                          checked={formData.nodeGroups.includes(nodeGroup)}
+                          onChange={() => handleAddNodeGroup(nodeGroup)}
+                          className="w-4 h-4 cursor-pointer"
+                        />
+                        <label htmlFor={`nodegroup-${index}`} className="text-xs text-foreground cursor-pointer">
+                          {nodeGroup}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 解析记录预览 */}
+                {formData.nodeGroups.length > 0 && (
+                  <div className="border-t border-border pt-4">
+                    <label className="text-xs font-medium text-foreground block mb-2">解析记录预览：</label>
+                    <div className="bg-secondary/30 rounded-lg p-3 space-y-1 text-xs text-muted-foreground">
+                      {formData.nodeGroups.map((nodeGroup, index) => (
+                        <div key={index}>
+                          {formData.domain} CNAME {formData.cname}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 border-t border-border flex items-center justify-end gap-2">
+                <Button variant="outline" onClick={handleCancel}>
+                  取消
+                </Button>
+                <Button onClick={handleSubmit}>
+                  添加
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
