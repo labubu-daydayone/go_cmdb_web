@@ -32,7 +32,6 @@ interface NavItem {
 const navigationItems: NavItem[] = [
   { label: '仪表板', href: '/', icon: '📊' },
   { label: '域名管理', href: '/domains', icon: '🌐' },
-  { label: 'DNS 配置', href: '/dns-config', icon: '🔧' },
   {
     label: '网站管理',
     icon: '🌍',
@@ -43,6 +42,7 @@ const navigationItems: NavItem[] = [
       { label: '节点列表', href: '/nodes', icon: '🖥' },
       { label: '节点分组', href: '/node-groups', icon: '📋' },
       { label: '缓存设置', href: '/cache-settings', icon: '💾' },
+      { label: 'DNS 配置', href: '/dns-config', icon: '🔧' },
     ],
   },
   { label: '服务器', href: '/servers', icon: '🖥️' },
