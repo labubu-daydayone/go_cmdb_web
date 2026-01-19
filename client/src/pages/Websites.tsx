@@ -10,7 +10,7 @@ import { Plus, Edit2, Trash2, Zap, X } from 'lucide-react';
 type SortField = 'domain' | 'cname' | 'lineGroup' | 'https' | 'status';
 type SortOrder = 'asc' | 'desc';
 type ConfigTab = 'https' | 'cache';
-type AddFormTab = 'origin' | 'redirect' | 'template' | 'cache';
+type AddFormTab = 'origin' | 'redirect' | 'template';
 
 interface FormData {
   domain: string;
@@ -577,7 +577,22 @@ export default function Websites() {
                     </label>
                   </div>
 
-                  {/* 配置切换按马 */}
+                  {/* 缓存规则选择 */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-medium text-foreground whitespace-nowrap">缓存规则：</label>
+                    <select
+                      value={formData.cacheRules}
+                      onChange={(e) => setFormData({ ...formData, cacheRules: e.target.value })}
+                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">-- 请选择缓存规则 --</option>
+                      <option value="首页缓存">首页缓存</option>
+                      <option value="图片缓存">图片缓存</option>
+                      <option value="API缓存">API缓存</option>
+                    </select>
+                  </div>
+
+                  {/* 配置切换按钮 */}
                   <div className="flex gap-2 border-b border-border overflow-x-auto">
                     <button
                       onClick={() => setAddFormTab('origin')}
@@ -608,16 +623,6 @@ export default function Websites() {
                       }`}
                     >
                       使用分组
-                    </button>
-                    <button
-                      onClick={() => setAddFormTab('cache')}
-                      className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
-                        addFormTab === 'cache'
-                          ? 'text-primary border-primary'
-                          : 'text-muted-foreground border-transparent hover:text-foreground'
-                      }`}
-                    >
-                      缓存规则
                     </button>
                   </div>
 
@@ -656,24 +661,6 @@ export default function Websites() {
                        </div>
                   )}
 
-                  {/* 缓存规则内容 */}
-                  {addFormTab === 'cache' && (
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-xs font-medium text-foreground mb-1">缓存规则选择</label>
-                        <select
-                          value={formData.cacheRules}
-                          onChange={(e) => setFormData({ ...formData, cacheRules: e.target.value })}
-                          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        >
-                          <option value="">-- 请选择缓存规则 --</option>
-                          <option value="首页缓存">首页缓存</option>
-                          <option value="图片缓存">图片缓存</option>
-                          <option value="API缓存">API缓存</option>
-                        </select>
-                      </div>
-                    </div>
-                  )}
 
                   {/* 按钮 */}
                   {addFormTab === 'redirect' && (
