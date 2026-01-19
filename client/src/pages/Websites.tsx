@@ -10,7 +10,7 @@ import { Plus, Edit2, Trash2, Zap, X } from 'lucide-react';
 type SortField = 'domain' | 'cname' | 'lineGroup' | 'https' | 'status';
 type SortOrder = 'asc' | 'desc';
 type ConfigTab = 'https' | 'cache';
-type AddFormTab = 'origin' | 'redirect' | 'template';
+type AddFormTab = 'origin' | 'redirect' | 'template' | 'cache';
 
 interface FormData {
   domain: string;
@@ -609,6 +609,16 @@ export default function Websites() {
                     >
                       使用分组
                     </button>
+                    <button
+                      onClick={() => setAddFormTab('cache')}
+                      className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
+                        addFormTab === 'cache'
+                          ? 'text-primary border-primary'
+                          : 'text-muted-foreground border-transparent hover:text-foreground'
+                      }`}
+                    >
+                      缓存规则
+                    </button>
                   </div>
 
                   {/* 回源配置内容 */}
@@ -643,10 +653,29 @@ export default function Websites() {
                           </button>
                         </div>
                       ))}
+                       </div>
+                  )}
+
+                  {/* 缓存规则内容 */}
+                  {addFormTab === 'cache' && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-foreground mb-1">缓存规则选择</label>
+                        <select
+                          value={formData.cacheRules}
+                          onChange={(e) => setFormData({ ...formData, cacheRules: e.target.value })}
+                          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        >
+                          <option value="">-- 请选择缓存规则 --</option>
+                          <option value="首页缓存">首页缓存</option>
+                          <option value="图片缓存">图片缓存</option>
+                          <option value="API缓存">API缓存</option>
+                        </select>
+                      </div>
                     </div>
                   )}
 
-                  {/* 重定向内容 */}
+                  {/* 按钮 */}
                   {addFormTab === 'redirect' && (
                     <div className="space-y-3">
                       <div className="flex gap-2 items-end">
