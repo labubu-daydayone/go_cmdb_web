@@ -14,7 +14,7 @@ import {
   SelectChangeEvent,
   OutlinedInput,
 } from '@mui/material';
-import { X } from 'lucide-react';
+import CloseIcon from '@mui/icons-material/Close';
 
 export interface MultiSelectOption {
   label: string;
@@ -76,9 +76,9 @@ const MultiSelect = forwardRef<HTMLDivElement, MultiSelectProps>(
                     size="small"
                     onDelete={() => handleDelete(val)}
                     deleteIcon={
-                      <X
-                        size={14}
-                        onMouseDown={(event) => {
+                      <CloseIcon
+                        sx={{ fontSize: 14 }}
+                        onMouseDown={(event: React.MouseEvent) => {
                           event.stopPropagation();
                         }}
                       />

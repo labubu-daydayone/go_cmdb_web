@@ -8,7 +8,12 @@ import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
 import { generateMockNodes, Node } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Edit2, Trash2, ChevronDown, ChevronRight, X } from 'lucide-react';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import CloseIcon from '@mui/icons-material/Close';
 
 type SortField = 'name' | 'ip' | 'managementPort' | 'status';
 type SortOrder = 'asc' | 'desc';
@@ -173,7 +178,7 @@ export default function Nodes() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">节点列表</h1>
           <Button className="gap-2">
-            <Plus size={16} />
+            <AddIcon fontSize="small" />
             添加节点
           </Button>
         </div>
@@ -271,9 +276,9 @@ export default function Nodes() {
                       title={expandedNodes.has(node.id) ? '收起' : '展开'}
                     >
                       {expandedNodes.has(node.id) ? (
-                        <ChevronDown size={16} className="text-muted-foreground" />
+                        <ExpandMoreIcon fontSize="small" className="text-muted-foreground"/>
                       ) : (
-                        <ChevronRight size={16} className="text-muted-foreground" />
+                        <ChevronRightIcon fontSize="small" className="text-muted-foreground"/>
                       )}
                     </button>
                   </div>
@@ -299,13 +304,13 @@ export default function Nodes() {
                       className="p-1 hover:bg-secondary rounded transition-colors"
                       title="添加子IP"
                     >
-                      <Plus size={16} className="text-muted-foreground" />
+                      <AddIcon fontSize="small" className="text-muted-foreground"/>
                     </button>
                     <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
-                      <Edit2 size={16} className="text-muted-foreground" />
+                      <EditIcon fontSize="small" className="text-muted-foreground"/>
                     </button>
                     <button className="p-1 hover:bg-red-100 rounded transition-colors" title="删除">
-                      <Trash2 size={16} className="text-red-600" />
+                      <DeleteIcon fontSize="small" className="text-red-600"/>
                     </button>
                   </div>
                 </div>
@@ -337,7 +342,7 @@ export default function Nodes() {
                             className="p-1 hover:bg-red-100 rounded transition-colors"
                             title="删除"
                           >
-                            <Trash2 size={14} className="text-red-600" />
+                            <DeleteIcon fontSize="small" className="text-red-600"/>
                           </button>
                         </div>
                       ))}
@@ -363,7 +368,7 @@ export default function Nodes() {
                   }}
                   className="p-1 hover:bg-secondary rounded transition-colors"
                 >
-                  <X size={20} className="text-muted-foreground" />
+                  <CloseIcon fontSize="medium" className="text-muted-foreground"/>
                 </button>
               </div>
               <div>

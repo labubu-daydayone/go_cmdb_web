@@ -8,7 +8,12 @@ import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
 import { generateMockDNSConfigs, DNSConfig } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Edit2, Trash2, Copy, Eye, EyeOff } from 'lucide-react';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 export default function DNSConfigPage() {
   const [dnsConfigs, setDnsConfigs] = useState<DNSConfig[]>(generateMockDNSConfigs());
@@ -91,7 +96,7 @@ export default function DNSConfigPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">DNS 配置</h1>
           <Button className="gap-2" onClick={() => setShowAddModal(true)}>
-            <Plus size={16} />
+            <AddIcon fontSize="small" />
             添加配置
           </Button>
         </div>
@@ -150,9 +155,9 @@ export default function DNSConfigPage() {
                           title={showTokens.has(config.id) ? '隐藏' : '显示'}
                         >
                           {showTokens.has(config.id) ? (
-                            <EyeOff size={14} className="text-muted-foreground" />
+                            <VisibilityOffIcon fontSize="small" className="text-muted-foreground"/>
                           ) : (
-                            <Eye size={14} className="text-muted-foreground" />
+                            <VisibilityIcon fontSize="small" className="text-muted-foreground"/>
                           )}
                         </button>
                         <button
@@ -160,7 +165,7 @@ export default function DNSConfigPage() {
                           className="p-1 hover:bg-secondary rounded transition-colors"
                           title="复制"
                         >
-                          <Copy size={14} className="text-muted-foreground" />
+                          <ContentCopyIcon fontSize="small" className="text-muted-foreground"/>
                         </button>
                       </div>
                     </td>
@@ -173,14 +178,14 @@ export default function DNSConfigPage() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
-                          <Edit2 size={16} className="text-muted-foreground" />
+                          <EditIcon fontSize="small" className="text-muted-foreground"/>
                         </button>
                         <button
                           onClick={() => handleDeleteConfig(config.id)}
                           className="p-1 hover:bg-red-100 rounded transition-colors"
                           title="删除"
                         >
-                          <Trash2 size={16} className="text-red-600" />
+                          <DeleteIcon fontSize="small" className="text-red-600"/>
                         </button>
                       </div>
                     </td>

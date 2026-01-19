@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
 import DashboardLayout from '@/components/DashboardLayout';
 
 interface CacheRule {
@@ -277,14 +280,14 @@ export default function CacheSettings() {
                             className="p-1 hover:bg-secondary rounded transition-colors"
                             title="编辑"
                           >
-                            <Edit2 size={16} className="text-muted-foreground" />
+                            <EditIcon fontSize="small" className="text-muted-foreground"/>
                           </button>
                           <button
                             onClick={() => handleDeleteSetting(setting.id)}
                             className="p-1 hover:bg-secondary rounded transition-colors"
                             title="删除"
                           >
-                            <Trash2 size={16} className="text-destructive" />
+                            <DeleteIcon fontSize="small" className="text-destructive"/>
                           </button>
                         </div>
                       </td>
@@ -340,7 +343,7 @@ export default function CacheSettings() {
                   onClick={resetForm}
                   className="p-1 hover:bg-secondary rounded transition-colors"
                 >
-                  <X size={20} className="text-muted-foreground" />
+                  <CloseIcon fontSize="medium" className="text-muted-foreground"/>
                 </button>
               </div>
 
@@ -443,7 +446,7 @@ export default function CacheSettings() {
                           className="p-2 hover:bg-destructive/10 rounded transition-colors flex-shrink-0"
                           title="删除规则"
                         >
-                          <Trash2 size={18} className="text-destructive" />
+                          <DeleteIcon fontSize="small" className="text-destructive"/>
                         </button>
                       </div>
                     ))}
@@ -454,7 +457,7 @@ export default function CacheSettings() {
                     onClick={handleAddRule}
                     className="mt-6 flex items-center gap-2 px-4 py-2 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
                   >
-                    <Plus size={18} />
+                    <AddIcon fontSize="small" />
                     添加规则
                   </button>
                 </div>

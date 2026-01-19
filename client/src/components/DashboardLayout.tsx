@@ -7,7 +7,23 @@
 import { ReactNode, useState } from 'react';
 import * as React from 'react';
 import { Link, useLocation } from 'wouter';
-import { Menu, X, ChevronRight, ChevronDown } from 'lucide-react';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+// 菜单图标
+import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
+import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined';
+import PublicOutlinedIcon from '@mui/icons-material/PublicOutlined';
+import ListAltOutlinedIcon from '@mui/icons-material/ListAltOutlined';
+import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined';
+import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
+import ComputerOutlinedIcon from '@mui/icons-material/ComputerOutlined';
+import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
+import SettingsEthernetOutlinedIcon from '@mui/icons-material/SettingsEthernetOutlined';
+import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { Button } from '@/components/mui';
 import { useMenu } from '@/contexts/MenuContext';
 import { colors } from '@/theme';
@@ -26,28 +42,28 @@ interface DashboardLayoutProps {
 interface NavItem {
   label: string;
   href?: string;
-  icon: string;
+  icon: React.ReactNode;
   children?: NavItem[];
 }
 
 const navigationItems: NavItem[] = [
-  { label: '仪表板', href: '/', icon: '📊' },
-  { label: '域名管理', href: '/domains', icon: '🌐' },
+  { label: '仪表板', href: '/', icon: <DashboardOutlinedIcon fontSize="small" /> },
+  { label: '域名管理', href: '/domains', icon: <LanguageOutlinedIcon fontSize="small" /> },
   {
     label: '网站管理',
-    icon: '🌍',
+    icon: <PublicOutlinedIcon fontSize="small" />,
     children: [
-      { label: '网站列表', href: '/websites', icon: '📋' },
-      { label: '回源分组', href: '/origin-groups', icon: '🔗' },
-      { label: '线路分组', href: '/line-groups', icon: '🔀' },
-      { label: '节点列表', href: '/nodes', icon: '🖥' },
-      { label: '节点分组', href: '/node-groups', icon: '📋' },
-      { label: '缓存设置', href: '/cache-settings', icon: '💾' },
-      { label: 'DNS 配置', href: '/dns-config', icon: '🔧' },
+      { label: '网站列表', href: '/websites', icon: <ListAltOutlinedIcon fontSize="small" /> },
+      { label: '回源分组', href: '/origin-groups', icon: <LinkOutlinedIcon fontSize="small" /> },
+      { label: '线路分组', href: '/line-groups', icon: <AccountTreeOutlinedIcon fontSize="small" /> },
+      { label: '节点列表', href: '/nodes', icon: <ComputerOutlinedIcon fontSize="small" /> },
+      { label: '节点分组', href: '/node-groups', icon: <FolderOutlinedIcon fontSize="small" /> },
+      { label: '缓存设置', href: '/cache-settings', icon: <SaveOutlinedIcon fontSize="small" /> },
+      { label: 'DNS 配置', href: '/dns-config', icon: <SettingsEthernetOutlinedIcon fontSize="small" /> },
     ],
   },
-  { label: '服务器', href: '/servers', icon: '🖥️' },
-  { label: '配置', href: '/settings', icon: '⚙️' },
+  { label: '服务器', href: '/servers', icon: <StorageOutlinedIcon fontSize="small" /> },
+  { label: '配置', href: '/settings', icon: <SettingsOutlinedIcon fontSize="small" /> },
 ];
 
 export default function DashboardLayout({
@@ -131,13 +147,13 @@ export default function DashboardLayout({
               transition: 'background-color 0.2s',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
+              e.currentTarget.style.backgroundColor = colors.sidebar.hover;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
             }}
           >
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            {sidebarOpen ? <CloseIcon fontSize="small" /> : <MenuIcon fontSize="small" />}
           </button>
         </div>
 
@@ -171,13 +187,13 @@ export default function DashboardLayout({
                       borderRadius: '8px',
                       border: 'none',
                       cursor: 'pointer',
-                      backgroundColor: isExpanded ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                      backgroundColor: isExpanded ? 'colors.sidebar.hover' : 'transparent',
                       color: colors.sidebar.foreground,
                       transition: 'background-color 0.2s',
                     }}
                     onMouseEnter={(e) => {
                       if (!isExpanded) {
-                        e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                        e.currentTarget.style.backgroundColor = 'colors.sidebar.hover';
                       }
                     }}
                     onMouseLeave={(e) => {
@@ -186,14 +202,14 @@ export default function DashboardLayout({
                       }
                     }}
                   >
-                    <span style={{ fontSize: '20px' }}>{item.icon}</span>
+                    {item.icon}
                     {sidebarOpen && (
                       <>
                         <span style={{ fontSize: '14px', fontWeight: 500, flex: 1, textAlign: 'left' }}>
                           {item.label}
                         </span>
-                        <ChevronDown
-                          size={16}
+                        <ExpandMoreIcon
+                          fontSize="small"
                           style={{
                             transition: 'transform 0.2s',
                             transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -223,7 +239,7 @@ export default function DashboardLayout({
                               }}
                               onMouseEnter={(e) => {
                                 if (!isChildActive) {
-                                  e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                                  e.currentTarget.style.backgroundColor = 'colors.sidebar.hover';
                                 }
                               }}
                               onMouseLeave={(e) => {
@@ -232,7 +248,7 @@ export default function DashboardLayout({
                                 }
                               }}
                             >
-                              <span>{child.icon}</span>
+                              {child.icon}
                               {child.label}
                             </a>
                           </Link>
@@ -260,7 +276,7 @@ export default function DashboardLayout({
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                      e.currentTarget.style.backgroundColor = 'colors.sidebar.hover';
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -269,7 +285,7 @@ export default function DashboardLayout({
                     }
                   }}
                 >
-                  <span style={{ fontSize: '20px' }}>{item.icon}</span>
+                  {item.icon}
                   {sidebarOpen && <span style={{ fontSize: '14px', fontWeight: 500 }}>{item.label}</span>}
                 </a>
               </Link>
@@ -321,7 +337,7 @@ export default function DashboardLayout({
             </Link>
             {breadcrumbs.length > 0 && (
               <>
-                <ChevronRight size={16} className="text-muted-foreground" />
+                <ChevronRightIcon fontSize="small" className="text-muted-foreground" />
                 <div className="flex items-center gap-2">
                   {breadcrumbs.map((crumb, index) => (
                     <div key={index} className="flex items-center gap-2">
@@ -335,7 +351,7 @@ export default function DashboardLayout({
                         <span className="text-sm text-foreground font-medium">{crumb.label}</span>
                       )}
                       {index < breadcrumbs.length - 1 && (
-                        <ChevronRight size={16} className="text-muted-foreground" />
+                        <ChevronRightIcon fontSize="small" className="text-muted-foreground" />
                       )}
                     </div>
                   ))}

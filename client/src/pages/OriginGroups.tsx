@@ -7,7 +7,8 @@ import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/mui';
 import { Card } from '@/components/mui/Card';
-import { Pencil, Trash2 } from 'lucide-react';
+import CreateIcon from '@mui/icons-material/Create';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface OriginGroup {
   id: string;
@@ -133,13 +134,13 @@ export default function OriginGroups() {
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
                         <button className="p-1 hover:bg-secondary rounded transition-colors">
-                          <Pencil size={16} className="text-muted-foreground" />
+                          <CreateIcon fontSize="small" className="text-muted-foreground"/>
                         </button>
                         <button
                           onClick={() => handleDeleteGroup(group.id)}
                           className="p-1 hover:bg-secondary rounded transition-colors"
                         >
-                          <Trash2 size={16} className="text-destructive" />
+                          <DeleteIcon fontSize="small" className="text-destructive"/>
                         </button>
                       </div>
                     </td>

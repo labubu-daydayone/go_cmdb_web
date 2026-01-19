@@ -3,7 +3,10 @@ import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
 import { generateMockWebsites, Website, OriginIP } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
 
 export default function OriginManagement() {
   const [websites, setWebsites] = useState<Website[]>(generateMockWebsites());
@@ -140,7 +143,7 @@ export default function OriginManagement() {
                   <div className="px-6 py-3 border-b border-border flex items-center justify-between">
                     <h3 className="font-semibold text-foreground">回源 IP ({selectedWebsite.originConfig.originIPs.length})</h3>
                     <Button size="sm" className="gap-2" onClick={() => setShowAddIPForm(true)}>
-                      <Plus size={14} />
+                      <AddIcon fontSize="small" />
                       添加 IP
                     </Button>
                   </div>
@@ -165,7 +168,7 @@ export default function OriginManagement() {
                               className="p-1 hover:bg-red-100 rounded transition-colors"
                               title="删除"
                             >
-                              <Trash2 size={16} className="text-red-600" />
+                              <DeleteIcon fontSize="small" className="text-red-600"/>
                             </button>
                           </div>
                         </div>
@@ -209,7 +212,7 @@ export default function OriginManagement() {
                         }}
                         className="p-1 hover:bg-secondary rounded transition-colors"
                       >
-                        <X size={20} className="text-muted-foreground" />
+                        <CloseIcon fontSize="medium" className="text-muted-foreground"/>
                       </button>
                     </div>
                     <div className="space-y-3">

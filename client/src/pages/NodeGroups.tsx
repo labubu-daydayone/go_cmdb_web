@@ -3,7 +3,12 @@ import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
 import { generateMockNodeGroups, NodeGroup } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Edit2, Trash2, ChevronDown, ChevronRight, X } from 'lucide-react';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import CloseIcon from '@mui/icons-material/Close';
 
 export default function NodeGroups() {
   const [groups, setGroups] = useState<NodeGroup[]>(generateMockNodeGroups());
@@ -84,7 +89,7 @@ export default function NodeGroups() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">节点分组</h1>
           <Button className="gap-2" onClick={() => setShowAddGroupModal(true)}>
-            <Plus size={16} />
+            <AddIcon fontSize="small" />
             添加分组
           </Button>
         </div>
@@ -148,9 +153,9 @@ export default function NodeGroups() {
                         title={expandedGroups.has(group.id) ? '收起' : '展开'}
                       >
                         {expandedGroups.has(group.id) ? (
-                          <ChevronDown size={16} className="text-muted-foreground" />
+                          <ExpandMoreIcon fontSize="small" className="text-muted-foreground"/>
                         ) : (
-                          <ChevronRight size={16} className="text-muted-foreground" />
+                          <ChevronRightIcon fontSize="small" className="text-muted-foreground"/>
                         )}
                       </button>
                     </div>
@@ -161,14 +166,14 @@ export default function NodeGroups() {
                     <div className="col-span-1">
                       <div className="flex items-center gap-2">
                         <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
-                          <Edit2 size={16} className="text-muted-foreground" />
+                          <EditIcon fontSize="small" className="text-muted-foreground"/>
                         </button>
                         <button
                           onClick={() => handleDeleteGroup(group.id)}
                           className="p-1 hover:bg-red-100 rounded transition-colors"
                           title="删除"
                         >
-                          <Trash2 size={16} className="text-red-600" />
+                          <DeleteIcon fontSize="small" className="text-red-600"/>
                         </button>
                       </div>
                     </div>
@@ -208,7 +213,7 @@ export default function NodeGroups() {
                   }}
                   className="p-1 hover:bg-secondary rounded transition-colors"
                 >
-                  <X size={20} className="text-muted-foreground" />
+                  <CloseIcon fontSize="medium" className="text-muted-foreground"/>
                 </button>
               </div>
               <div>

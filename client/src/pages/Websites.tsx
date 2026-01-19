@@ -1,11 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
 import { generateMockWebsites, Website } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Edit2, Trash2, Zap, X } from 'lucide-react';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import FlashOnIcon from '@mui/icons-material/FlashOn';
+import CloseIcon from '@mui/icons-material/Close';
+import WifiIcon from '@mui/icons-material/Wifi';
+import WifiOffIcon from '@mui/icons-material/WifiOff';
+import { useWebsiteUpdates } from '@/hooks/useWebsiteUpdates';
 
 type SortField = 'domain' | 'cname' | 'lineGroup' | 'https' | 'status';
 type SortOrder = 'asc' | 'desc';
@@ -30,6 +37,53 @@ interface FormData {
 
 export default function Websites() {
   const [websites, setWebsites] = useState<Website[]>(generateMockWebsites());
+  const [wsConnected, setWsConnected] = useState(false);
+  const [updateCount, setUpdateCount] = useState(0);
+
+  // WebSocket 回调函数
+  const handleAdd = useCallback((website: Website) => {
+    console.log('Adding new website:', website);
+    setWebsites((prev) => [website, ...prev]);
+    setUpdateCount((prev) => prev + 1);
+  }, []);
+
+  const handleUpdate = useCallback((websiteId: string, updates: Partial<Website>) => {
+    console.log('Updating website:', websiteId, updates);
+    setWebsites((prev) =>
+      prev.map((w) => (w.id === websiteId ? { ...w, ...updates } : w))
+    );
+    setUpdateCount((prev) => prev + 1);
+  }, []);
+
+  const handleDelete = useCallback((websiteId: string) => {
+    console.log('Deleting website:', websiteId);
+    setWebsites((prev) => prev.filter((w) => w.id !== websiteId));
+    setUpdateCount((prev) => prev + 1);
+  }, []);
+
+  const handleConnected = useCallback(() => {
+    console.log('WebSocket connected');
+    setWsConnected(true);
+  }, []);
+
+  const handleError = useCallback((error: Error) => {
+    console.error('WebSocket error:', error);
+    setWsConnected(false);
+  }, []);
+
+  // 使用 WebSocket Hook
+  const { connected } = useWebsiteUpdates({
+    onAdd: handleAdd,
+    onUpdate: handleUpdate,
+    onDelete: handleDelete,
+    onConnected: handleConnected,
+    onError: handleError,
+  });
+
+  // 同步连接状态
+  useState(() => {
+    setWsConnected(connected);
+  });
   const [selectedWebsites, setSelectedWebsites] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -206,8 +260,30 @@ export default function Websites() {
         {/* 页面标题 */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">网站列表</h1>
-            <p className="text-sm text-muted-foreground mt-1">共 {websites.length} 个</p>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-foreground">网站列表</h1>
+              {/* WebSocket 连接状态指示器 */}
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/30">
+                {wsConnected ? (
+                  <>
+                    <WifiIcon fontSize="small" className="text-green-600"/>
+                    <span className="text-xs text-green-600 font-medium">实时连接</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOffIcon fontSize="small" className="text-gray-400"/>
+                    <span className="text-xs text-gray-400 font-medium">离线</span>
+                  </>
+                )}
+              </div>
+              {/* 更新计数 */}
+              {updateCount > 0 && (
+                <div className="px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">
+                  {updateCount} 次更新
+                </div>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">共 {websites.length} 个网站</p>
           </div>
           <Button onClick={() => setShowAddForm(true)}>添加网站</Button>
         </div>
@@ -314,10 +390,10 @@ export default function Websites() {
                     </td>
                     <td className="px-6 py-3 flex gap-2">
                       <button onClick={() => handleEditWebsite(website)} className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
-                        <Edit2 size={16} className="text-primary" />
+                        <EditIcon fontSize="small" className="text-primary"/>
                       </button>
                       <button onClick={() => handleDeleteWebsite(website.id)} className="p-1 hover:bg-secondary rounded transition-colors" title="删除">
-                        <Trash2 size={16} className="text-destructive" />
+                        <DeleteIcon fontSize="small" className="text-destructive"/>
                       </button>
                     </td>
                   </tr>
@@ -357,7 +433,7 @@ export default function Websites() {
             <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
               <h2 className="text-base font-bold text-foreground">{editingId ? '编辑网站' : '添加网站'}</h2>
               <button onClick={resetForm} className="p-1 hover:bg-secondary rounded transition-colors">
-                <X size={20} className="text-muted-foreground" />
+                <CloseIcon fontSize="medium" className="text-muted-foreground"/>
               </button>
             </div>
 
@@ -654,7 +730,7 @@ export default function Websites() {
                             onClick={() => handleRemoveOriginIP(index)}
                             className="p-1 hover:bg-secondary rounded transition-colors"
                           >
-                            <X size={16} className="text-destructive" />
+                            <CloseIcon fontSize="small" className="text-destructive"/>
                           </button>
                         </div>
                       ))}

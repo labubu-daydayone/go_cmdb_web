@@ -8,7 +8,10 @@ import { Card } from '@/components/mui/Card';
 import { generateMockServers, generateTimeSeriesData } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { AlertCircle, CheckCircle, Clock, Server } from 'lucide-react';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+import StorageIcon from '@mui/icons-material/Storage';
 
 export default function Dashboard() {
   const stats = {
@@ -77,7 +80,7 @@ export default function Dashboard() {
                 <p className="text-xs text-muted-foreground mt-2">正常运行中</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckCircle size={24} className="text-green-600" />
+                <CheckCircleIcon fontSize="medium" className="text-green-600"/>
               </div>
             </div>
           </Card>
@@ -91,7 +94,7 @@ export default function Dashboard() {
                 <p className="text-xs text-muted-foreground mt-2">30天内过期</p>
               </div>
               <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                <Clock size={24} className="text-amber-600" />
+                <ScheduleIcon fontSize="medium" className="text-amber-600"/>
               </div>
             </div>
           </Card>
@@ -105,7 +108,7 @@ export default function Dashboard() {
                 <p className="text-xs text-muted-foreground mt-2">需要处理</p>
               </div>
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                <AlertCircle size={24} className="text-red-600" />
+                <ErrorOutlineIcon fontSize="medium" className="text-red-600"/>
               </div>
             </div>
           </Card>

@@ -8,7 +8,12 @@ import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
 import { generateMockDomains, Domain } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
-import { ChevronRight, Search, Plus, Edit2, Trash2, Eye } from 'lucide-react';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 type SortField = 'name' | 'status' | 'expiryDate' | 'sslStatus';
 type SortOrder = 'asc' | 'desc';
@@ -121,7 +126,7 @@ export default function Domains() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-3 text-muted-foreground" size={18} />
+              <SearchIcon fontSize="small" className="absolute left-3 top-3 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="搜索域名..."
@@ -143,7 +148,7 @@ export default function Domains() {
               <option value="expired">已过期</option>
             </select>
             <Button className="gap-2">
-              <Plus size={18} />
+              <AddIcon fontSize="small" />
               添加域名
             </Button>
           </div>
@@ -239,13 +244,13 @@ export default function Domains() {
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
                             <button className="p-1 hover:bg-secondary rounded transition-colors" title="查看">
-                              <Eye size={16} className="text-muted-foreground" />
+                              <VisibilityIcon fontSize="small" className="text-muted-foreground"/>
                             </button>
                             <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
-                              <Edit2 size={16} className="text-muted-foreground" />
+                              <EditIcon fontSize="small" className="text-muted-foreground"/>
                             </button>
                             <button className="p-1 hover:bg-red-100 rounded transition-colors" title="删除">
-                              <Trash2 size={16} className="text-red-600" />
+                              <DeleteIcon fontSize="small" className="text-red-600"/>
                             </button>
                           </div>
                         </td>

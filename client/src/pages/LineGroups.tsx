@@ -9,7 +9,11 @@ import { Button, MultiSelect } from '@/components/mui';
 import type { MultiSelectOption } from '@/components/mui/MultiSelect';
 import { generateMockLineGroups, LineGroup } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Edit2, Trash2, Network, X } from 'lucide-react';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import HubIcon from '@mui/icons-material/Hub';
+import CloseIcon from '@mui/icons-material/Close';
 
 type SortField = 'name' | 'description' | 'cname' | 'nodeCount';
 type SortOrder = 'asc' | 'desc';
@@ -163,7 +167,7 @@ export default function LineGroups() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">线路分组</h1>
           <Button className="gap-2" onClick={() => setShowForm(true)}>
-            <Plus size={16} />
+            <AddIcon fontSize="small" />
             添加线路分组
           </Button>
         </div>
@@ -248,20 +252,20 @@ export default function LineGroups() {
                     <td className="py-3 px-4 text-muted-foreground">{lineGroup.cname}</td>
                     <td className="py-3 px-4">
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">
-                        <Network size={14} />
+                        <HubIcon fontSize="small" />
                         {lineGroup.nodeCount}
                       </span>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <button className="p-1 hover:bg-secondary rounded transition-colors" title="查看节点">
-                          <Network size={16} className="text-muted-foreground" />
+                          <HubIcon fontSize="small" className="text-muted-foreground"/>
                         </button>
                         <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
-                          <Edit2 size={16} className="text-muted-foreground" />
+                          <EditIcon fontSize="small" className="text-muted-foreground"/>
                         </button>
                         <button className="p-1 hover:bg-red-100 rounded transition-colors" title="删除">
-                          <Trash2 size={16} className="text-red-600" />
+                          <DeleteIcon fontSize="small" className="text-red-600"/>
                         </button>
                       </div>
                     </td>
@@ -284,7 +288,7 @@ export default function LineGroups() {
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-bold text-foreground">添加线路分组</h2>
                   <button onClick={handleCancel} className="p-1 hover:bg-secondary rounded transition-colors">
-                    <X size={20} className="text-muted-foreground" />
+                    <CloseIcon fontSize="medium" className="text-muted-foreground"/>
                   </button>
                 </div>
 
