@@ -13,6 +13,7 @@ import DNSConfig from "./pages/DNSConfig";
 import Nodes from "./pages/Nodes";
 import NodeGroups from "./pages/NodeGroups";
 import OriginManagement from "./pages/OriginManagement";
+import OriginGroups from "./pages/OriginGroups";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <Route path={"/nodes"} component={Nodes} />
       <Route path={"/node-groups"} component={NodeGroups} />
       <Route path={"/origin-management"} component={OriginManagement} />
+      <Route path={"/origin-groups"} component={OriginGroups} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

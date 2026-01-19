@@ -364,7 +364,7 @@ export default function Websites() {
                         : 'text-muted-foreground border-transparent hover:text-foreground'
                     }`}
                   >
-                    使用模版
+                    使用回源分组
                   </button>
                 </div>
 
@@ -435,37 +435,49 @@ export default function Websites() {
                   </div>
                 )}
 
-                {/* 使用模版内容 */}
+                {/* 使用回源分组内容 */}
                 {configTab === 'template' && (
                   <div className="space-y-3">
-                    {[
-                      { id: '1', name: '标准回源', description: '使用标准回源配置' },
-                      { id: '2', name: '高可用回源', description: '多源站高可用配置' },
-                      { id: '3', name: '加速回源', description: '优化加速的回源配置' },
-                    ].map((template) => (
-                      <div
-                        key={template.id}
-                        onClick={() => setFormData({ ...formData, template: template.id })}
-                        className={`p-3 border rounded-lg cursor-pointer transition-colors text-sm ${
-                          formData.template === template.id
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="font-medium text-foreground">{template.name}</div>
-                        <div className="text-xs text-muted-foreground mt-1">{template.description}</div>
-                      </div>
-                    ))}
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left py-2 px-2 font-medium text-foreground">名称</th>
+                          <th className="text-left py-2 px-2 font-medium text-foreground">类型</th>
+                          <th className="text-left py-2 px-2 font-medium text-foreground">地址</th>
+                          <th className="text-left py-2 px-2 font-medium text-foreground">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { id: '1', name: '标准回源', type: '主源', address: '192.168.1.1' },
+                          { id: '2', name: '高可用回源', type: '活跃', address: '192.168.1.2' },
+                          { id: '3', name: '加速回源', type: '备源', address: '192.168.1.3' },
+                        ].map((group) => (
+                          <tr
+                            key={group.id}
+                            className="border-b border-border hover:bg-secondary/50 cursor-pointer transition-colors"
+                            onClick={() => setFormData({ ...formData, template: group.id })}
+                          >
+                            <td className="py-2 px-2 text-foreground">{group.name}</td>
+                            <td className="py-2 px-2 text-muted-foreground">{group.type}</td>
+                            <td className="py-2 px-2 text-muted-foreground">{group.address}</td>
+                            <td className="py-2 px-2">
+                              <button className="text-primary text-xs hover:text-primary/80">使用</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>
 
               {/* 底部按钮 */}
               <div className="sticky bottom-0 bg-background border-t border-border px-6 py-4 flex gap-2 justify-end">
-                <Button variant="outline" onClick={resetForm}>
+                <Button variant="outline" onClick={resetForm} className="text-sm">
                   取消
                 </Button>
-                <Button onClick={handleAddWebsite}>添加</Button>
+                <Button onClick={handleAddWebsite} className="text-sm">添加</Button>
               </div>
             </Card>
           </div>

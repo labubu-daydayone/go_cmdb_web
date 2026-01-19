@@ -36,6 +36,7 @@ const navigationItems: NavItem[] = [
     icon: '🌍',
     children: [
       { label: '网站列表', href: '/websites', icon: '📋' },
+      { label: '回源分组', href: '/origin-groups', icon: '🔗' },
       { label: '线路分组', href: '/line-groups', icon: '🔀' },
       { label: '节点列表', href: '/nodes', icon: '🖥' },
       { label: '节点分组', href: '/node-groups', icon: '📋' },
