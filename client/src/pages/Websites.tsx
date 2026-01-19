@@ -1,25 +1,29 @@
-/**
- * 网站管理 - 网站列表页面
- * 显示所有网站信息和管理功能
- */
-
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { generateMockWebsites, Website } from '@/lib/mockData';
+import { generateMockWebsites, Website, OriginIP } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Edit2, Trash2, Eye, Zap } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, Zap, X, Plus as PlusIcon } from 'lucide-react';
 
 type SortField = 'domain' | 'cname' | 'lineGroup' | 'https' | 'status';
 type SortOrder = 'asc' | 'desc';
 
 export default function Websites() {
-  const [websites] = useState<Website[]>(generateMockWebsites());
+  const [websites, setWebsites] = useState<Website[]>(generateMockWebsites());
   const [selectedWebsites, setSelectedWebsites] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('domain');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [formData, setFormData] = useState({
+    domain: '',
+    lineGroup: '线路1',
+    originIPs: [{ ip: '', remark: '' }],
+    redirectEnabled: false,
+    redirectUrl: '',
+    redirectStatusCode: 301 as 301 | 302,
+  });
 
   const handleSelectWebsite = (websiteId: string) => {
     const newSelected = new Set(selectedWebsites);
@@ -48,49 +52,91 @@ export default function Websites() {
     }
   };
 
-  const baseFilteredWebsites = websites.filter(website => {
-    const matchesSearch = website.domain.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || website.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
-
-  const filteredWebsites = [...baseFilteredWebsites].sort((a, b) => {
-    let aValue: any = a[sortField];
-    let bValue: any = b[sortField];
-
-    if (typeof aValue === 'string') {
-      aValue = aValue.toLowerCase();
-      bValue = bValue.toLowerCase();
-    }
-
-    if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-    if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-    return 0;
-  });
-
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) {
-      return <span className="ml-1 text-muted-foreground text-xs">⇅</span>;
-    }
-    return <span className="ml-1 text-primary text-xs">{sortOrder === 'asc' ? '↑' : '↓'}</span>;
+  const handleAddOriginIP = () => {
+    setFormData({
+      ...formData,
+      originIPs: [...formData.originIPs, { ip: '', remark: '' }],
+    });
   };
 
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-700';
-      case 'inactive':
-        return 'bg-gray-100 text-gray-700';
-      case 'maintenance':
-        return 'bg-yellow-100 text-yellow-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
+  const handleRemoveOriginIP = (index: number) => {
+    setFormData({
+      ...formData,
+      originIPs: formData.originIPs.filter((_, i) => i !== index),
+    });
+  };
+
+  const handleOriginIPChange = (index: number, field: 'ip' | 'remark', value: string) => {
+    const newIPs = [...formData.originIPs];
+    newIPs[index][field] = value;
+    setFormData({ ...formData, originIPs: newIPs });
+  };
+
+  const handleAddWebsite = () => {
+    if (formData.domain.trim()) {
+      const newWebsite: Website = {
+        id: `website-${Date.now()}`,
+        domain: formData.domain,
+        cname: `cdn-${Date.now()}.example.com`,
+        lineGroup: formData.lineGroup,
+        https: true,
+        status: 'active',
+        createdDate: new Date().toISOString().split('T')[0],
+        originConfig: {
+          id: `origin-${Date.now()}`,
+          websiteId: `website-${Date.now()}`,
+          originIPs: formData.originIPs
+            .filter(o => o.ip.trim())
+            .map((o, i) => ({
+              id: `origin-ip-${Date.now()}-${i}`,
+              ip: o.ip,
+              remark: o.remark,
+              enabled: true,
+            })),
+          redirectEnabled: formData.redirectEnabled,
+          redirectUrl: formData.redirectUrl,
+          redirectStatusCode: formData.redirectStatusCode,
+          createdDate: new Date().toISOString().split('T')[0],
+        },
+      };
+      setWebsites([...websites, newWebsite]);
+      setShowAddForm(false);
+      setFormData({
+        domain: '',
+        lineGroup: '线路1',
+        originIPs: [{ ip: '', remark: '' }],
+        redirectEnabled: false,
+        redirectUrl: '',
+        redirectStatusCode: 301,
+      });
     }
   };
 
-  const getHttpsBadgeColor = (https: boolean) => {
-    return https ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+  const handleDeleteWebsite = (websiteId: string) => {
+    setWebsites(websites.filter(w => w.id !== websiteId));
+    setSelectedWebsites(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(websiteId);
+      return newSet;
+    });
   };
+
+  const filteredWebsites = websites
+    .filter(w => {
+      const matchesSearch = w.domain.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = filterStatus === 'all' || w.status === filterStatus;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      let aVal: any = a[sortField];
+      let bVal: any = b[sortField];
+      if (sortField === 'https') {
+        aVal = a.https ? 1 : 0;
+        bVal = b.https ? 1 : 0;
+      }
+      const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
 
   const breadcrumbs = [
     { label: '首页', href: '/' },
@@ -101,16 +147,14 @@ export default function Websites() {
   return (
     <DashboardLayout breadcrumbs={breadcrumbs} currentPage="网站列表">
       <div className="space-y-6">
-        {/* 页面标题和操作 */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">网站列表</h1>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setShowAddForm(true)}>
             <Plus size={16} />
             添加网站
           </Button>
         </div>
 
-        {/* 搜索和过滤 */}
         <div className="flex items-center gap-4">
           <div className="flex-1 relative">
             <input
@@ -129,11 +173,9 @@ export default function Websites() {
             <option value="all">全部状态</option>
             <option value="active">活跃</option>
             <option value="inactive">非活跃</option>
-            <option value="maintenance">维护中</option>
           </select>
         </div>
 
-        {/* 网站列表 */}
         <Card className="border border-border overflow-hidden">
           <div className="px-6 py-3 border-b border-border flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
@@ -144,7 +186,7 @@ export default function Websites() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-secondary/30">
-                  <th className="text-center py-3 px-4 font-semibold text-foreground w-12">
+                  <th className="px-6 py-3 text-left font-semibold text-foreground w-12">
                     <input
                       type="checkbox"
                       checked={selectedWebsites.size === filteredWebsites.length && filteredWebsites.length > 0}
@@ -152,37 +194,37 @@ export default function Websites() {
                       className="w-4 h-4 cursor-pointer"
                     />
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('domain')}>
-                    <div className="flex items-center">
-                      域名
-                      <SortIcon field="domain" />
-                    </div>
+                  <th
+                    className="px-6 py-3 text-left font-semibold text-foreground cursor-pointer hover:bg-secondary/50"
+                    onClick={() => handleSort('domain')}
+                  >
+                    域名 {sortField === 'domain' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('cname')}>
-                    <div className="flex items-center">
-                      CNAME
-                      <SortIcon field="cname" />
-                    </div>
+                  <th
+                    className="px-6 py-3 text-left font-semibold text-foreground cursor-pointer hover:bg-secondary/50"
+                    onClick={() => handleSort('cname')}
+                  >
+                    CNAME {sortField === 'cname' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('lineGroup')}>
-                    <div className="flex items-center">
-                      线路组
-                      <SortIcon field="lineGroup" />
-                    </div>
+                  <th
+                    className="px-6 py-3 text-left font-semibold text-foreground cursor-pointer hover:bg-secondary/50"
+                    onClick={() => handleSort('lineGroup')}
+                  >
+                    线路 {sortField === 'lineGroup' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('https')}>
-                    <div className="flex items-center">
-                      HTTPS
-                      <SortIcon field="https" />
-                    </div>
+                  <th
+                    className="px-6 py-3 text-left font-semibold text-foreground cursor-pointer hover:bg-secondary/50"
+                    onClick={() => handleSort('https')}
+                  >
+                    HTTPS {sortField === 'https' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('status')}>
-                    <div className="flex items-center">
-                      状态
-                      <SortIcon field="status" />
-                    </div>
+                  <th
+                    className="px-6 py-3 text-left font-semibold text-foreground cursor-pointer hover:bg-secondary/50"
+                    onClick={() => handleSort('status')}
+                  >
+                    状态 {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">操作</th>
+                  <th className="px-6 py-3 text-left font-semibold text-foreground">操作</th>
                 </tr>
               </thead>
               <tbody>
@@ -193,7 +235,7 @@ export default function Websites() {
                       selectedWebsites.has(website.id) ? 'bg-primary/10' : index % 2 === 0 ? 'bg-background' : 'bg-secondary/10'
                     }`}
                   >
-                    <td className="text-center py-3 px-4">
+                    <td className="px-6 py-3 text-center">
                       <input
                         type="checkbox"
                         checked={selectedWebsites.has(website.id)}
@@ -201,20 +243,24 @@ export default function Websites() {
                         className="w-4 h-4 cursor-pointer"
                       />
                     </td>
-                    <td className="py-3 px-4 font-medium text-foreground">{website.domain}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{website.cname}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{website.lineGroup}</td>
-                    <td className="py-3 px-4">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getHttpsBadgeColor(website.https)}`}>
-                        {website.https ? '已启用' : '已禁用'}
-                      </span>
+                    <td className="px-6 py-3 font-medium text-foreground">{website.domain}</td>
+                    <td className="px-6 py-3 text-muted-foreground text-xs font-mono">{website.cname}</td>
+                    <td className="px-6 py-3 text-muted-foreground">{website.lineGroup}</td>
+                    <td className="px-6 py-3">
+                      {website.https ? (
+                        <span className="inline-block px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">有效</span>
+                      ) : (
+                        <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">无</span>
+                      )}
                     </td>
-                    <td className="py-3 px-4">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(website.status)}`}>
-                        {website.status === 'active' ? '活跃' : website.status === 'inactive' ? '非活跃' : '维护中'}
-                      </span>
+                    <td className="px-6 py-3">
+                      {website.status === 'active' ? (
+                        <span className="inline-block px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">活跃</span>
+                      ) : (
+                        <span className="inline-block px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">非活跃</span>
+                      )}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="px-6 py-3">
                       <div className="flex items-center gap-2">
                         <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
                           <Edit2 size={16} className="text-muted-foreground" />
@@ -222,7 +268,11 @@ export default function Websites() {
                         <button className="p-1 hover:bg-secondary rounded transition-colors" title="清除缓存">
                           <Zap size={16} className="text-muted-foreground" />
                         </button>
-                        <button className="p-1 hover:bg-red-100 rounded transition-colors" title="删除">
+                        <button
+                          onClick={() => handleDeleteWebsite(website.id)}
+                          className="p-1 hover:bg-red-100 rounded transition-colors"
+                          title="删除"
+                        >
                           <Trash2 size={16} className="text-red-600" />
                         </button>
                       </div>
@@ -233,6 +283,155 @@ export default function Websites() {
             </table>
           </div>
         </Card>
+
+        {showAddForm && (
+          <Card className="border border-border p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-foreground">添加网站</h2>
+              <button
+                onClick={() => {
+                  setShowAddForm(false);
+                  setFormData({
+                    domain: '',
+                    lineGroup: '线路1',
+                    originIPs: [{ ip: '', remark: '' }],
+                    redirectEnabled: false,
+                    redirectUrl: '',
+                    redirectStatusCode: 301,
+                  });
+                }}
+                className="p-1 hover:bg-secondary rounded transition-colors"
+              >
+                <X size={20} className="text-muted-foreground" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">域名</label>
+                <input
+                  type="text"
+                  value={formData.domain}
+                  onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+                  placeholder="输入域名"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">线路</label>
+                <select
+                  value={formData.lineGroup}
+                  onChange={(e) => setFormData({ ...formData, lineGroup: e.target.value })}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option>线路1</option>
+                  <option>线路2</option>
+                  <option>线路3</option>
+                  <option>线路4</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-foreground">回源地址</label>
+                <button
+                  onClick={handleAddOriginIP}
+                  className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 transition-colors"
+                >
+                  <PlusIcon size={14} />
+                  添加 IP
+                </button>
+              </div>
+              {formData.originIPs.map((ip, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={ip.ip}
+                    onChange={(e) => handleOriginIPChange(index, 'ip', e.target.value)}
+                    placeholder="输入 IP 地址"
+                    className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <input
+                    type="text"
+                    value={ip.remark}
+                    onChange={(e) => handleOriginIPChange(index, 'remark', e.target.value)}
+                    placeholder="备注（如：主源站）"
+                    className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  {formData.originIPs.length > 1 && (
+                    <button
+                      onClick={() => handleRemoveOriginIP(index)}
+                      className="p-2 hover:bg-red-100 rounded transition-colors"
+                    >
+                      <X size={16} className="text-red-600" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="redirectEnabled"
+                  checked={formData.redirectEnabled}
+                  onChange={(e) => setFormData({ ...formData, redirectEnabled: e.target.checked })}
+                  className="w-4 h-4 cursor-pointer"
+                />
+                <label htmlFor="redirectEnabled" className="text-sm font-medium text-foreground cursor-pointer">
+                  启用重定向
+                </label>
+              </div>
+              {formData.redirectEnabled && (
+                <div className="space-y-3 pl-7">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">重定向地址</label>
+                    <input
+                      type="text"
+                      value={formData.redirectUrl}
+                      onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
+                      placeholder="输入重定向 URL"
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">重定向状态码</label>
+                    <select
+                      value={formData.redirectStatusCode}
+                      onChange={(e) => setFormData({ ...formData, redirectStatusCode: parseInt(e.target.value) as 301 | 302 })}
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value={301}>301 (永久重定向)</option>
+                      <option value={302}>302 (临时重定向)</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowAddForm(false);
+                  setFormData({
+                    domain: '',
+                    lineGroup: '线路1',
+                    originIPs: [{ ip: '', remark: '' }],
+                    redirectEnabled: false,
+                    redirectUrl: '',
+                    redirectStatusCode: 301,
+                  });
+                }}
+              >
+                取消
+              </Button>
+              <Button onClick={handleAddWebsite}>添加</Button>
+            </div>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );

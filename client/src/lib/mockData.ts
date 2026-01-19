@@ -1,4 +1,6 @@
-// 数据接口定义
+/**
+ * 模拟数据生成器
+ */
 
 export interface Domain {
   id: string;
@@ -10,6 +12,23 @@ export interface Domain {
   createdDate: string;
 }
 
+export interface OriginIP {
+  id: string;
+  ip: string;
+  remark: string;
+  enabled: boolean;
+}
+
+export interface OriginConfig {
+  id: string;
+  websiteId: string;
+  originIPs: OriginIP[];
+  redirectEnabled: boolean;
+  redirectUrl?: string;
+  redirectStatusCode?: 301 | 302;
+  createdDate: string;
+}
+
 export interface Website {
   id: string;
   domain: string;
@@ -18,6 +37,7 @@ export interface Website {
   https: boolean;
   status: 'active' | 'inactive';
   createdDate: string;
+  originConfig?: OriginConfig;
 }
 
 export interface Server {
@@ -97,15 +117,36 @@ export const generateMockWebsites = (): Website[] => {
   const domains = ['example.com', 'myapp.io', 'company.cn', 'service.net', 'platform.org', 'cloud.dev', 'api.tech', 'data.ai', 'web.store', 'mobile.app'];
   const lineGroups = ['线路1', '线路2', '线路3', '线路4'];
 
-  return domains.map((domain, index) => ({
-    id: `website-${index + 1}`,
-    domain,
-    cname: `cdn-${index + 1}.example.com`,
-    lineGroup: lineGroups[index % lineGroups.length],
-    https: index % 2 === 0,
-    status: index % 3 === 0 ? 'inactive' : 'active',
-    createdDate: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-  }));
+  return domains.map((domain, index) => {
+    const originIPs: OriginIP[] = [];
+    for (let i = 0; i < 2; i++) {
+      originIPs.push({
+        id: `origin-${index}-${i}`,
+        ip: `192.168.${index}.${100 + i}`,
+        remark: i === 0 ? '主源站' : '备源站',
+        enabled: true,
+      });
+    }
+
+    return {
+      id: `website-${index + 1}`,
+      domain,
+      cname: `cdn-${index + 1}.example.com`,
+      lineGroup: lineGroups[index % lineGroups.length],
+      https: index % 2 === 0,
+      status: index % 3 === 0 ? 'inactive' : 'active',
+      createdDate: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      originConfig: {
+        id: `origin-config-${index + 1}`,
+        websiteId: `website-${index + 1}`,
+        originIPs,
+        redirectEnabled: index % 3 === 0,
+        redirectUrl: index % 3 === 0 ? `https://redirect-${index}.example.com` : undefined,
+        redirectStatusCode: index % 3 === 0 ? (index % 2 === 0 ? 301 : 302) : undefined,
+        createdDate: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      },
+    };
+  });
 };
 
 // 生成假服务器数据
@@ -134,7 +175,6 @@ export const generateMockLineGroups = (): LineGroup[] => {
     { name: '华南线路', description: '广东、深圳、福建等地区' },
     { name: '国际线路', description: '新加坡、日本、香港等地区' },
   ];
-
   return groups.map((group, index) => ({
     id: `line-${index + 1}`,
     name: group.name,
@@ -161,7 +201,6 @@ export const generateMockDNSConfigs = (): DNSConfig[] => {
 export const generateMockNodes = (): Node[] => {
   const lineGroupIds = ['line-1', 'line-2', 'line-3', 'line-4'];
   const nodes: Node[] = [];
-
   for (let i = 1; i <= 12; i++) {
     const subIPCount = Math.floor(Math.random() * 3) + 1;
     const subIPs: SubIP[] = [];
@@ -173,7 +212,6 @@ export const generateMockNodes = (): Node[] => {
         createdDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       });
     }
-
     nodes.push({
       id: `node-${i}`,
       name: `节点 ${i}`,
@@ -186,7 +224,6 @@ export const generateMockNodes = (): Node[] => {
       subIPs,
     });
   }
-
   return nodes;
 };
 
@@ -194,7 +231,6 @@ export const generateMockNodes = (): Node[] => {
 export const generateMockNodeGroups = (): NodeGroup[] => {
   const groupNames = ['东中国节点', '西南节点', '华东节点', '华北节点'];
   const groups: NodeGroup[] = [];
-
   for (let i = 0; i < groupNames.length; i++) {
     const subIPCount = Math.floor(Math.random() * 4) + 2;
     const subIPs: SubIP[] = [];
@@ -206,7 +242,6 @@ export const generateMockNodeGroups = (): NodeGroup[] => {
         createdDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       });
     }
-
     groups.push({
       id: `group-${i + 1}`,
       name: groupNames[i],
@@ -215,7 +250,6 @@ export const generateMockNodeGroups = (): NodeGroup[] => {
       createdDate: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     });
   }
-
   return groups;
 };
 
@@ -223,18 +257,15 @@ export const generateMockNodeGroups = (): NodeGroup[] => {
 export const generateTimeSeriesData = (days: number = 30) => {
   const data = [];
   const now = new Date();
-
   for (let i = days; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
     const dateStr = date.toISOString().split('T')[0];
-
     data.push({
       date: dateStr,
       requests: Math.floor(Math.random() * 20000) + 5000,
       errors: Math.floor(Math.random() * 500),
     });
   }
-
   return data;
 };
