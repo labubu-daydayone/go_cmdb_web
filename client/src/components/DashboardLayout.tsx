@@ -5,6 +5,7 @@
  */
 
 import { ReactNode, useState } from 'react';
+import * as React from 'react';
 import { Link, useLocation } from 'wouter';
 import { Menu, X, ChevronRight, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -54,6 +55,19 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
   const [location] = useLocation();
+
+  // 自动展开包含当前路由的父菜单
+  React.useEffect(() => {
+    for (const item of navigationItems) {
+      if (item.children) {
+        const hasActiveChild = item.children.some(child => child.href === location);
+        if (hasActiveChild) {
+          setExpandedMenu(item.label);
+          return;
+        }
+      }
+    }
+  }, [location]);
 
   return (
     <div className="flex h-screen bg-background">
