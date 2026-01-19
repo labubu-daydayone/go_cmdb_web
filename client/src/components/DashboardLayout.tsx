@@ -56,19 +56,20 @@ export default function DashboardLayout({
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
   const [location] = useLocation();
 
-  // 自动展开包含当前路由的父菜单
+  // 仅在初始加载时自动展开包含当前路由的父菜单，之后菜单状态由用户控制
   React.useEffect(() => {
-    for (const item of navigationItems) {
-      if (item.children) {
-        const hasActiveChild = item.children.some(child => child.href === location);
-        if (hasActiveChild) {
-          // 只在菜单未展开时才更新状态，避免不必要的重新渲染
-          setExpandedMenu(prev => prev === item.label ? prev : item.label);
-          return;
+    if (expandedMenu === null) {
+      for (const item of navigationItems) {
+        if (item.children) {
+          const hasActiveChild = item.children.some(child => child.href === location);
+          if (hasActiveChild) {
+            setExpandedMenu(item.label);
+            return;
+          }
         }
       }
     }
-  }, [location]);
+  }, []);
 
   return (
     <div className="flex h-screen bg-background">
