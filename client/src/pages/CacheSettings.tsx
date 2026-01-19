@@ -181,136 +181,125 @@ export default function CacheSettings() {
         </div>
 
         {/* 缓存设置列表 */}
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-secondary/50">
-                  <th className="px-6 py-3 text-left font-semibold text-foreground w-12"></th>
-                  <th className="px-6 py-3 text-left font-semibold text-foreground">缓存名称</th>
-                  <th className="px-6 py-3 text-left font-semibold text-foreground">说明</th>
-                  <th className="px-6 py-3 text-center font-semibold text-foreground">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedSettings.length > 0 ? (
-                  paginatedSettings.map((setting) => (
-                    <div key={setting.id}>
-                      <tr className="border-b border-border hover:bg-secondary/30 transition-colors">
-                        <td className="px-6 py-3 text-center">
-                          <button
-                            onClick={() =>
-                              setExpandedId(expandedId === setting.id ? null : setting.id)
-                            }
-                            className="p-1 hover:bg-secondary rounded transition-colors"
-                          >
-                            {expandedId === setting.id ? (
-                              <ChevronDown size={16} className="text-muted-foreground" />
-                            ) : (
-                              <ChevronRight size={16} className="text-muted-foreground" />
-                            )}
-                          </button>
-                        </td>
-                        <td className="px-6 py-3 text-foreground font-medium">{setting.name}</td>
-                        <td className="px-6 py-3 text-muted-foreground">{setting.description}</td>
-                        <td className="px-6 py-3 text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <button
-                              onClick={() => handleEditSetting(setting)}
-                              className="p-1 hover:bg-secondary rounded transition-colors"
-                              title="编辑"
-                            >
-                              <Edit2 size={16} className="text-muted-foreground" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteSetting(setting.id)}
-                              className="p-1 hover:bg-secondary rounded transition-colors"
-                              title="删除"
-                            >
-                              <Trash2 size={16} className="text-destructive" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-
-                      {/* 展开的详细信息 */}
-                      {expandedId === setting.id && (
-                        <tr className="border-b border-border bg-secondary/10">
-                          <td colSpan={4} className="px-6 py-4">
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                  <label className="block text-sm font-medium text-foreground mb-2">
-                                    匹配规则类型
-                                  </label>
-                                  <div className="text-sm text-muted-foreground px-3 py-2 bg-background rounded-lg border border-border">
-                                    {setting.ruleType === 'directory' ? '目录' : '文件'}
-                                  </div>
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-foreground mb-2">
-                                    规则
-                                  </label>
-                                  <div className="text-sm text-muted-foreground px-3 py-2 bg-background rounded-lg border border-border font-mono">
-                                    {setting.pattern}
-                                  </div>
-                                </div>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-foreground mb-2">
-                                  TTL (秒)
-                                </label>
-                                <div className="text-sm text-muted-foreground px-3 py-2 bg-background rounded-lg border border-border">
-                                  {setting.ttl}
-                                </div>
-                              </div>
-                              <div className="pt-2 border-t border-border">
-                                <p className="text-xs text-muted-foreground">
-                                  添加时间：{setting.addedTime}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
+        <div className="space-y-3">
+          {paginatedSettings.length > 0 ? (
+            paginatedSettings.map((setting) => (
+              <Card
+                key={setting.id}
+                className="p-4 cursor-pointer hover:bg-secondary/30 transition-colors"
+              >
+                {/* 列表项头部 */}
+                <div
+                  onClick={() =>
+                    setExpandedId(expandedId === setting.id ? null : setting.id)
+                  }
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex-1 flex items-center gap-4">
+                    <button className="p-1 hover:bg-secondary rounded transition-colors">
+                      {expandedId === setting.id ? (
+                        <ChevronDown size={20} className="text-muted-foreground" />
+                      ) : (
+                        <ChevronRight size={20} className="text-muted-foreground" />
                       )}
+                    </button>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground">{setting.name}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{setting.description}</p>
                     </div>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
-                      暂无缓存设置
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </div>
 
-          {/* 分页 */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-border">
-              <span className="text-sm text-muted-foreground">
-                {listPage} / {totalPages}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setListPage(Math.max(1, listPage - 1))}
-                  disabled={listPage === 1}
-                  className="px-3 py-1 border border-border rounded-lg text-xs hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  上一页
-                </button>
-                <button
-                  onClick={() => setListPage(Math.min(totalPages, listPage + 1))}
-                  disabled={listPage === totalPages}
-                  className="px-3 py-1 border border-border rounded-lg text-xs hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  下一页
-                </button>
-              </div>
-            </div>
+                  {/* 操作按钮 */}
+                  <div
+                    className="flex items-center gap-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => handleEditSetting(setting)}
+                      className="p-2 hover:bg-secondary rounded transition-colors"
+                      title="编辑"
+                    >
+                      <Edit2 size={16} className="text-muted-foreground" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSetting(setting.id)}
+                      className="p-2 hover:bg-secondary rounded transition-colors"
+                      title="删除"
+                    >
+                      <Trash2 size={16} className="text-destructive" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 展开的详细信息 */}
+                {expandedId === setting.id && (
+                  <div className="mt-4 pt-4 border-t border-border space-y-4">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          匹配规则类型
+                        </label>
+                        <div className="text-sm text-muted-foreground px-3 py-2 bg-secondary/30 rounded-lg border border-border">
+                          {setting.ruleType === 'directory' ? '目录' : '文件'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          规则
+                        </label>
+                        <div className="text-sm text-muted-foreground px-3 py-2 bg-secondary/30 rounded-lg border border-border font-mono">
+                          {setting.pattern}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        TTL (秒)
+                      </label>
+                      <div className="text-sm text-muted-foreground px-3 py-2 bg-secondary/30 rounded-lg border border-border">
+                        {setting.ttl}
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-border">
+                      <p className="text-xs text-muted-foreground">
+                        添加时间：{setting.addedTime}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            ))
+          ) : (
+            <Card className="p-8 text-center">
+              <p className="text-muted-foreground">暂无缓存设置</p>
+            </Card>
           )}
-        </Card>
+        </div>
+
+        {/* 分页 */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-4">
+            <span className="text-sm text-muted-foreground">
+              {listPage} / {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setListPage(Math.max(1, listPage - 1))}
+                disabled={listPage === 1}
+                className="px-3 py-1 border border-border rounded-lg text-xs hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                上一页
+              </button>
+              <button
+                onClick={() => setListPage(Math.min(totalPages, listPage + 1))}
+                disabled={listPage === totalPages}
+                className="px-3 py-1 border border-border rounded-lg text-xs hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                下一页
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 添加/编辑表单 */}
         {showAddForm && (
