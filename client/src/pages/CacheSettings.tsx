@@ -297,7 +297,7 @@ export default function CacheSettings() {
         {/* 添加/编辑表单 */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black/30 flex items-end z-50 animate-in fade-in duration-200">
-            <Card className="w-1/2 rounded-t-2xl border-0 p-0 h-auto max-h-2/3 overflow-y-auto bg-background animate-in slide-in-from-bottom duration-300 ml-auto">
+            <Card className="w-1/2 rounded-t-2xl border-0 p-0 h-3/4 overflow-y-auto bg-background animate-in slide-in-from-bottom duration-300 ml-auto">
               {/* 表单头部 */}
               <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
                 <h2 className="text-base font-bold text-foreground">
