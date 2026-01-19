@@ -9,6 +9,7 @@ interface CacheRule {
   ruleType: 'directory' | 'suffix' | 'file';
   pattern: string;
   ttl: number;
+  forceCache?: boolean;
 }
 
 interface CacheSetting {
@@ -92,6 +93,7 @@ export default function CacheSettings() {
       ruleType: 'directory',
       pattern: '',
       ttl: 3600,
+      forceCache: false,
     };
     setFormData({
       ...formData,
@@ -258,6 +260,11 @@ export default function CacheSettings() {
                               </span>
                               <span className="font-mono">{rule.pattern}</span>
                               <span className="text-muted-foreground ml-2">({rule.ttl}s)</span>
+                              {rule.forceCache && (
+                                <span className="inline-block bg-primary/20 text-primary px-2 py-1 rounded ml-2 text-xs">
+                                  强制缓存
+                                </span>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -413,6 +420,21 @@ export default function CacheSettings() {
                             min="1"
                             className="w-32 px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                           />
+                        </div>
+
+                        {/* 强制缓存勾选框 */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={rule.forceCache || false}
+                            onChange={(e) =>
+                              handleUpdateRule(rule.id, { forceCache: e.target.checked })
+                            }
+                            className="w-4 h-4 cursor-pointer"
+                          />
+                          <label className="text-sm font-medium text-foreground cursor-pointer">
+                            强制缓存
+                          </label>
                         </div>
 
                         {/* 删除按钮 */}
