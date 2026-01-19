@@ -313,47 +313,35 @@ export default function CacheSettings() {
 
               {/* 表单内容 */}
               <div className="p-6 space-y-6">
-                {/* 缓存名称 */}
-                <div className="flex items-end gap-4">
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      缓存名称 <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="例如：首页缓存"
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
+                {/* 缓存名称 - label和input在一行 */}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-foreground w-32 flex-shrink-0">
+                    缓存名称: <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="例如：首页缓存"
+                    className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
                 </div>
 
                 {/* 匹配规则 */}
                 <div>
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-foreground">匹配规则</h3>
-                  </div>
-
-                  {/* 规则表头 */}
-                  <div className="grid grid-cols-12 gap-4 mb-3 px-3 py-2 bg-secondary/20 rounded-lg">
-                    <div className="col-span-3">
-                      <label className="text-xs font-medium text-muted-foreground">类型</label>
-                    </div>
-                    <div className="col-span-6">
-                      <label className="text-xs font-medium text-muted-foreground">规则</label>
-                    </div>
-                    <div className="col-span-2">
-                      <label className="text-xs font-medium text-muted-foreground">TTL (秒)</label>
-                    </div>
-                    <div className="col-span-1"></div>
-                  </div>
+                  <label className="block text-sm font-medium text-foreground mb-4">
+                    匹配规则:
+                  </label>
 
                   {/* 规则行 */}
                   <div className="space-y-3">
                     {formData.rules.map((rule, index) => (
-                      <div key={rule.id} className="grid grid-cols-12 gap-4">
-                        <div className="col-span-3">
+                      <div key={rule.id} className="flex items-center gap-4">
+                        {/* 类型 */}
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-foreground w-12 flex-shrink-0">
+                            类型:
+                          </label>
                           <select
                             value={rule.ruleType}
                             onChange={(e) =>
@@ -361,14 +349,18 @@ export default function CacheSettings() {
                                 ruleType: e.target.value as 'file' | 'directory',
                               })
                             }
-                            className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                           >
                             <option value="directory">目录</option>
                             <option value="file">文件</option>
                           </select>
                         </div>
 
-                        <div className="col-span-6">
+                        {/* 规则 */}
+                        <div className="flex items-center gap-2 flex-1">
+                          <label className="text-sm font-medium text-foreground w-12 flex-shrink-0">
+                            规则:
+                          </label>
                           <input
                             type="text"
                             value={rule.pattern}
@@ -377,14 +369,18 @@ export default function CacheSettings() {
                             }
                             placeholder={
                               rule.ruleType === 'directory'
-                                ? '例如：/api/'
-                                : '例如：png|jpg'
+                                ? '/api/'
+                                : 'png|jpg'
                             }
-                            className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                         </div>
 
-                        <div className="col-span-2">
+                        {/* TTL */}
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-foreground w-12 flex-shrink-0">
+                            TTL:
+                          </label>
                           <input
                             type="number"
                             value={rule.ttl}
@@ -392,19 +388,18 @@ export default function CacheSettings() {
                               handleUpdateRule(rule.id, { ttl: parseInt(e.target.value) })
                             }
                             min="1"
-                            className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-24 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                         </div>
 
-                        <div className="col-span-1 flex items-center justify-center">
-                          <button
-                            onClick={() => handleRemoveRule(rule.id)}
-                            className="p-1 hover:bg-destructive/10 rounded transition-colors"
-                            title="删除规则"
-                          >
-                            <Trash2 size={16} className="text-destructive" />
-                          </button>
-                        </div>
+                        {/* 删除按钮 */}
+                        <button
+                          onClick={() => handleRemoveRule(rule.id)}
+                          className="p-1 hover:bg-destructive/10 rounded transition-colors flex-shrink-0"
+                          title="删除规则"
+                        >
+                          <Trash2 size={16} className="text-destructive" />
+                        </button>
                       </div>
                     ))}
                   </div>
