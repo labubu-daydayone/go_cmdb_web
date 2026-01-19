@@ -119,8 +119,8 @@ export default function Domains() {
                   {selectedDomains.size > 0 ? `已选择 ${selectedDomains.size} 个` : `共 ${filteredDomains.length} 个`}
                 </span>
               </div>
-              <div className="overflow-x-auto w-full">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+                <table className="w-auto text-sm">
                   <thead>
                     <tr className="border-b border-border bg-secondary/30">
                       <th className="text-center py-3 px-4 font-semibold text-foreground w-12">
@@ -131,11 +131,11 @@ export default function Domains() {
                           className="w-4 h-4 cursor-pointer"
                         />
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">域名</th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">状态</th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">过期日期</th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">SSL</th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">操作</th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground">域名</th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground">状态</th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground">过期日期</th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground">SSL</th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground">操作</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -157,7 +157,7 @@ export default function Domains() {
                             className="w-4 h-4 cursor-pointer"
                           />
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap cursor-pointer" onClick={() => setSelectedDomain(domain)}>
+                        <td className="py-3 px-4 cursor-pointer" onClick={() => setSelectedDomain(domain)}>
                           <div className="flex items-center gap-2">
                             <span className="text-lg">🌐</span>
                             <div>
@@ -166,18 +166,18 @@ export default function Domains() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap cursor-pointer" onClick={() => setSelectedDomain(domain)}>
+                        <td className="py-3 px-4 cursor-pointer" onClick={() => setSelectedDomain(domain)}>
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(domain.status)}`}>
                             {domain.status === 'active' ? '活跃' : domain.status === 'inactive' ? '非活跃' : '已过期'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-muted-foreground whitespace-nowrap cursor-pointer" onClick={() => setSelectedDomain(domain)}>{domain.expiryDate}</td>
-                        <td className="py-3 px-4 whitespace-nowrap cursor-pointer" onClick={() => setSelectedDomain(domain)}>
+                        <td className="py-3 px-4 text-muted-foreground cursor-pointer" onClick={() => setSelectedDomain(domain)}>{domain.expiryDate}</td>
+                        <td className="py-3 px-4 cursor-pointer" onClick={() => setSelectedDomain(domain)}>
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSSLBadgeColor(domain.sslStatus)}`}>
                             {domain.sslStatus === 'valid' ? '有效' : domain.sslStatus === 'warning' ? '警告' : '已过期'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
                             <button className="p-1 hover:bg-secondary rounded transition-colors" title="查看">
                               <Eye size={16} className="text-muted-foreground" />
