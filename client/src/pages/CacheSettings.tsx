@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 
 interface CacheRule {
   id: string;
-  ruleType: 'file' | 'directory';
+  ruleType: 'directory' | 'suffix' | 'file';
   pattern: string;
   ttl: number;
 }
@@ -64,6 +64,19 @@ export default function CacheSettings() {
     rules: [{ id: '0', ruleType: 'directory', pattern: '', ttl: 3600 }],
   });
 
+  const getPlaceholder = (ruleType: string) => {
+    switch (ruleType) {
+      case 'directory':
+        return '/api/';
+      case 'suffix':
+        return 'png|jpg|txt';
+      case 'file':
+        return '/down/doc.txt';
+      default:
+        return '';
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -84,6 +97,19 @@ export default function CacheSettings() {
       ...formData,
       rules: [...formData.rules, newRule],
     });
+  };
+
+  const getTypeLabel = (ruleType: string) => {
+    switch (ruleType) {
+      case 'directory':
+        return '目录';
+      case 'suffix':
+        return '后缀';
+      case 'file':
+        return '文件';
+      default:
+        return '';
+    }
   };
 
   const handleRemoveRule = (ruleId: string) => {
@@ -228,7 +254,7 @@ export default function CacheSettings() {
                           {setting.rules.map((rule) => (
                             <div key={rule.id} className="text-xs">
                               <span className="inline-block bg-secondary/50 px-2 py-1 rounded mr-2">
-                                {rule.ruleType === 'directory' ? '目录' : '文件'}
+                                {getTypeLabel(rule.ruleType)}
                               </span>
                               <span className="font-mono">{rule.pattern}</span>
                               <span className="text-muted-foreground ml-2">({rule.ttl}s)</span>
@@ -314,8 +340,8 @@ export default function CacheSettings() {
               {/* 表单内容 - 可滚动 */}
               <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
                 {/* 缓存名称 */}
-                <div className="flex items-center gap-6">
-                  <label className="text-sm font-medium text-foreground w-32 flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-medium text-foreground flex-shrink-0">
                     缓存名称: <span className="text-destructive">*</span>
                   </label>
                   <input
@@ -346,12 +372,13 @@ export default function CacheSettings() {
                             value={rule.ruleType}
                             onChange={(e) =>
                               handleUpdateRule(rule.id, {
-                                ruleType: e.target.value as 'file' | 'directory',
+                                ruleType: e.target.value as 'directory' | 'suffix' | 'file',
                               })
                             }
                             className="px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary min-w-32"
                           >
                             <option value="directory">目录</option>
+                            <option value="suffix">后缀</option>
                             <option value="file">文件</option>
                           </select>
                         </div>
@@ -367,11 +394,7 @@ export default function CacheSettings() {
                             onChange={(e) =>
                               handleUpdateRule(rule.id, { pattern: e.target.value })
                             }
-                            placeholder={
-                              rule.ruleType === 'directory'
-                                ? '/api/'
-                                : 'png|jpg'
-                            }
+                            placeholder={getPlaceholder(rule.ruleType)}
                             className="flex-1 px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                         </div>
