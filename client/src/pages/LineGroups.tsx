@@ -13,11 +13,16 @@ import { Plus, Edit2, Trash2, Network, X } from 'lucide-react';
 type SortField = 'name' | 'description' | 'cname' | 'nodeCount';
 type SortOrder = 'asc' | 'desc';
 
+interface NodeGroup {
+  id: string;
+  name: string;
+}
+
 interface FormData {
   name: string;
+  cnamePrefix: string;
   domain: string;
-  nodeGroups: string[];
-  cname: string;
+  nodeGroups: NodeGroup[];
 }
 
 export default function LineGroups() {
@@ -29,10 +34,18 @@ export default function LineGroups() {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     name: '',
+    cnamePrefix: '',
     domain: '',
     nodeGroups: [],
-    cname: '',
   });
+
+  // 可用的节点分组列表
+  const availableNodeGroups: NodeGroup[] = [
+    { id: '1', name: '节点分组1' },
+    { id: '2', name: '节点分组2' },
+    { id: '3', name: '节点分组3' },
+    { id: '4', name: '节点分组4' },
+  ];
 
   const handleSelectLineGroup = (lineGroupId: string) => {
     const newSelected = new Set(selectedLineGroups);
@@ -89,28 +102,43 @@ export default function LineGroups() {
     return <span className="ml-1 text-primary text-xs">{sortOrder === 'asc' ? '↑' : '↓'}</span>;
   };
 
-  // 生成随机 CNAME
-  const generateCNAME = () => {
+  // 生成随机 CNAME 前缀
+  const generateCNAMEPrefix = () => {
     const randomStr = Math.random().toString(36).substring(2, 8);
-    return `cdn-${randomStr}.example.com`;
+    return `cdn-${randomStr}`;
   };
 
-  const handleAddNodeGroup = (nodeGroupId: string) => {
-    const newNodeGroups = formData.nodeGroups.includes(nodeGroupId)
-      ? formData.nodeGroups.filter(id => id !== nodeGroupId)
-      : [...formData.nodeGroups, nodeGroupId];
-    setFormData({ ...formData, nodeGroups: newNodeGroups });
+  const handleAddNodeGroup = (nodeGroup: NodeGroup) => {
+    const exists = formData.nodeGroups.find(ng => ng.id === nodeGroup.id);
+    if (exists) {
+      setFormData({
+        ...formData,
+        nodeGroups: formData.nodeGroups.filter(ng => ng.id !== nodeGroup.id),
+      });
+    } else {
+      setFormData({
+        ...formData,
+        nodeGroups: [...formData.nodeGroups, nodeGroup],
+      });
+    }
+  };
+
+  const handleRemoveNodeGroup = (nodeGroupId: string) => {
+    setFormData({
+      ...formData,
+      nodeGroups: formData.nodeGroups.filter(ng => ng.id !== nodeGroupId),
+    });
   };
 
   const handleSubmit = () => {
     console.log('Submit form:', formData);
     setShowForm(false);
-    setFormData({ name: '', domain: '', nodeGroups: [], cname: '' });
+    setFormData({ name: '', cnamePrefix: '', domain: '', nodeGroups: [] });
   };
 
   const handleCancel = () => {
     setShowForm(false);
-    setFormData({ name: '', domain: '', nodeGroups: [], cname: '' });
+    setFormData({ name: '', cnamePrefix: '', domain: '', nodeGroups: [] });
   };
 
   const breadcrumbs = [
@@ -235,18 +263,22 @@ export default function LineGroups() {
           </div>
         </Card>
 
-        {/* 添加线路分组表单 */}
+        {/* 添加线路分组表单 - 上滑动设计 */}
         {showForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <Card className="w-full max-w-2xl max-h-3/4 overflow-y-auto border border-border">
-              <div className="p-6 border-b border-border flex items-center justify-between">
-                <h2 className="text-lg font-bold text-foreground">添加线路分组</h2>
-                <button onClick={handleCancel} className="p-1 hover:bg-secondary rounded transition-colors">
-                  <X size={20} className="text-muted-foreground" />
-                </button>
-              </div>
-
+          <div className="fixed inset-0 bg-black/50 z-50" onClick={handleCancel}>
+            <div
+              className="fixed bottom-0 left-0 right-0 bg-background border-t border-border rounded-t-lg h-1/2 overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="p-6 space-y-6">
+                {/* 标题 */}
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-foreground">添加线路分组</h2>
+                  <button onClick={handleCancel} className="p-1 hover:bg-secondary rounded transition-colors">
+                    <X size={20} className="text-muted-foreground" />
+                  </button>
+                </div>
+
                 {/* 名称 */}
                 <div className="flex items-center gap-2">
                   <label className="text-xs font-medium text-foreground whitespace-nowrap">名称：</label>
@@ -259,78 +291,80 @@ export default function LineGroups() {
                   />
                 </div>
 
-                {/* DNS 配置的域名选项 */}
+                {/* 解析记录和DNS域名 */}
                 <div className="flex items-center gap-2">
-                  <label className="text-xs font-medium text-foreground whitespace-nowrap">DNS 域名：</label>
+                  <label className="text-xs font-medium text-foreground whitespace-nowrap">解析记录：</label>
+                  <input
+                    type="text"
+                    placeholder="前缀"
+                    value={formData.cnamePrefix}
+                    onChange={(e) => setFormData({ ...formData, cnamePrefix: e.target.value })}
+                    className="w-32 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <span className="text-xs text-muted-foreground">.</span>
                   <select
                     value={formData.domain}
                     onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                    className="w-48 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-40 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">-- 请选择域名 --</option>
                     <option value="example.com">example.com</option>
                     <option value="api.example.com">api.example.com</option>
                     <option value="cdn.example.com">cdn.example.com</option>
                   </select>
-                </div>
-
-                {/* 解析记录（CNAME） */}
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-medium text-foreground whitespace-nowrap">解析记录：</label>
-                  <input
-                    type="text"
-                    placeholder="CNAME 记录"
-                    value={formData.cname}
-                    onChange={(e) => setFormData({ ...formData, cname: e.target.value })}
-                    className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setFormData({ ...formData, cname: generateCNAME() })}
+                    onClick={() => setFormData({ ...formData, cnamePrefix: generateCNAMEPrefix() })}
                     className="text-xs"
                   >
                     生成
                   </Button>
                 </div>
 
-                {/* 添加的节点 */}
+                {/* 添加节点分组 */}
                 <div>
-                  <label className="text-xs font-medium text-foreground block mb-3">添加的节点：</label>
-                  <div className="space-y-2 pl-4">
-                    {['节点分组1', '节点分组2', '节点分组3', '节点分组4'].map((nodeGroup, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id={`nodegroup-${index}`}
-                          checked={formData.nodeGroups.includes(nodeGroup)}
-                          onChange={() => handleAddNodeGroup(nodeGroup)}
-                          className="w-4 h-4 cursor-pointer"
-                        />
-                        <label htmlFor={`nodegroup-${index}`} className="text-xs text-foreground cursor-pointer">
-                          {nodeGroup}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 解析记录预览 */}
-                {formData.nodeGroups.length > 0 && (
-                  <div className="border-t border-border pt-4">
-                    <label className="text-xs font-medium text-foreground block mb-2">解析记录预览：</label>
-                    <div className="bg-secondary/30 rounded-lg p-3 space-y-1 text-xs text-muted-foreground">
-                      {formData.nodeGroups.map((nodeGroup, index) => (
-                        <div key={index}>
-                          {formData.domain} CNAME {formData.cname}
-                        </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-xs font-medium text-foreground">添加节点分组：</label>
+                    <div className="flex items-center gap-2">
+                      {availableNodeGroups.map((nodeGroup) => (
+                        <Button
+                          key={nodeGroup.id}
+                          size="sm"
+                          variant={formData.nodeGroups.find(ng => ng.id === nodeGroup.id) ? 'default' : 'outline'}
+                          onClick={() => handleAddNodeGroup(nodeGroup)}
+                          className="text-xs"
+                        >
+                          {nodeGroup.name}
+                        </Button>
                       ))}
                     </div>
                   </div>
-                )}
+
+                  {/* 已添加的节点分组 */}
+                  {formData.nodeGroups.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pl-0">
+                      {formData.nodeGroups.map((nodeGroup) => (
+                        <div
+                          key={nodeGroup.id}
+                          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30"
+                        >
+                          <span className="text-xs text-foreground">{nodeGroup.name}</span>
+                          <button
+                            onClick={() => handleRemoveNodeGroup(nodeGroup.id)}
+                            className="p-0 hover:bg-primary/20 rounded transition-colors"
+                          >
+                            <X size={14} className="text-primary" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="p-6 border-t border-border flex items-center justify-end gap-2">
+              {/* 底部按钮 */}
+              <div className="sticky bottom-0 p-6 border-t border-border bg-background flex items-center justify-end gap-2">
                 <Button variant="outline" onClick={handleCancel}>
                   取消
                 </Button>
@@ -338,7 +372,7 @@ export default function LineGroups() {
                   添加
                 </Button>
               </div>
-            </Card>
+            </div>
           </div>
         )}
       </div>
