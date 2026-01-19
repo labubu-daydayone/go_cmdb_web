@@ -413,18 +413,18 @@ export default function Websites() {
                 {/* 重定向配置内容 */}
                 {configTab === 'redirect' && (
                   <div className="space-y-4">
-                    <div className="flex gap-2">
+                    <div className="flex gap-4">
                       <input
                         type="text"
                         value={formData.redirectUrl}
                         onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
                         placeholder="输入重定向 URL"
-                        className="flex-1 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-48 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                       <select
                         value={formData.redirectStatusCode}
                         onChange={(e) => setFormData({ ...formData, redirectStatusCode: parseInt(e.target.value) as 301 | 302 })}
-                        className="px-3 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-20 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         <option value={301}>301</option>
                         <option value={302}>302</option>
@@ -439,21 +439,29 @@ export default function Websites() {
                     <table className="w-full text-xs border-collapse">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="text-left py-2 px-2 font-medium text-foreground">名称</th>
-                          <th className="text-left py-2 px-2 font-medium text-foreground">类型</th>
+                          <th className="text-left py-2 px-2 font-medium text-foreground w-48">名称</th>
+                          <th className="text-left py-2 px-2 font-medium text-foreground w-24">类型</th>
                           <th className="text-left py-2 px-2 font-medium text-foreground">地址</th>
                           <th className="text-left py-2 px-2 font-medium text-foreground">操作</th>
                         </tr>
                       </thead>
                       <tbody>
                         {paginatedTemplates.map((group) => (
-                          <tr
-                            key={group.id}
-                            className="border-b border-border hover:bg-secondary/50 cursor-pointer transition-colors"
-                            onClick={() => setFormData({ ...formData, template: group.id })}
-                          >
-                            <td className="py-2 px-2 text-foreground">{group.name}</td>
-                            <td className="py-2 px-2 text-muted-foreground">{group.type}</td>
+                          <tr key={group.id} className="border-b border-border hover:bg-secondary/50 transition-colors">
+                            <td className="py-2 px-2 text-foreground w-48">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="template"
+                                  value={group.id}
+                                  checked={formData.template === group.id}
+                                  onChange={() => setFormData({ ...formData, template: group.id })}
+                                  className="w-4 h-4 rounded-full border-border"
+                                />
+                                <span>{group.name}</span>
+                              </label>
+                            </td>
+                            <td className="py-2 px-2 text-muted-foreground w-24">{group.type}</td>
                             <td className="py-2 px-2 text-muted-foreground">{group.address}</td>
                             <td className="py-2 px-2">
                               <button className="text-primary text-xs hover:text-primary/80">使用</button>
