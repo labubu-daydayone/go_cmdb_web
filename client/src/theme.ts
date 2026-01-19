@@ -228,40 +228,47 @@ const theme = createTheme({
           fontSize: '0.875rem',
           fontWeight: 600,
           textTransform: 'none',
-          boxShadow: 'none',
-          border: 'none',
+          boxShadow: 'none !important',
+          border: 'none !important',
+          outline: 'none !important',
           transition: 'all 0.15s ease-out',
           '&:hover': {
-            boxShadow: 'none',
-            border: 'none',
+            boxShadow: 'none !important',
+            border: 'none !important',
             transform: 'translateY(-1px)',
           },
           '&:active': {
             transform: 'translateY(0)',
           },
+          '&:focus': {
+            outline: 'none !important',
+            boxShadow: 'none !important',
+          },
         },
         contained: {
           background: colors.primary.gradient,
-          border: 'none',
+          color: '#FFFFFF !important',
+          border: 'none !important',
           '&:hover': {
             background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
-            border: 'none',
+            border: 'none !important',
+            color: '#FFFFFF !important',
           },
         },
         outlined: {
           backgroundColor: 'rgba(99, 102, 241, 0.08)',
-          color: colors.primary.main,
-          border: 'none',
+          color: `${colors.primary.main} !important`,
+          border: 'none !important',
           '&:hover': {
             backgroundColor: 'rgba(99, 102, 241, 0.15)',
-            border: 'none',
+            border: 'none !important',
           },
         },
         text: {
-          border: 'none',
+          border: 'none !important',
           '&:hover': {
             backgroundColor: 'rgba(0, 0, 0, 0.04)',
-            border: 'none',
+            border: 'none !important',
           },
         },
         sizeSmall: {

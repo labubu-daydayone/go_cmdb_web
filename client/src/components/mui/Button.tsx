@@ -33,11 +33,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         sx = { 
           ...sx, 
           backgroundColor: 'rgba(99, 102, 241, 0.08)',
-          color: '#6366F1',
-          border: 'none',
+          color: '#6366F1 !important',
+          border: 'none !important',
+          boxShadow: 'none !important',
           '&:hover': {
             backgroundColor: 'rgba(99, 102, 241, 0.15)',
-            border: 'none',
+            border: 'none !important',
+            boxShadow: 'none !important',
+            color: '#6366F1 !important',
           },
         };
         break;
@@ -46,13 +49,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         sx = { 
           ...sx, 
           backgroundColor: '#F3F4F6',
-          color: '#374151',
-          border: 'none',
-          boxShadow: 'none',
+          color: '#374151 !important',
+          border: 'none !important',
+          boxShadow: 'none !important',
           '&:hover': {
             backgroundColor: '#E5E7EB',
-            border: 'none',
-            boxShadow: 'none',
+            border: 'none !important',
+            boxShadow: 'none !important',
+            color: '#374151 !important',
           },
         };
         break;
@@ -60,11 +64,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         muiVariant = 'text';
         sx = { 
           ...sx, 
-          color: '#6B7280',
-          border: 'none',
+          color: '#6B7280 !important',
+          border: 'none !important',
+          boxShadow: 'none !important',
           '&:hover': {
             backgroundColor: 'rgba(0, 0, 0, 0.04)',
-            border: 'none',
+            border: 'none !important',
+            boxShadow: 'none !important',
+            color: '#6B7280 !important',
           },
         };
         break;
