@@ -7,7 +7,7 @@ import { Plus, Edit2, Trash2, Zap, X } from 'lucide-react';
 
 type SortField = 'domain' | 'cname' | 'lineGroup' | 'https' | 'status';
 type SortOrder = 'asc' | 'desc';
-type FormTab = 'basic' | 'origin' | 'redirect';
+type ConfigTab = 'origin' | 'redirect';
 
 export default function Websites() {
   const [websites, setWebsites] = useState<Website[]>(generateMockWebsites());
@@ -17,7 +17,7 @@ export default function Websites() {
   const [sortField, setSortField] = useState<SortField>('domain');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [showAddForm, setShowAddForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<FormTab>('basic');
+  const [configTab, setConfigTab] = useState<ConfigTab>('origin');
   const [formData, setFormData] = useState({
     domain: '',
     lineGroup: '线路1',
@@ -76,7 +76,7 @@ export default function Websites() {
 
   const resetForm = () => {
     setShowAddForm(false);
-    setActiveTab('basic');
+    setConfigTab('origin');
     setFormData({
       domain: '',
       lineGroup: '线路1',
@@ -291,7 +291,7 @@ export default function Websites() {
           </div>
         </Card>
 
-        {/* H5 风格的 Tab 表单 */}
+        {/* H5 风格的表单 */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black/50 flex items-end z-50">
             <Card className="w-full rounded-t-2xl border-0 p-0 max-h-[90vh] overflow-y-auto">
@@ -303,73 +303,61 @@ export default function Websites() {
                 </button>
               </div>
 
-              {/* Tab 标签 */}
-              <div className="sticky top-14 bg-background border-b border-border flex gap-0">
-                <button
-                  onClick={() => setActiveTab('basic')}
-                  className={`flex-1 px-4 py-3 font-medium text-center transition-colors border-b-2 ${
-                    activeTab === 'basic'
-                      ? 'text-primary border-primary'
-                      : 'text-muted-foreground border-transparent hover:text-foreground'
-                  }`}
-                >
-                  基本信息
-                </button>
-                <button
-                  onClick={() => setActiveTab('origin')}
-                  className={`flex-1 px-4 py-3 font-medium text-center transition-colors border-b-2 ${
-                    activeTab === 'origin'
-                      ? 'text-primary border-primary'
-                      : 'text-muted-foreground border-transparent hover:text-foreground'
-                  }`}
-                >
-                  回源配置
-                </button>
-                <button
-                  onClick={() => setActiveTab('redirect')}
-                  className={`flex-1 px-4 py-3 font-medium text-center transition-colors border-b-2 ${
-                    activeTab === 'redirect'
-                      ? 'text-primary border-primary'
-                      : 'text-muted-foreground border-transparent hover:text-foreground'
-                  }`}
-                >
-                  重定向
-                </button>
-              </div>
-
-              {/* Tab 内容 */}
+              {/* 表单内容 */}
               <div className="p-6 space-y-6">
-                {/* 基本信息 Tab */}
-                {activeTab === 'basic' && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">域名</label>
-                      <input
-                        type="text"
-                        value={formData.domain}
-                        onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                        placeholder="输入域名"
-                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">线路</label>
-                      <select
-                        value={formData.lineGroup}
-                        onChange={(e) => setFormData({ ...formData, lineGroup: e.target.value })}
-                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      >
-                        <option>线路1</option>
-                        <option>线路2</option>
-                        <option>线路3</option>
-                        <option>线路4</option>
-                      </select>
-                    </div>
+                {/* 基本信息 */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">域名</label>
+                    <input
+                      type="text"
+                      value={formData.domain}
+                      onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+                      placeholder="输入域名"
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
                   </div>
-                )}
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">线路</label>
+                    <select
+                      value={formData.lineGroup}
+                      onChange={(e) => setFormData({ ...formData, lineGroup: e.target.value })}
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option>线路1</option>
+                      <option>线路2</option>
+                      <option>线路3</option>
+                      <option>线路4</option>
+                    </select>
+                  </div>
+                </div>
 
-                {/* 回源配置 Tab */}
-                {activeTab === 'origin' && (
+                {/* 配置切换按钮 */}
+                <div className="flex gap-2 border-b border-border">
+                  <button
+                    onClick={() => setConfigTab('origin')}
+                    className={`flex-1 px-4 py-3 font-medium text-center transition-colors border-b-2 ${
+                      configTab === 'origin'
+                        ? 'text-primary border-primary'
+                        : 'text-muted-foreground border-transparent hover:text-foreground'
+                    }`}
+                  >
+                    回源配置
+                  </button>
+                  <button
+                    onClick={() => setConfigTab('redirect')}
+                    className={`flex-1 px-4 py-3 font-medium text-center transition-colors border-b-2 ${
+                      configTab === 'redirect'
+                        ? 'text-primary border-primary'
+                        : 'text-muted-foreground border-transparent hover:text-foreground'
+                    }`}
+                  >
+                    重定向
+                  </button>
+                </div>
+
+                {/* 回源配置内容 */}
+                {configTab === 'origin' && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <label className="block text-sm font-medium text-foreground">回源地址</label>
@@ -412,8 +400,8 @@ export default function Websites() {
                   </div>
                 )}
 
-                {/* 重定向 Tab */}
-                {activeTab === 'redirect' && (
+                {/* 重定向配置内容 */}
+                {configTab === 'redirect' && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <input
