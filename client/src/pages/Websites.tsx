@@ -468,13 +468,26 @@ export default function Websites() {
                         </div>
                       </div>
                       {formData.certificateType === 'manual' && (
-                        <textarea
-                          value={formData.certificateData}
-                          onChange={(e) => setFormData({ ...formData, certificateData: e.target.value })}
-                          placeholder="输入证书数据"
-                          className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                          rows={3}
-                        />
+                        <div className="space-y-2">
+                          <div>
+                            <label className="block text-xs font-medium text-foreground mb-1">证书</label>
+                            <textarea
+                              value={formData.certificateData}
+                              onChange={(e) => setFormData({ ...formData, certificateData: e.target.value })}
+                              placeholder="输入证书内容（PEM/CRT 格式）"
+                              className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                              rows={3}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-foreground mb-1">私钥</label>
+                            <textarea
+                              placeholder="输入私钥内容（KEY 格式）"
+                              className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                              rows={3}
+                            />
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}
@@ -482,13 +495,32 @@ export default function Websites() {
                   {/* 缓存规则内容 */}
                   {configTab === 'cache' && (
                     <div className="space-y-3">
-                      <textarea
-                        value={formData.cacheRules}
-                        onChange={(e) => setFormData({ ...formData, cacheRules: e.target.value })}
-                        placeholder="输入缓存规则"
-                        className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                        rows={4}
-                      />
+                      <div>
+                        <label className="block text-xs font-medium text-foreground mb-1">指定目录</label>
+                        <input
+                          type="text"
+                          placeholder="例如：/api /static"
+                          className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-foreground mb-1">指定文件名</label>
+                        <input
+                          type="text"
+                          placeholder="例如：js,png,css,jpg"
+                          className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-foreground mb-1">缓存规则</label>
+                        <textarea
+                          value={formData.cacheRules}
+                          onChange={(e) => setFormData({ ...formData, cacheRules: e.target.value })}
+                          placeholder="输入缓存规则"
+                          className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                          rows={3}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
