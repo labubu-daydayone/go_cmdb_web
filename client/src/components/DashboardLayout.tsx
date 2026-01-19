@@ -42,6 +42,7 @@ const navigationItems: NavItem[] = [
       { label: '线路分组', href: '/line-groups', icon: '🔀' },
       { label: '节点列表', href: '/nodes', icon: '🖥' },
       { label: '节点分组', href: '/node-groups', icon: '📋' },
+      { label: '缓存设置', href: '/cache-settings', icon: '💾' },
     ],
   },
   { label: '服务器', href: '/servers', icon: '🖥️' },
