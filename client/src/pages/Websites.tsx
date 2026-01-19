@@ -18,11 +18,12 @@ export default function Websites() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [showAddForm, setShowAddForm] = useState(false);
   const [configTab, setConfigTab] = useState<ConfigTab>('origin');
+  const [templatePage, setTemplatePage] = useState(1);
   const [formData, setFormData] = useState({
     domain: '',
     lineGroup: '线路1',
+    https: false,
     originIPs: [{ ip: '', remark: '' }],
-    redirectEnabled: false,
     redirectUrl: '',
     redirectStatusCode: 301 as 301 | 302,
     template: '',
@@ -78,11 +79,12 @@ export default function Websites() {
   const resetForm = () => {
     setShowAddForm(false);
     setConfigTab('origin');
+    setTemplatePage(1);
     setFormData({
       domain: '',
       lineGroup: '线路1',
+      https: false,
       originIPs: [{ ip: '', remark: '' }],
-      redirectEnabled: false,
       redirectUrl: '',
       redirectStatusCode: 301,
       template: '',
@@ -96,25 +98,9 @@ export default function Websites() {
         domain: formData.domain,
         cname: `cdn-${Date.now()}.example.com`,
         lineGroup: formData.lineGroup,
-        https: true,
+        https: formData.https,
         status: 'active',
         createdDate: new Date().toISOString().split('T')[0],
-        originConfig: {
-          id: `origin-${Date.now()}`,
-          websiteId: `website-${Date.now()}`,
-          originIPs: formData.redirectEnabled ? [] : formData.originIPs
-            .filter(o => o.ip.trim())
-            .map((o, i) => ({
-              id: `origin-ip-${Date.now()}-${i}`,
-              ip: o.ip,
-              remark: o.remark,
-              enabled: true,
-            })),
-          redirectEnabled: formData.redirectEnabled,
-          redirectUrl: formData.redirectUrl,
-          redirectStatusCode: formData.redirectStatusCode,
-          createdDate: new Date().toISOString().split('T')[0],
-        },
       };
       setWebsites([...websites, newWebsite]);
       resetForm();
@@ -123,61 +109,66 @@ export default function Websites() {
 
   const handleDeleteWebsite = (websiteId: string) => {
     setWebsites(websites.filter(w => w.id !== websiteId));
-    setSelectedWebsites(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(websiteId);
-      return newSet;
-    });
+    setSelectedWebsites(new Set(Array.from(selectedWebsites).filter(id => id !== websiteId)));
   };
 
   const filteredWebsites = websites
-    .filter(w => {
-      const matchesSearch = w.domain.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || w.status === filterStatus;
-      return matchesSearch && matchesStatus;
-    })
+    .filter(w => w.domain.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter(w => filterStatus === 'all' || w.status === filterStatus)
     .sort((a, b) => {
-      let aVal: any = a[sortField];
-      let bVal: any = b[sortField];
-      if (sortField === 'https') {
-        aVal = a.https ? 1 : 0;
-        bVal = b.https ? 1 : 0;
-      }
+      const aVal = a[sortField];
+      const bVal = b[sortField];
       const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
       return sortOrder === 'asc' ? comparison : -comparison;
     });
 
-  const breadcrumbs = [
-    { label: '首页', href: '/' },
-    { label: '网站管理' },
-    { label: '网站列表' },
+  // 分页数据
+  const templatesData = [
+    { id: '1', name: '标准回源', type: '主源', address: '192.168.1.1' },
+    { id: '2', name: '高可用回源', type: '活跃', address: '192.168.1.2' },
+    { id: '3', name: '加速回源', type: '备源', address: '192.168.1.3' },
+    { id: '4', name: '备用回源', type: '备源', address: '192.168.1.4' },
+    { id: '5', name: '灾备回源', type: '备源', address: '192.168.1.5' },
+    { id: '6', name: '跨域回源', type: '活跃', address: '192.168.1.6' },
   ];
+  const itemsPerPage = 3;
+  const totalPages = Math.ceil(templatesData.length / itemsPerPage);
+  const paginatedTemplates = templatesData.slice(
+    (templatePage - 1) * itemsPerPage,
+    templatePage * itemsPerPage
+  );
 
   return (
-    <DashboardLayout breadcrumbs={breadcrumbs} currentPage="网站列表">
+    <DashboardLayout
+      breadcrumbs={[
+        { label: '网站管理' },
+        { label: '网站列表' },
+      ]}
+      currentPage="网站列表"
+    >
       <div className="space-y-6">
+        {/* 页面标题和操作按钮 */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">网站列表</h1>
-          <Button className="gap-2" onClick={() => setShowAddForm(true)}>
-            <Plus size={16} />
-            添加网站
-          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">网站列表</h1>
+            <p className="text-sm text-muted-foreground mt-1">共 {websites.length} 个</p>
+          </div>
+          <Button onClick={() => setShowAddForm(true)}>添加网站</Button>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              placeholder="搜索域名..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
+        {/* 搜索和筛选 */}
+        <div className="flex gap-4">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="搜索域名..."
+            className="flex-1 px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="all">全部状态</option>
             <option value="active">活跃</option>
@@ -185,17 +176,13 @@ export default function Websites() {
           </select>
         </div>
 
-        <Card className="border border-border overflow-hidden">
-          <div className="px-6 py-3 border-b border-border flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              {selectedWebsites.size > 0 ? `已选择 ${selectedWebsites.size} 个` : `共 ${filteredWebsites.length} 个`}
-            </span>
-          </div>
-          <div className="overflow-x-auto w-full">
+        {/* 网站列表表格 */}
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-secondary/30">
-                  <th className="px-6 py-3 text-left font-semibold text-foreground w-12">
+                <tr className="border-b border-border bg-secondary/50">
+                  <th className="px-6 py-3 text-center">
                     <input
                       type="checkbox"
                       checked={selectedWebsites.size === filteredWebsites.length && filteredWebsites.length > 0}
@@ -295,8 +282,8 @@ export default function Websites() {
 
         {/* H5 风格的表单 */}
         {showAddForm && (
-          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-end z-50">
-            <Card className="w-full rounded-t-2xl border-0 p-0 h-2/3 overflow-y-auto bg-background/95 backdrop-blur-md">
+          <div className="fixed inset-0 bg-black/30 flex items-end z-50">
+            <Card className="w-full rounded-t-2xl border-0 p-0 h-2/3 overflow-y-auto bg-background/80">
               {/* 表单头部 */}
               <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
                 <h2 className="text-base font-bold text-foreground">添加网站</h2>
@@ -311,26 +298,39 @@ export default function Websites() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-foreground mb-2">域名</label>
-                    <input
-                      type="text"
+                    <textarea
                       value={formData.domain}
                       onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                       placeholder="输入域名"
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                      rows={3}
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-foreground mb-2">线路</label>
-                    <select
-                      value={formData.lineGroup}
-                      onChange={(e) => setFormData({ ...formData, lineGroup: e.target.value })}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option>线路1</option>
-                      <option>线路2</option>
-                      <option>线路3</option>
-                      <option>线路4</option>
-                    </select>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-2">线路</label>
+                      <select
+                        value={formData.lineGroup}
+                        onChange={(e) => setFormData({ ...formData, lineGroup: e.target.value })}
+                        className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option>线路1</option>
+                        <option>线路2</option>
+                        <option>线路3</option>
+                        <option>线路4</option>
+                      </select>
+                    </div>
+                    <div className="flex items-end">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.https}
+                          onChange={(e) => setFormData({ ...formData, https: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">HTTPS</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
 
@@ -338,7 +338,7 @@ export default function Websites() {
                 <div className="flex gap-2 border-b border-border">
                   <button
                     onClick={() => setConfigTab('origin')}
-                    className={`flex-1 px-4 py-2 font-medium text-center text-sm transition-colors border-b-2 ${
+                    className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 ${
                       configTab === 'origin'
                         ? 'text-primary border-primary'
                         : 'text-muted-foreground border-transparent hover:text-foreground'
@@ -348,7 +348,7 @@ export default function Websites() {
                   </button>
                   <button
                     onClick={() => setConfigTab('redirect')}
-                    className={`flex-1 px-4 py-2 font-medium text-center text-sm transition-colors border-b-2 ${
+                    className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 ${
                       configTab === 'redirect'
                         ? 'text-primary border-primary'
                         : 'text-muted-foreground border-transparent hover:text-foreground'
@@ -358,7 +358,7 @@ export default function Websites() {
                   </button>
                   <button
                     onClick={() => setConfigTab('template')}
-                    className={`flex-1 px-4 py-2 font-medium text-center text-sm transition-colors border-b-2 ${
+                    className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 ${
                       configTab === 'template'
                         ? 'text-primary border-primary'
                         : 'text-muted-foreground border-transparent hover:text-foreground'
@@ -372,13 +372,13 @@ export default function Websites() {
                 {configTab === 'origin' && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <label className="block text-xs font-medium text-foreground">回源地址</label>
+                      <label className="block text-xs font-medium text-foreground">添加回源</label>
                       <button
                         onClick={handleAddOriginIP}
                         className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
                       >
                         <Plus size={14} />
-                        添加 IP
+                        添加回源
                       </button>
                     </div>
                     {formData.originIPs.map((ip, index) => (
@@ -389,19 +389,19 @@ export default function Websites() {
                             value={ip.ip}
                             onChange={(e) => handleOriginIPChange(index, 'ip', e.target.value)}
                             placeholder="输入 IP 地址"
-                            className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="flex-1 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                           <input
                             type="text"
                             value={ip.remark}
                             onChange={(e) => handleOriginIPChange(index, 'remark', e.target.value)}
                             placeholder="备注（如：主源站）"
-                            className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="flex-1 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                           {formData.originIPs.length > 1 && (
                             <button
                               onClick={() => handleRemoveOriginIP(index)}
-                              className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                              className="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-xs"
                             >
                               删除
                             </button>
@@ -421,12 +421,12 @@ export default function Websites() {
                         value={formData.redirectUrl}
                         onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
                         placeholder="输入重定向 URL"
-                        className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="flex-1 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                       <select
                         value={formData.redirectStatusCode}
                         onChange={(e) => setFormData({ ...formData, redirectStatusCode: parseInt(e.target.value) as 301 | 302 })}
-                        className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="px-3 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         <option value={301}>301</option>
                         <option value={302}>302</option>
@@ -435,7 +435,7 @@ export default function Websites() {
                   </div>
                 )}
 
-                {/* 使用回源分组内容 */}
+                {/* 使用分组内容 */}
                 {configTab === 'template' && (
                   <div className="space-y-3">
                     <table className="w-full text-xs border-collapse">
@@ -448,11 +448,7 @@ export default function Websites() {
                         </tr>
                       </thead>
                       <tbody>
-                        {[
-                          { id: '1', name: '标准回源', type: '主源', address: '192.168.1.1' },
-                          { id: '2', name: '高可用回源', type: '活跃', address: '192.168.1.2' },
-                          { id: '3', name: '加速回源', type: '备源', address: '192.168.1.3' },
-                        ].map((group) => (
+                        {paginatedTemplates.map((group) => (
                           <tr
                             key={group.id}
                             className="border-b border-border hover:bg-secondary/50 cursor-pointer transition-colors"
@@ -468,6 +464,26 @@ export default function Websites() {
                         ))}
                       </tbody>
                     </table>
+                    {/* 分页 */}
+                    <div className="flex items-center justify-center gap-2 mt-4">
+                      <button
+                        onClick={() => setTemplatePage(Math.max(1, templatePage - 1))}
+                        disabled={templatePage === 1}
+                        className="px-2 py-1 text-xs border border-border rounded hover:bg-secondary disabled:opacity-50"
+                      >
+                        上一页
+                      </button>
+                      <span className="text-xs text-muted-foreground">
+                        {templatePage} / {totalPages}
+                      </span>
+                      <button
+                        onClick={() => setTemplatePage(Math.min(totalPages, templatePage + 1))}
+                        disabled={templatePage === totalPages}
+                        className="px-2 py-1 text-xs border border-border rounded hover:bg-secondary disabled:opacity-50"
+                      >
+                        下一页
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
