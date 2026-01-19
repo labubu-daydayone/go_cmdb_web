@@ -506,30 +506,17 @@ export default function Websites() {
                   {configTab === 'cache' && (
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-xs font-medium text-foreground mb-1">指定目录</label>
-                        <input
-                          type="text"
-                          placeholder="例如：/api /static"
-                          className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-foreground mb-1">指定文件名</label>
-                        <input
-                          type="text"
-                          placeholder="例如：js,png,css,jpg"
-                          className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-foreground mb-1">缓存规则</label>
-                        <textarea
+                        <label className="block text-xs font-medium text-foreground mb-1">缓存规则选择</label>
+                        <select
                           value={formData.cacheRules}
                           onChange={(e) => setFormData({ ...formData, cacheRules: e.target.value })}
-                          placeholder="输入缓存规则"
-                          className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                          rows={3}
-                        />
+                          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        >
+                          <option value="">-- 请选择缓存规则 --</option>
+                          <option value="首页缓存">首页缓存</option>
+                          <option value="图片缓存">图片缓存</option>
+                          <option value="API缓存">API缓存</option>
+                        </select>
                       </div>
                     </div>
                   )}
