@@ -132,11 +132,9 @@ export default function DashboardLayout({
                       {item.children!.map((child) => {
                         const isChildActive = location === child.href;
                         return (
-                          <button
+                          <Link
                             key={child.href}
-                            onClick={() => {
-                              window.history.pushState(null, '', child.href!);
-                            }}
+                            href={child.href!}
                             className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
                               isChildActive
                                 ? 'bg-sidebar-accent text-sidebar-accent-foreground'
@@ -145,7 +143,7 @@ export default function DashboardLayout({
                           >
                             <span>{child.icon}</span>
                             {child.label}
-                          </button>
+                          </Link>
                         );
                       })}
                     </div>
