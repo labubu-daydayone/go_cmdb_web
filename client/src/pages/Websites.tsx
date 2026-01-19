@@ -293,26 +293,26 @@ export default function Websites() {
               </div>
 
               {/* 表单内容 */}
-              <div className="p-6 space-y-6 pb-24">
+              <div className="p-6 pb-24 space-y-3">
                 {/* 基本信息 */}
-                <div className="space-y-4">
+                <div className="space-y-2">
                   <div>
-                    <label className="block text-xs font-medium text-foreground mb-2">域名</label>
+                    <label className="block text-xs font-medium text-foreground mb-1">域名</label>
                     <textarea
                       value={formData.domain}
                       onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                       placeholder="输入域名"
                       className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                      rows={3}
+                      rows={2}
                     />
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="col-span-2">
-                      <label className="block text-xs font-medium text-foreground mb-2">线路</label>
+                  <div className="flex gap-3 items-end">
+                    <div>
+                      <label className="block text-xs font-medium text-foreground mb-1">线路</label>
                       <select
                         value={formData.lineGroup}
                         onChange={(e) => setFormData({ ...formData, lineGroup: e.target.value })}
-                        className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-32 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         <option>线路1</option>
                         <option>线路2</option>
@@ -320,17 +320,15 @@ export default function Websites() {
                         <option>线路4</option>
                       </select>
                     </div>
-                    <div>
-                      <label className="flex items-center gap-2 cursor-pointer h-full pt-6">
-                        <input
-                          type="checkbox"
-                          checked={formData.https}
-                          onChange={(e) => setFormData({ ...formData, https: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
-                        />
-                        <span className="text-xs font-medium text-foreground">HTTPS</span>
-                      </label>
-                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.https}
+                        onChange={(e) => setFormData({ ...formData, https: e.target.checked })}
+                        className="w-4 h-4 rounded border-border"
+                      />
+                      <span className="text-xs font-medium text-foreground">HTTPS</span>
+                    </label>
                   </div>
                 </div>
 
@@ -465,7 +463,7 @@ export default function Websites() {
                       </tbody>
                     </table>
                     {/* 分页 */}
-                    <div className="flex items-center justify-center gap-2 mt-4">
+                    <div className="flex items-center justify-end gap-2 mt-4">
                       <button
                         onClick={() => setTemplatePage(Math.max(1, templatePage - 1))}
                         disabled={templatePage === 1}
