@@ -5,7 +5,8 @@
 
 import { useState } from 'react';
 import { Card } from '@/components/mui/Card';
-import { Button } from '@/components/mui';
+import { Button, MultiSelect } from '@/components/mui';
+import type { MultiSelectOption } from '@/components/mui/MultiSelect';
 import { generateMockLineGroups, LineGroup } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Edit2, Trash2, Network, X } from 'lucide-react';
@@ -45,7 +46,15 @@ export default function LineGroups() {
     { id: '2', name: '节点分组2' },
     { id: '3', name: '节点分组3' },
     { id: '4', name: '节点分组4' },
+    { id: '5', name: '节点分组5' },
+    { id: '6', name: '节点分组6' },
   ];
+
+  // 转换为 MultiSelect 选项格式
+  const nodeGroupOptions: MultiSelectOption[] = availableNodeGroups.map(ng => ({
+    label: ng.name,
+    value: ng.id,
+  }));
 
   const handleSelectLineGroup = (lineGroupId: string) => {
     const newSelected = new Set(selectedLineGroups);
@@ -322,46 +331,20 @@ export default function LineGroups() {
                   </Button>
                 </div>
 
-                {/* 添加节点分组 - 下拉框多选 */}
+                {/* 添加节点分组 - Material UI 多选选择器 */}
                 <div>
-                  <label className="text-xs font-medium text-foreground mb-2 block">添加节点分组：</label>
-                  <select
-                    multiple
+                  <MultiSelect
+                    label="添加节点分组"
+                    placeholder="请选择节点分组"
                     value={formData.nodeGroups.map(ng => ng.id)}
-                    onChange={(e) => {
-                      const selectedIds = Array.from(e.target.selectedOptions, option => option.value);
+                    onChange={(selectedIds) => {
                       const selectedNodeGroups = availableNodeGroups.filter(ng => selectedIds.includes(ng.id));
                       setFormData({ ...formData, nodeGroups: selectedNodeGroups });
                     }}
-                    className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    {availableNodeGroups.map((nodeGroup) => (
-                      <option key={nodeGroup.id} value={nodeGroup.id}>
-                        {nodeGroup.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-muted-foreground mt-1">按 Ctrl/Cmd 键多选</p>
-
-                  {/* 已添加的节点分组 */}
-                  {formData.nodeGroups.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {formData.nodeGroups.map((nodeGroup) => (
-                        <div
-                          key={nodeGroup.id}
-                          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30"
-                        >
-                          <span className="text-xs text-foreground">{nodeGroup.name}</span>
-                          <button
-                            onClick={() => handleRemoveNodeGroup(nodeGroup.id)}
-                            className="p-0 hover:bg-primary/20 rounded transition-colors"
-                          >
-                            <X size={14} className="text-primary" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    options={nodeGroupOptions}
+                    fullWidth
+                    size="small"
+                  />
                 </div>
               </div>
 

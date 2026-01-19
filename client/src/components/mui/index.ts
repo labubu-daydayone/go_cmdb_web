@@ -4,6 +4,7 @@
 
 export * from './Button';
 export * from './Card';
+export * from './MultiSelect';
 
 // 直接导出 MUI 原生组件
 export {
