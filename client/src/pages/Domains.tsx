@@ -110,9 +110,9 @@ export default function Domains() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* 域名列表 */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <Card className="border border-border overflow-hidden">
               <div className="px-6 py-3 border-b border-border flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
