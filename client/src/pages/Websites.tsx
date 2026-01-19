@@ -307,8 +307,8 @@ export default function Websites() {
                     />
                   </div>
                   <div className="flex gap-3 items-end">
-                    <div>
-                      <label className="block text-xs font-medium text-foreground mb-1">线路</label>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-medium text-foreground whitespace-nowrap">线路：</label>
                       <select
                         value={formData.lineGroup}
                         onChange={(e) => setFormData({ ...formData, lineGroup: e.target.value })}
