@@ -356,7 +356,7 @@ export default function CacheSettings() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="例如：首页缓存"
-                    className="w-72 px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-72 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
@@ -382,7 +382,7 @@ export default function CacheSettings() {
                                 ruleType: e.target.value as 'directory' | 'suffix' | 'file',
                               })
                             }
-                            className="px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary min-w-32"
+                            className="px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary min-w-32"
                           >
                             <option value="directory">目录</option>
                             <option value="suffix">后缀</option>
@@ -402,7 +402,7 @@ export default function CacheSettings() {
                               handleUpdateRule(rule.id, { pattern: e.target.value })
                             }
                             placeholder={getPlaceholder(rule.ruleType)}
-                            className="flex-1 px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="flex-1 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                         </div>
 
@@ -418,7 +418,7 @@ export default function CacheSettings() {
                               handleUpdateRule(rule.id, { ttl: parseInt(e.target.value) })
                             }
                             min="1"
-                            className="w-32 px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-32 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                         </div>
 
