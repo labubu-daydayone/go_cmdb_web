@@ -64,6 +64,25 @@ export interface LineGroup {
   createdDate: string;
 }
 
+export interface DNSConfig {
+  id: string;
+  domain: string;
+  token: string;
+  createdDate: string;
+  status: 'active' | 'inactive';
+}
+
+export interface Node {
+  id: string;
+  name: string;
+  ip: string;
+  managementPort: number;
+  enabled: boolean;
+  status: 'online' | 'offline' | 'maintenance';
+  lineGroupId: string;
+  createdDate: string;
+}
+
 // 生成假域名数据
 export const generateMockDomains = (): Domain[] => {
   const statuses: Array<'active' | 'inactive' | 'expired'> = ['active', 'active', 'active', 'inactive', 'expired'];
@@ -278,6 +297,39 @@ export const generateMockLineGroups = (): LineGroup[] => {
       createdDate: '2025-01-04',
     },
   ];
+};
+
+// 生成 DNS 配置
+export const generateMockDNSConfigs = (): DNSConfig[] => {
+  const domains = ['example.com', 'myapp.io', 'company.cn', 'service.net', 'platform.org'];
+  return domains.map((domain, index) => ({
+    id: `dns-${index + 1}`,
+    domain,
+    token: `token_${Math.random().toString(36).substring(2, 15)}`,
+    createdDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    status: index % 2 === 0 ? 'active' : 'inactive',
+  }));
+};
+
+// 生成节点列表
+export const generateMockNodes = (): Node[] => {
+  const lineGroupIds = ['line-1', 'line-2', 'line-3', 'line-4'];
+  const nodes: Node[] = [];
+  
+  for (let i = 1; i <= 12; i++) {
+    nodes.push({
+      id: `node-${i}`,
+      name: `节点 ${i}`,
+      ip: `192.168.${Math.floor(i / 4) + 1}.${(i % 4) * 50 + 10}`,
+      managementPort: 8080 + i,
+      enabled: i % 3 !== 0,
+      status: ['online', 'online', 'offline', 'maintenance'][i % 4] as 'online' | 'offline' | 'maintenance',
+      lineGroupId: lineGroupIds[i % lineGroupIds.length],
+      createdDate: new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    });
+  }
+  
+  return nodes;
 };
 
 // 生成时间序列数据（用于图表）

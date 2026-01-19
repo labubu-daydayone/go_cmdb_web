@@ -1,0 +1,240 @@
+/**
+ * DNS 配置页面
+ * 管理 DNS 配置信息
+ */
+
+import { useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { generateMockDNSConfigs, DNSConfig } from '@/lib/mockData';
+import DashboardLayout from '@/components/DashboardLayout';
+import { Plus, Edit2, Trash2, Copy, Eye, EyeOff } from 'lucide-react';
+
+export default function DNSConfigPage() {
+  const [dnsConfigs, setDnsConfigs] = useState<DNSConfig[]>(generateMockDNSConfigs());
+  const [selectedConfigs, setSelectedConfigs] = useState<Set<string>>(new Set());
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newDomain, setNewDomain] = useState('');
+  const [newToken, setNewToken] = useState('');
+  const [showTokens, setShowTokens] = useState<Set<string>>(new Set());
+
+  const handleSelectConfig = (configId: string) => {
+    const newSelected = new Set(selectedConfigs);
+    if (newSelected.has(configId)) {
+      newSelected.delete(configId);
+    } else {
+      newSelected.add(configId);
+    }
+    setSelectedConfigs(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedConfigs.size === dnsConfigs.length) {
+      setSelectedConfigs(new Set());
+    } else {
+      setSelectedConfigs(new Set(dnsConfigs.map(c => c.id)));
+    }
+  };
+
+  const handleAddConfig = () => {
+    if (newDomain.trim() && newToken.trim()) {
+      const newConfig: DNSConfig = {
+        id: `dns-${Date.now()}`,
+        domain: newDomain,
+        token: newToken,
+        createdDate: new Date().toISOString().split('T')[0],
+        status: 'active',
+      };
+      setDnsConfigs([...dnsConfigs, newConfig]);
+      setNewDomain('');
+      setNewToken('');
+      setShowAddModal(false);
+    }
+  };
+
+  const handleDeleteConfig = (configId: string) => {
+    setDnsConfigs(dnsConfigs.filter(c => c.id !== configId));
+    setSelectedConfigs(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(configId);
+      return newSet;
+    });
+  };
+
+  const toggleShowToken = (configId: string) => {
+    const newSet = new Set(showTokens);
+    if (newSet.has(configId)) {
+      newSet.delete(configId);
+    } else {
+      newSet.add(configId);
+    }
+    setShowTokens(newSet);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  const getStatusBadgeColor = (status: string) => {
+    return status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700';
+  };
+
+  const breadcrumbs = [
+    { label: '首页', href: '/' },
+    { label: 'DNS 配置' },
+  ];
+
+  return (
+    <DashboardLayout breadcrumbs={breadcrumbs} currentPage="DNS 配置">
+      <div className="space-y-6">
+        {/* 页面标题和操作 */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-foreground">DNS 配置</h1>
+          <Button className="gap-2" onClick={() => setShowAddModal(true)}>
+            <Plus size={16} />
+            添加配置
+          </Button>
+        </div>
+
+        {/* DNS 配置列表 */}
+        <Card className="border border-border overflow-hidden">
+          <div className="px-6 py-3 border-b border-border flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
+              {selectedConfigs.size > 0 ? `已选择 ${selectedConfigs.size} 个` : `共 ${dnsConfigs.length} 个`}
+            </span>
+          </div>
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-secondary/30">
+                  <th className="text-center py-3 px-4 font-semibold text-foreground w-12">
+                    <input
+                      type="checkbox"
+                      checked={selectedConfigs.size === dnsConfigs.length && dnsConfigs.length > 0}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">域名</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">Token</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">状态</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">创建时间</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dnsConfigs.map((config, index) => (
+                  <tr
+                    key={config.id}
+                    className={`border-b border-border hover:bg-secondary/30 transition-colors ${
+                      selectedConfigs.has(config.id) ? 'bg-primary/10' : index % 2 === 0 ? 'bg-background' : 'bg-secondary/10'
+                    }`}
+                  >
+                    <td className="text-center py-3 px-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedConfigs.has(config.id)}
+                        onChange={() => handleSelectConfig(config.id)}
+                        className="w-4 h-4 cursor-pointer"
+                      />
+                    </td>
+                    <td className="py-3 px-4 font-medium text-foreground">{config.domain}</td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <code className="text-xs bg-secondary/50 px-2 py-1 rounded font-mono">
+                          {showTokens.has(config.id) ? config.token : '••••••••••••••••'}
+                        </code>
+                        <button
+                          onClick={() => toggleShowToken(config.id)}
+                          className="p-1 hover:bg-secondary rounded transition-colors"
+                          title={showTokens.has(config.id) ? '隐藏' : '显示'}
+                        >
+                          {showTokens.has(config.id) ? (
+                            <EyeOff size={14} className="text-muted-foreground" />
+                          ) : (
+                            <Eye size={14} className="text-muted-foreground" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => copyToClipboard(config.token)}
+                          className="p-1 hover:bg-secondary rounded transition-colors"
+                          title="复制"
+                        >
+                          <Copy size={14} className="text-muted-foreground" />
+                        </button>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(config.status)}`}>
+                        {config.status === 'active' ? '活跃' : '非活跃'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-muted-foreground">{config.createdDate}</td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
+                          <Edit2 size={16} className="text-muted-foreground" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteConfig(config.id)}
+                          className="p-1 hover:bg-red-100 rounded transition-colors"
+                          title="删除"
+                        >
+                          <Trash2 size={16} className="text-red-600" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        {/* 添加配置模态框 */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-96 border border-border p-6 space-y-4">
+              <h2 className="text-lg font-bold text-foreground">添加 DNS 配置</h2>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">域名</label>
+                  <input
+                    type="text"
+                    placeholder="例如：example.com"
+                    value={newDomain}
+                    onChange={(e) => setNewDomain(e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Token</label>
+                  <input
+                    type="text"
+                    placeholder="输入 Token"
+                    value={newToken}
+                    onChange={(e) => setNewToken(e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setNewDomain('');
+                    setNewToken('');
+                  }}
+                >
+                  取消
+                </Button>
+                <Button onClick={handleAddConfig}>添加</Button>
+              </div>
+            </Card>
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}

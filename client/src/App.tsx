@@ -5,6 +5,8 @@ import Dashboard from "@/pages/Dashboard";
 import Domains from "@/pages/Domains";
 import Websites from "@/pages/Websites";
 import LineGroups from "@/pages/LineGroups";
+import DNSConfig from "@/pages/DNSConfig";
+import Nodes from "@/pages/Nodes";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -16,6 +18,8 @@ function Router() {
       <Route path={"/domains"} component={Domains} />
       <Route path={"/websites"} component={Websites} />
       <Route path={"/line-groups"} component={LineGroups} />
+      <Route path={"/dns-config"} component={DNSConfig} />
+      <Route path={"/nodes"} component={Nodes} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

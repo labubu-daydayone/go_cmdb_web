@@ -30,12 +30,14 @@ interface NavItem {
 const navigationItems: NavItem[] = [
   { label: '仪表板', href: '/', icon: '📊' },
   { label: '域名管理', href: '/domains', icon: '🌐' },
+  { label: 'DNS 配置', href: '/dns-config', icon: '🔧' },
   {
     label: '网站管理',
     icon: '🌍',
     children: [
       { label: '网站列表', href: '/websites', icon: '📋' },
       { label: '线路分组', href: '/line-groups', icon: '🔀' },
+      { label: '节点列表', href: '/nodes', icon: '🖥' },
     ],
   },
   { label: '服务器', href: '/servers', icon: '🖥️' },
