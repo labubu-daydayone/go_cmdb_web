@@ -302,8 +302,8 @@ export default function Websites() {
                       value={formData.domain}
                       onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                       placeholder="输入域名"
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                      rows={2}
+                      className="w-full px-3 py-3 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                      rows={4}
                     />
                   </div>
                   <div className="flex gap-6 items-center">
