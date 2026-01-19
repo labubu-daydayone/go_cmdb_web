@@ -15,6 +15,25 @@ export default function Domains() {
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
+
+  const handleSelectDomain = (domainId: string) => {
+    const newSelected = new Set(selectedDomains);
+    if (newSelected.has(domainId)) {
+      newSelected.delete(domainId);
+    } else {
+      newSelected.add(domainId);
+    }
+    setSelectedDomains(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedDomains.size === filteredDomains.length) {
+      setSelectedDomains(new Set());
+    } else {
+      setSelectedDomains(new Set(filteredDomains.map(d => d.id)));
+    }
+  };
 
   const filteredDomains = domains.filter(domain => {
     const matchesSearch = domain.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -95,27 +114,50 @@ export default function Domains() {
           {/* 域名列表 */}
           <div className="lg:col-span-2">
             <Card className="border border-border overflow-hidden">
+              <div className="px-6 py-3 border-b border-border flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  {selectedDomains.size > 0 ? `已选择 ${selectedDomains.size} 个` : `共 ${filteredDomains.length} 个`}
+                </span>
+              </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-auto text-sm">
                   <thead>
                     <tr className="border-b border-border bg-secondary/30">
-                      <th className="text-left py-3 px-4 font-semibold text-foreground">域名</th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground">状态</th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground">过期日期</th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground">SSL</th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground">操作</th>
+                      <th className="text-center py-3 px-4 font-semibold text-foreground w-12">
+                        <input
+                          type="checkbox"
+                          checked={selectedDomains.size === filteredDomains.length && filteredDomains.length > 0}
+                          onChange={handleSelectAll}
+                          className="w-4 h-4 cursor-pointer"
+                        />
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">域名</th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">状态</th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">过期日期</th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">SSL</th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">操作</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredDomains.map((domain, index) => (
                       <tr
                         key={domain.id}
-                        className={`border-b border-border hover:bg-secondary/30 transition-colors cursor-pointer ${
-                          index % 2 === 0 ? 'bg-background' : 'bg-secondary/10'
-                        } ${selectedDomain?.id === domain.id ? 'bg-primary/5' : ''}`}
-                        onClick={() => setSelectedDomain(domain)}
+                        className={`border-b border-border hover:bg-secondary/30 transition-colors ${
+                          selectedDomains.has(domain.id) ? 'bg-primary/10' : index % 2 === 0 ? 'bg-background' : 'bg-secondary/10'
+                        } ${selectedDomain?.id === domain.id ? 'ring-1 ring-primary' : ''}`}
                       >
-                        <td className="py-3 px-4">
+                        <td className="text-center py-3 px-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedDomains.has(domain.id)}
+                            onChange={() => {
+                              handleSelectDomain(domain.id);
+                              setSelectedDomain(domain);
+                            }}
+                            className="w-4 h-4 cursor-pointer"
+                          />
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap cursor-pointer" onClick={() => setSelectedDomain(domain)}>
                           <div className="flex items-center gap-2">
                             <span className="text-lg">🌐</span>
                             <div>
@@ -124,18 +166,18 @@ export default function Domains() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 whitespace-nowrap cursor-pointer" onClick={() => setSelectedDomain(domain)}>
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(domain.status)}`}>
                             {domain.status === 'active' ? '活跃' : domain.status === 'inactive' ? '非活跃' : '已过期'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-muted-foreground">{domain.expiryDate}</td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 text-muted-foreground whitespace-nowrap cursor-pointer" onClick={() => setSelectedDomain(domain)}>{domain.expiryDate}</td>
+                        <td className="py-3 px-4 whitespace-nowrap cursor-pointer" onClick={() => setSelectedDomain(domain)}>
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSSLBadgeColor(domain.sslStatus)}`}>
                             {domain.sslStatus === 'valid' ? '有效' : domain.sslStatus === 'warning' ? '警告' : '已过期'}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <button className="p-1 hover:bg-secondary rounded transition-colors" title="查看">
                               <Eye size={16} className="text-muted-foreground" />

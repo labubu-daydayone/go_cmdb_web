@@ -3,6 +3,7 @@
  * 显示关键指标、统计信息和系统状态
  */
 
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { generateDashboardStats, generateMockServers, generateTimeSeriesData } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -13,6 +14,25 @@ export default function Dashboard() {
   const stats = generateDashboardStats();
   const servers = generateMockServers();
   const timeSeriesData = generateTimeSeriesData(30);
+  const [selectedServers, setSelectedServers] = useState<Set<string>>(new Set());
+
+  const handleSelectServer = (serverId: string) => {
+    const newSelected = new Set(selectedServers);
+    if (newSelected.has(serverId)) {
+      newSelected.delete(serverId);
+    } else {
+      newSelected.add(serverId);
+    }
+    setSelectedServers(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedServers.size === servers.length) {
+      setSelectedServers(new Set());
+    } else {
+      setSelectedServers(new Set(servers.map(s => s.id)));
+    }
+  };
 
   const onlineServers = servers.filter(s => s.status === 'online').length;
   const offlineServers = servers.filter(s => s.status === 'offline').length;
@@ -147,18 +167,31 @@ export default function Dashboard() {
 
         {/* 服务器列表 */}
         <Card className="p-6 border border-border">
-          <h3 className="text-lg font-bold text-foreground mb-4">服务器列表</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-foreground">服务器列表</h3>
+            {selectedServers.size > 0 && (
+              <span className="text-sm text-muted-foreground">已选择 {selectedServers.size} 个</span>
+            )}
+          </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-auto text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">服务器名称</th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">IP 地址</th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">状态</th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">CPU</th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">内存</th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">磁盘</th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">操作系统</th>
+                  <th className="text-center py-3 px-4 font-semibold text-foreground w-12">
+                    <input
+                      type="checkbox"
+                      checked={selectedServers.size === servers.length && servers.length > 0}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">服务器名称</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">IP 地址</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">状态</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">CPU</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">内存</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">磁盘</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground whitespace-nowrap">操作系统</th>
                 </tr>
               </thead>
               <tbody>
@@ -166,12 +199,20 @@ export default function Dashboard() {
                   <tr 
                     key={server.id} 
                     className={`border-b border-border hover:bg-secondary/50 transition-colors ${
-                      index % 2 === 0 ? 'bg-background' : 'bg-secondary/20'
+                      selectedServers.has(server.id) ? 'bg-primary/10' : index % 2 === 0 ? 'bg-background' : 'bg-secondary/20'
                     }`}
                   >
-                    <td className="py-3 px-4 font-medium text-foreground">{server.name}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{server.ip}</td>
-                    <td className="py-3 px-4">
+                    <td className="text-center py-3 px-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedServers.has(server.id)}
+                        onChange={() => handleSelectServer(server.id)}
+                        className="w-4 h-4 cursor-pointer"
+                      />
+                    </td>
+                    <td className="py-3 px-4 font-medium text-foreground whitespace-nowrap">{server.name}</td>
+                    <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">{server.ip}</td>
+                    <td className="py-3 px-4 whitespace-nowrap">
                       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                         server.status === 'online' 
                           ? 'bg-green-100 text-green-700'
@@ -189,7 +230,7 @@ export default function Dashboard() {
                         {server.status === 'online' ? '在线' : server.status === 'offline' ? '离线' : '维护中'}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="w-16 h-2 bg-secondary rounded-full overflow-hidden">
                           <div 
@@ -200,7 +241,7 @@ export default function Dashboard() {
                         <span className="text-xs text-muted-foreground">{server.cpu}%</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="w-16 h-2 bg-secondary rounded-full overflow-hidden">
                           <div 
@@ -211,7 +252,7 @@ export default function Dashboard() {
                         <span className="text-xs text-muted-foreground">{server.memory}%</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="w-16 h-2 bg-secondary rounded-full overflow-hidden">
                           <div 
@@ -222,7 +263,7 @@ export default function Dashboard() {
                         <span className="text-xs text-muted-foreground">{server.disk}%</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-muted-foreground">{server.os}</td>
+                    <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">{server.os}</td>
                   </tr>
                 ))}
               </tbody>
