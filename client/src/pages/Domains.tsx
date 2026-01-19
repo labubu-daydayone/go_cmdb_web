@@ -10,12 +10,17 @@ import { generateMockDomains, generateMockDNSRecords, Domain } from '@/lib/mockD
 import DashboardLayout from '@/components/DashboardLayout';
 import { ChevronRight, Search, Plus, Edit2, Trash2, Eye } from 'lucide-react';
 
+type SortField = 'name' | 'status' | 'expiryDate' | 'sslStatus';
+type SortOrder = 'asc' | 'desc';
+
 export default function Domains() {
   const [domains] = useState<Domain[]>(generateMockDomains());
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
+  const [sortField, setSortField] = useState<SortField>('name');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
   const handleSelectDomain = (domainId: string) => {
     const newSelected = new Set(selectedDomains);
@@ -35,13 +40,43 @@ export default function Domains() {
     }
   };
 
-  const filteredDomains = domains.filter(domain => {
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const baseFilteredDomains = domains.filter(domain => {
     const matchesSearch = domain.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || domain.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
+  const filteredDomains = [...baseFilteredDomains].sort((a, b) => {
+    let aValue: any = a[sortField];
+    let bValue: any = b[sortField];
+
+    if (typeof aValue === 'string') {
+      aValue = aValue.toLowerCase();
+      bValue = bValue.toLowerCase();
+    }
+
+    if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
   const dnsRecords = selectedDomain ? generateMockDNSRecords(selectedDomain.id) : [];
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <span className="ml-1 text-muted-foreground text-xs">⇅</span>;
+    }
+    return <span className="ml-1 text-primary text-xs">{sortOrder === 'asc' ? '↑' : '↓'}</span>;
+  };
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -119,8 +154,8 @@ export default function Domains() {
                   {selectedDomains.size > 0 ? `已选择 ${selectedDomains.size} 个` : `共 ${filteredDomains.length} 个`}
                 </span>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-auto text-sm">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border bg-secondary/30">
                       <th className="text-center py-3 px-4 font-semibold text-foreground w-12">
@@ -131,10 +166,30 @@ export default function Domains() {
                           className="w-4 h-4 cursor-pointer"
                         />
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground">域名</th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground">状态</th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground">过期日期</th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground">SSL</th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('name')}>
+                        <div className="flex items-center">
+                          域名
+                          <SortIcon field="name" />
+                        </div>
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('status')}>
+                        <div className="flex items-center">
+                          状态
+                          <SortIcon field="status" />
+                        </div>
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('expiryDate')}>
+                        <div className="flex items-center">
+                          过期日期
+                          <SortIcon field="expiryDate" />
+                        </div>
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('sslStatus')}>
+                        <div className="flex items-center">
+                          SSL
+                          <SortIcon field="sslStatus" />
+                        </div>
+                      </th>
                       <th className="text-left py-3 px-4 font-semibold text-foreground">操作</th>
                     </tr>
                   </thead>
