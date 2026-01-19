@@ -297,10 +297,10 @@ export default function CacheSettings() {
         {/* 添加/编辑表单 */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black/30 flex items-end z-50 animate-in fade-in duration-200">
-            <Card className="w-full h-1/2 rounded-t-2xl border-0 p-0 overflow-y-auto bg-background animate-in slide-in-from-bottom duration-300">
+            <Card className="w-full h-1/2 rounded-t-2xl border-0 p-0 overflow-hidden bg-background flex flex-col">
               {/* 表单头部 */}
-              <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
-                <h2 className="text-base font-bold text-foreground">
+              <div className="bg-background border-b border-border px-8 py-4 flex items-center justify-between flex-shrink-0">
+                <h2 className="text-lg font-bold text-foreground">
                   {editingId ? '编辑缓存规则' : '添加缓存规则'}
                 </h2>
                 <button
@@ -311,10 +311,10 @@ export default function CacheSettings() {
                 </button>
               </div>
 
-              {/* 表单内容 */}
-              <div className="p-6 space-y-6">
-                {/* 缓存名称 - label和input在一行 */}
-                <div className="flex items-center gap-4">
+              {/* 表单内容 - 可滚动 */}
+              <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
+                {/* 缓存名称 */}
+                <div className="flex items-center gap-6">
                   <label className="text-sm font-medium text-foreground w-32 flex-shrink-0">
                     缓存名称: <span className="text-destructive">*</span>
                   </label>
@@ -323,23 +323,23 @@ export default function CacheSettings() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="例如：首页缓存"
-                    className="w-48 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-72 px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
-                {/* 匹配规则 */}
+                {/* 匹配规则标题 */}
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-4">
+                  <label className="block text-sm font-medium text-foreground mb-6">
                     匹配规则:
                   </label>
 
                   {/* 规则行 */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {formData.rules.map((rule, index) => (
-                      <div key={rule.id} className="flex items-center gap-4">
+                      <div key={rule.id} className="flex items-center gap-6 pb-4 border-b border-border/50">
                         {/* 类型 */}
-                        <div className="flex items-center gap-2">
-                          <label className="text-sm font-medium text-foreground w-12 flex-shrink-0">
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <label className="text-sm font-medium text-foreground w-12">
                             类型:
                           </label>
                           <select
@@ -349,7 +349,7 @@ export default function CacheSettings() {
                                 ruleType: e.target.value as 'file' | 'directory',
                               })
                             }
-                            className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary min-w-32"
                           >
                             <option value="directory">目录</option>
                             <option value="file">文件</option>
@@ -357,7 +357,7 @@ export default function CacheSettings() {
                         </div>
 
                         {/* 规则 */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3 flex-1">
                           <label className="text-sm font-medium text-foreground w-12 flex-shrink-0">
                             规则:
                           </label>
@@ -372,13 +372,13 @@ export default function CacheSettings() {
                                 ? '/api/'
                                 : 'png|jpg'
                             }
-                            className="w-40 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="flex-1 px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                         </div>
 
                         {/* TTL */}
-                        <div className="flex items-center gap-2">
-                          <label className="text-sm font-medium text-foreground w-12 flex-shrink-0">
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <label className="text-sm font-medium text-foreground w-12">
                             TTL:
                           </label>
                           <input
@@ -388,17 +388,17 @@ export default function CacheSettings() {
                               handleUpdateRule(rule.id, { ttl: parseInt(e.target.value) })
                             }
                             min="1"
-                            className="w-24 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-32 px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                         </div>
 
                         {/* 删除按钮 */}
                         <button
                           onClick={() => handleRemoveRule(rule.id)}
-                          className="p-1 hover:bg-destructive/10 rounded transition-colors flex-shrink-0"
+                          className="p-2 hover:bg-destructive/10 rounded transition-colors flex-shrink-0"
                           title="删除规则"
                         >
-                          <Trash2 size={16} className="text-destructive" />
+                          <Trash2 size={18} className="text-destructive" />
                         </button>
                       </div>
                     ))}
@@ -407,16 +407,16 @@ export default function CacheSettings() {
                   {/* 添加规则按钮 */}
                   <button
                     onClick={handleAddRule}
-                    className="mt-4 flex items-center gap-2 px-3 py-2 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                    className="mt-6 flex items-center gap-2 px-4 py-2 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
                   >
-                    <Plus size={16} />
+                    <Plus size={18} />
                     添加规则
                   </button>
                 </div>
               </div>
 
-              {/* 表单按钮 */}
-              <div className="border-t border-border px-6 py-4 flex gap-2 justify-end">
+              {/* 表单按钮 - 固定在底部 */}
+              <div className="border-t border-border px-8 py-4 flex gap-3 justify-end flex-shrink-0 bg-background">
                 <Button variant="outline" onClick={resetForm}>
                   取消
                 </Button>
