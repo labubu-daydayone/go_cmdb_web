@@ -219,7 +219,7 @@ const theme = createTheme({
   
   // 组件样式覆盖
   components: {
-    // 按钮
+    // 按钮 - 无边框扁平设计
     MuiButton: {
       styleOverrides: {
         root: {
@@ -229,25 +229,39 @@ const theme = createTheme({
           fontWeight: 600,
           textTransform: 'none',
           boxShadow: 'none',
+          border: 'none',
           transition: 'all 0.15s ease-out',
           '&:hover': {
             boxShadow: 'none',
-            transform: 'scale(1.02)',
+            border: 'none',
+            transform: 'translateY(-1px)',
           },
           '&:active': {
-            transform: 'scale(0.98)',
+            transform: 'translateY(0)',
           },
         },
         contained: {
           background: colors.primary.gradient,
+          border: 'none',
           '&:hover': {
             background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+            border: 'none',
           },
         },
         outlined: {
-          borderWidth: 2,
+          backgroundColor: 'rgba(99, 102, 241, 0.08)',
+          color: colors.primary.main,
+          border: 'none',
           '&:hover': {
-            borderWidth: 2,
+            backgroundColor: 'rgba(99, 102, 241, 0.15)',
+            border: 'none',
+          },
+        },
+        text: {
+          border: 'none',
+          '&:hover': {
+            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+            border: 'none',
           },
         },
         sizeSmall: {

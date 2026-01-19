@@ -28,16 +28,45 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         color = 'error';
         break;
       case 'outline':
-        muiVariant = 'outlined';
+        muiVariant = 'contained';
         color = 'primary';
+        sx = { 
+          ...sx, 
+          backgroundColor: 'rgba(99, 102, 241, 0.08)',
+          color: '#6366F1',
+          border: 'none',
+          '&:hover': {
+            backgroundColor: 'rgba(99, 102, 241, 0.15)',
+            border: 'none',
+          },
+        };
         break;
       case 'secondary':
         muiVariant = 'contained';
-        color = 'secondary';
+        sx = { 
+          ...sx, 
+          backgroundColor: '#F3F4F6',
+          color: '#374151',
+          border: 'none',
+          boxShadow: 'none',
+          '&:hover': {
+            backgroundColor: '#E5E7EB',
+            border: 'none',
+            boxShadow: 'none',
+          },
+        };
         break;
       case 'ghost':
         muiVariant = 'text';
-        color = 'inherit';
+        sx = { 
+          ...sx, 
+          color: '#6B7280',
+          border: 'none',
+          '&:hover': {
+            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+            border: 'none',
+          },
+        };
         break;
       case 'link':
         muiVariant = 'text';
