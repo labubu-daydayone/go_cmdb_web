@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card } from '@/components/mui/Card';
+import { Button } from '@/components/mui';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 

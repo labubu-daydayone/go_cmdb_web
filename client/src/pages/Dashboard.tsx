@@ -1,10 +1,10 @@
 /**
- * CMDB 仪表板页面
+ * CMDB 仪表板页面 - Material UI 版本
  * 显示关键指标、统计信息和系统状态
  */
 
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
+import { Card } from '@/components/mui/Card';
 import { generateMockServers, generateTimeSeriesData } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -55,7 +55,7 @@ export default function Dashboard() {
         {/* 关键指标卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* 总域名数 */}
-          <Card className="p-6 border border-border hover:shadow-md transition-shadow">
+          <Card className="p-6 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-2">总域名数</p>
@@ -69,7 +69,7 @@ export default function Dashboard() {
           </Card>
 
           {/* 活跃域名 */}
-          <Card className="p-6 border border-border hover:shadow-md transition-shadow">
+          <Card className="p-6 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-2">活跃域名</p>
@@ -83,7 +83,7 @@ export default function Dashboard() {
           </Card>
 
           {/* 即将过期 */}
-          <Card className="p-6 border border-border hover:shadow-md transition-shadow">
+          <Card className="p-6 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-2">即将过期</p>
@@ -97,7 +97,7 @@ export default function Dashboard() {
           </Card>
 
           {/* SSL 警告 */}
-          <Card className="p-6 border border-border hover:shadow-md transition-shadow">
+          <Card className="p-6 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-2">SSL 警告</p>
@@ -114,7 +114,7 @@ export default function Dashboard() {
         {/* 图表区域 */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* 请求趋势 */}
-          <Card className="col-span-1 lg:col-span-2 p-6 border border-border">
+          <Card className="col-span-1 lg:col-span-2 p-6">
             <h3 className="text-lg font-bold text-foreground mb-4">请求趋势（30天）</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={timeSeriesData}>
@@ -146,7 +146,7 @@ export default function Dashboard() {
           </Card>
 
           {/* 服务器状态 */}
-          <Card className="p-6 border border-border">
+          <Card className="p-6">
             <h3 className="text-lg font-bold text-foreground mb-4">服务器状态</h3>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -171,7 +171,7 @@ export default function Dashboard() {
         </div>
 
         {/* 服务器列表 */}
-        <Card className="p-6 border border-border">
+        <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-foreground">服务器列表</h3>
             {selectedServers.size > 0 && (

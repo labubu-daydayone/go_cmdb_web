@@ -1,5 +1,4 @@
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+// Material UI 不需要全局 Toaster 和 TooltipProvider
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -43,10 +42,7 @@ function App() {
         defaultTheme="light"
       >
         <MenuProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
+          <Router />
         </MenuProvider>
       </ThemeProvider>
     </ErrorBoundary>

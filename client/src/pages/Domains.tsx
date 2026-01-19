@@ -4,8 +4,8 @@
  */
 
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card } from '@/components/mui/Card';
+import { Button } from '@/components/mui';
 import { generateMockDomains, Domain } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ChevronRight, Search, Plus, Edit2, Trash2, Eye } from 'lucide-react';

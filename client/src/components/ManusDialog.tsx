@@ -1,13 +1,5 @@
 import { useEffect, useState } from "react";
-
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Button, Dialog, DialogContent, DialogActions, Typography, Box } from "@/components/mui";
 
 interface ManusDialogProps {
   title?: string;
@@ -49,37 +41,88 @@ export function ManusDialog({
   return (
     <Dialog
       open={onOpenChange ? open : internalOpen}
-      onOpenChange={handleOpenChange}
+      onClose={() => handleOpenChange(false)}
+      PaperProps={{
+        sx: {
+          borderRadius: '20px',
+          width: '400px',
+          backgroundColor: '#f8f8f7',
+          boxShadow: '0px 4px 11px 0px rgba(0,0,0,0.08)',
+          border: '1px solid rgba(0,0,0,0.08)',
+          backdropFilter: 'blur(32px)',
+        }
+      }}
     >
-      <DialogContent className="py-5 bg-[#f8f8f7] rounded-[20px] w-[400px] shadow-[0px_4px_11px_0px_rgba(0,0,0,0.08)] border border-[rgba(0,0,0,0.08)] backdrop-blur-2xl p-0 gap-0 text-center">
-        <div className="flex flex-col items-center gap-2 p-5 pt-12">
-          {logo ? (
-            <div className="w-16 h-16 bg-white rounded-xl border border-[rgba(0,0,0,0.08)] flex items-center justify-center">
-              <img src={logo} alt="Dialog graphic" className="w-10 h-10 rounded-md" />
-            </div>
-          ) : null}
+      <DialogContent sx={{ textAlign: 'center', pt: 6, pb: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          {logo && (
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                backgroundColor: 'white',
+                borderRadius: '12px',
+                border: '1px solid rgba(0,0,0,0.08)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <img src={logo} alt="Dialog graphic" style={{ width: 40, height: 40, borderRadius: '6px' }} />
+            </Box>
+          )}
 
-          {/* Title and subtitle */}
-          {title ? (
-            <DialogTitle className="text-xl font-semibold text-[#34322d] leading-[26px] tracking-[-0.44px]">
+          {title && (
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: '20px',
+                fontWeight: 600,
+                color: '#34322d',
+                lineHeight: '26px',
+                letterSpacing: '-0.44px',
+              }}
+            >
               {title}
-            </DialogTitle>
-          ) : null}
-          <DialogDescription className="text-sm text-[#858481] leading-5 tracking-[-0.154px]">
-            Please login with Manus to continue
-          </DialogDescription>
-        </div>
-
-        <DialogFooter className="px-5 py-5">
-          {/* Login button */}
-          <Button
-            onClick={onLogin}
-            className="w-full h-10 bg-[#1a1a19] hover:bg-[#1a1a19]/90 text-white rounded-[10px] text-sm font-medium leading-5 tracking-[-0.154px]"
+            </Typography>
+          )}
+          
+          <Typography
+            variant="body2"
+            sx={{
+              fontSize: '14px',
+              color: '#858481',
+              lineHeight: '20px',
+              letterSpacing: '-0.154px',
+            }}
           >
-            Login with Manus
-          </Button>
-        </DialogFooter>
+            Please login with Manus to continue
+          </Typography>
+        </Box>
       </DialogContent>
+
+      <DialogActions sx={{ px: 2.5, pb: 2.5 }}>
+        <Button
+          onClick={onLogin}
+          variant="default"
+          sx={{
+            width: '100%',
+            height: '40px',
+            backgroundColor: '#1a1a19',
+            '&:hover': {
+              backgroundColor: 'rgba(26, 26, 25, 0.9)',
+            },
+            color: 'white',
+            borderRadius: '10px',
+            fontSize: '14px',
+            fontWeight: 500,
+            lineHeight: '20px',
+            letterSpacing: '-0.154px',
+          }}
+        >
+          Login with Manus
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }

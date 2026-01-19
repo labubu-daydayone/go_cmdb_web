@@ -5,8 +5,8 @@
 
 import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Button } from '@/components/mui';
+import { Card } from '@/components/mui/Card';
 import { Pencil, Trash2 } from 'lucide-react';
 
 interface OriginGroup {

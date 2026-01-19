@@ -1,5 +1,5 @@
 /**
- * CMDB 后台布局组件
+ * CMDB 后台布局组件 - Material UI 版本
  * 包含侧边栏导航和顶部导航栏
  * 设计风格：现代企业风 - 深蓝侧边栏 + 浅色顶部导航
  */
@@ -8,8 +8,9 @@ import { ReactNode, useState } from 'react';
 import * as React from 'react';
 import { Link, useLocation } from 'wouter';
 import { Menu, X, ChevronRight, ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/mui';
 import { useMenu } from '@/contexts/MenuContext';
+import { colors } from '@/theme';
 
 interface Breadcrumb {
   label: string;
@@ -77,30 +78,80 @@ export default function DashboardLayout({
     <div className="flex h-screen bg-background">
       {/* 侧边栏 */}
       <aside
-        className={`${
-          sidebarOpen ? 'w-60' : 'w-20'
-        } bg-sidebar text-sidebar-foreground transition-all duration-300 flex flex-col border-r border-sidebar-border`}
+        style={{
+          width: sidebarOpen ? '240px' : '80px',
+          backgroundColor: colors.sidebar.background,
+          color: colors.sidebar.foreground,
+          transition: 'width 0.3s ease',
+          display: 'flex',
+          flexDirection: 'column',
+          borderRight: `1px solid ${colors.sidebar.border}`,
+        }}
       >
         {/* Logo 区域 */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
+        <div
+          style={{
+            height: '64px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 16px',
+            borderBottom: `1px solid ${colors.sidebar.border}`,
+          }}
+        >
           {sidebarOpen && (
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center font-bold text-sm">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  backgroundColor: colors.sidebar.accent,
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 'bold',
+                  fontSize: '14px',
+                }}
+              >
                 CM
               </div>
-              <span className="font-bold text-lg">CMDB</span>
+              <span style={{ fontWeight: 'bold', fontSize: '18px' }}>CMDB</span>
             </div>
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-1 hover:bg-sidebar-accent/20 rounded-lg transition-colors"
+            style={{
+              padding: '4px',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: colors.sidebar.foreground,
+              borderRadius: '8px',
+              transition: 'background-color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
           >
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
 
         {/* 导航菜单 */}
-        <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto">
+        <nav
+          style={{
+            flex: 1,
+            padding: '16px 12px',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}
+        >
           {navigationItems.map((item) => {
             const isActive = location === item.href;
             const isExpanded = expandedMenu === item.label;
@@ -111,41 +162,79 @@ export default function DashboardLayout({
                 <div key={item.label}>
                   <button
                     onClick={() => setExpandedMenu(isExpanded ? null : item.label)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                      isExpanded
-                        ? 'bg-sidebar-accent/20 text-sidebar-accent-foreground'
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent/10'
-                    }`}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      backgroundColor: isExpanded ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                      color: colors.sidebar.foreground,
+                      transition: 'background-color 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isExpanded) {
+                        e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isExpanded) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
                   >
-                    <span className="text-xl">{item.icon}</span>
+                    <span style={{ fontSize: '20px' }}>{item.icon}</span>
                     {sidebarOpen && (
                       <>
-                        <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
+                        <span style={{ fontSize: '14px', fontWeight: 500, flex: 1, textAlign: 'left' }}>
+                          {item.label}
+                        </span>
                         <ChevronDown
                           size={16}
-                          className={`transition-transform ${
-                            isExpanded ? 'rotate-180' : ''
-                          }`}
+                          style={{
+                            transition: 'transform 0.2s',
+                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                          }}
                         />
                       </>
                     )}
                   </button>
                   {isExpanded && sidebarOpen && (
-                    <div className="ml-4 mt-1 space-y-1">
+                    <div style={{ marginLeft: '16px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {item.children!.map((child) => {
                         const isChildActive = location === child.href;
                         return (
-                          <Link
-                            key={child.href}
-                            href={child.href!}
-                            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
-                              isChildActive
-                                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                                : 'text-sidebar-foreground hover:bg-sidebar-accent/10'
-                            }`}
-                          >
-                            <span>{child.icon}</span>
-                            {child.label}
+                          <Link key={child.href} href={child.href!}>
+                            <a
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                fontSize: '14px',
+                                textDecoration: 'none',
+                                backgroundColor: isChildActive ? colors.sidebar.accent : 'transparent',
+                                color: colors.sidebar.foreground,
+                                transition: 'background-color 0.2s',
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isChildActive) {
+                                  e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isChildActive) {
+                                  e.currentTarget.style.backgroundColor = 'transparent';
+                                }
+                              }}
+                            >
+                              <span>{child.icon}</span>
+                              {child.label}
+                            </a>
                           </Link>
                         );
                       })}
@@ -156,32 +245,64 @@ export default function DashboardLayout({
             }
 
             return (
-              <Link
-                key={item.href}
-                href={item.href!}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                  isActive
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent/10'
-                }`}
-              >
-                <span className="text-xl">{item.icon}</span>
-                {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
+              <Link key={item.href} href={item.href!}>
+                <a
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    textDecoration: 'none',
+                    backgroundColor: isActive ? colors.sidebar.accent : 'transparent',
+                    color: colors.sidebar.foreground,
+                    transition: 'background-color 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  <span style={{ fontSize: '20px' }}>{item.icon}</span>
+                  {sidebarOpen && <span style={{ fontSize: '14px', fontWeight: 500 }}>{item.label}</span>}
+                </a>
               </Link>
             );
           })}
         </nav>
 
         {/* 底部用户信息 */}
-        <div className="border-t border-sidebar-border p-3">
-          <div className="flex items-center gap-3 px-2 py-2">
-            <div className="w-8 h-8 bg-sidebar-accent rounded-full flex items-center justify-center text-xs font-bold">
+        <div style={{ borderTop: `1px solid ${colors.sidebar.border}`, padding: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px' }}>
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                backgroundColor: colors.sidebar.accent,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '12px',
+                fontWeight: 'bold',
+              }}
+            >
               A
             </div>
             {sidebarOpen && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">Admin User</p>
-                <p className="text-xs opacity-75 truncate">admin@cmdb.local</p>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: '14px', fontWeight: 500, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  Admin User
+                </p>
+                <p style={{ fontSize: '12px', opacity: 0.75, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  admin@cmdb.local
+                </p>
               </div>
             )}
           </div>
@@ -193,8 +314,10 @@ export default function DashboardLayout({
         {/* 顶部导航栏 */}
         <header className="h-16 bg-background border-b border-border flex items-center justify-between px-6">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-              首页
+            <Link href="/">
+              <a className="text-sm text-muted-foreground hover:text-foreground" style={{ textDecoration: 'none' }}>
+                首页
+              </a>
             </Link>
             {breadcrumbs.length > 0 && (
               <>
@@ -203,8 +326,10 @@ export default function DashboardLayout({
                   {breadcrumbs.map((crumb, index) => (
                     <div key={index} className="flex items-center gap-2">
                       {crumb.href ? (
-                        <Link href={crumb.href} className="text-sm text-muted-foreground hover:text-foreground">
-                          {crumb.label}
+                        <Link href={crumb.href}>
+                          <a className="text-sm text-muted-foreground hover:text-foreground" style={{ textDecoration: 'none' }}>
+                            {crumb.label}
+                          </a>
                         </Link>
                       ) : (
                         <span className="text-sm text-foreground font-medium">{crumb.label}</span>

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card } from '@/components/mui/Card';
+import { Button } from '@/components/mui';
 import { generateMockWebsites, Website } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Edit2, Trash2, Zap, X } from 'lucide-react';
