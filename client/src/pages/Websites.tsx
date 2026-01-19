@@ -442,7 +442,6 @@ export default function Websites() {
                           <th className="text-left py-2 px-2 font-medium text-foreground w-48">名称</th>
                           <th className="text-left py-2 px-2 font-medium text-foreground w-24">类型</th>
                           <th className="text-left py-2 px-2 font-medium text-foreground">地址</th>
-                          <th className="text-left py-2 px-2 font-medium text-foreground">操作</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -463,9 +462,6 @@ export default function Websites() {
                             </td>
                             <td className="py-2 px-2 text-muted-foreground w-24">{group.type}</td>
                             <td className="py-2 px-2 text-muted-foreground">{group.address}</td>
-                            <td className="py-2 px-2">
-                              <button className="text-primary text-xs hover:text-primary/80">使用</button>
-                            </td>
                           </tr>
                         ))}
                       </tbody>
