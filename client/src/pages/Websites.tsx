@@ -283,7 +283,7 @@ export default function Websites() {
         {/* H5 风格的表单 */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black/30 flex items-end z-50">
-            <Card className="w-full rounded-t-2xl border-0 p-0 h-2/3 overflow-y-auto bg-background/80">
+            <Card className="w-full rounded-t-2xl border-0 p-0 h-2/3 overflow-y-auto bg-background">
               {/* 表单头部 */}
               <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
                 <h2 className="text-base font-bold text-foreground">添加网站</h2>
@@ -307,7 +307,7 @@ export default function Websites() {
                     />
                   </div>
                   <div className="grid grid-cols-3 gap-3">
-                    <div>
+                    <div className="col-span-2">
                       <label className="block text-xs font-medium text-foreground mb-2">线路</label>
                       <select
                         value={formData.lineGroup}
@@ -320,8 +320,8 @@ export default function Websites() {
                         <option>线路4</option>
                       </select>
                     </div>
-                    <div className="flex items-end">
-                      <label className="flex items-center gap-2 cursor-pointer">
+                    <div>
+                      <label className="flex items-center gap-2 cursor-pointer h-full pt-6">
                         <input
                           type="checkbox"
                           checked={formData.https}
