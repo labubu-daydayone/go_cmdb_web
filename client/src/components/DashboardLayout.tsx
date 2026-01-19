@@ -38,6 +38,7 @@ const navigationItems: NavItem[] = [
       { label: '网站列表', href: '/websites', icon: '📋' },
       { label: '线路分组', href: '/line-groups', icon: '🔀' },
       { label: '节点列表', href: '/nodes', icon: '🖥' },
+      { label: '节点分组', href: '/node-groups', icon: '📋' },
     ],
   },
   { label: '服务器', href: '/servers', icon: '🖥️' },

@@ -1,6 +1,6 @@
 /**
  * 节点列表页面
- * 显示所有节点信息和管理功能
+ * 显示所有节点信息和管理功能，支持展开显示子IP
  */
 
 import { useState } from 'react';
@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { generateMockNodes, Node } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Edit2, Trash2, Plus as PlusIcon, Zap } from 'lucide-react';
+import { Plus, Edit2, Trash2, ChevronDown, ChevronRight, X } from 'lucide-react';
 
 type SortField = 'name' | 'ip' | 'managementPort' | 'status';
 type SortOrder = 'asc' | 'desc';
@@ -16,10 +16,14 @@ type SortOrder = 'asc' | 'desc';
 export default function Nodes() {
   const [nodes, setNodes] = useState<Node[]>(generateMockNodes());
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [showAddSubIPModal, setShowAddSubIPModal] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [newSubIP, setNewSubIP] = useState('');
 
   const handleSelectNode = (nodeId: string) => {
     const newSelected = new Set(selectedNodes);
@@ -37,6 +41,59 @@ export default function Nodes() {
     } else {
       setSelectedNodes(new Set(filteredNodes.map(n => n.id)));
     }
+  };
+
+  const handleToggleExpand = (nodeId: string) => {
+    const newExpanded = new Set(expandedNodes);
+    if (newExpanded.has(nodeId)) {
+      newExpanded.delete(nodeId);
+    } else {
+      newExpanded.add(nodeId);
+    }
+    setExpandedNodes(newExpanded);
+  };
+
+  const handleAddSubIP = (nodeId: string) => {
+    setSelectedNodeId(nodeId);
+    setShowAddSubIPModal(true);
+  };
+
+  const handleSaveSubIP = () => {
+    if (selectedNodeId && newSubIP.trim()) {
+      setNodes(nodes.map(node => {
+        if (node.id === selectedNodeId) {
+          const subIPs = node.subIPs || [];
+          return {
+            ...node,
+            subIPs: [
+              ...subIPs,
+              {
+                id: `subip-${Date.now()}`,
+                ip: newSubIP,
+                enabled: true,
+                createdDate: new Date().toISOString().split('T')[0],
+              },
+            ],
+          };
+        }
+        return node;
+      }));
+      setNewSubIP('');
+      setShowAddSubIPModal(false);
+      setSelectedNodeId(null);
+    }
+  };
+
+  const handleDeleteSubIP = (nodeId: string, subIPId: string) => {
+    setNodes(nodes.map(node => {
+      if (node.id === nodeId) {
+        return {
+          ...node,
+          subIPs: (node.subIPs || []).filter(subip => subip.id !== subIPId),
+        };
+      }
+      return node;
+    }));
   };
 
   const handleSort = (field: SortField) => {
@@ -137,97 +194,185 @@ export default function Nodes() {
               {selectedNodes.size > 0 ? `已选择 ${selectedNodes.size} 个` : `共 ${filteredNodes.length} 个`}
             </span>
           </div>
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-secondary/30">
-                  <th className="text-center py-3 px-4 font-semibold text-foreground w-12">
+          <div className="space-y-0">
+            {/* 表头 */}
+            <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-border bg-secondary/30 font-semibold text-foreground text-sm">
+              <div className="col-span-1 text-center">
+                <input
+                  type="checkbox"
+                  checked={selectedNodes.size === filteredNodes.length && filteredNodes.length > 0}
+                  onChange={handleSelectAll}
+                  className="w-4 h-4 cursor-pointer"
+                />
+              </div>
+              <div className="col-span-1 text-center"></div>
+              <div className="col-span-2 cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('name')}>
+                <div className="flex items-center">
+                  名称
+                  <SortIcon field="name" />
+                </div>
+              </div>
+              <div className="col-span-2 cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('ip')}>
+                <div className="flex items-center">
+                  IP
+                  <SortIcon field="ip" />
+                </div>
+              </div>
+              <div className="col-span-2 cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('managementPort')}>
+                <div className="flex items-center">
+                  管理端口
+                  <SortIcon field="managementPort" />
+                </div>
+              </div>
+              <div className="col-span-1">启用</div>
+              <div className="col-span-2 cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('status')}>
+                <div className="flex items-center">
+                  状态
+                  <SortIcon field="status" />
+                </div>
+              </div>
+              <div className="col-span-1">操作</div>
+            </div>
+
+            {/* 节点行 */}
+            {filteredNodes.map((node, index) => (
+              <div key={node.id}>
+                <div
+                  className={`grid grid-cols-12 gap-4 px-6 py-3 border-b border-border hover:bg-secondary/30 transition-colors ${
+                    selectedNodes.has(node.id) ? 'bg-primary/10' : index % 2 === 0 ? 'bg-background' : 'bg-secondary/10'
+                  }`}
+                >
+                  <div className="col-span-1 text-center">
                     <input
                       type="checkbox"
-                      checked={selectedNodes.size === filteredNodes.length && filteredNodes.length > 0}
-                      onChange={handleSelectAll}
+                      checked={selectedNodes.has(node.id)}
+                      onChange={() => handleSelectNode(node.id)}
                       className="w-4 h-4 cursor-pointer"
                     />
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('name')}>
-                    <div className="flex items-center">
-                      名称
-                      <SortIcon field="name" />
+                  </div>
+                  <div className="col-span-1 text-center">
+                    <button
+                      onClick={() => handleToggleExpand(node.id)}
+                      className="p-1 hover:bg-secondary rounded transition-colors"
+                      title={expandedNodes.has(node.id) ? '收起' : '展开'}
+                    >
+                      {expandedNodes.has(node.id) ? (
+                        <ChevronDown size={16} className="text-muted-foreground" />
+                      ) : (
+                        <ChevronRight size={16} className="text-muted-foreground" />
+                      )}
+                    </button>
+                  </div>
+                  <div className="col-span-2 font-medium text-foreground">{node.name}</div>
+                  <div className="col-span-2 text-muted-foreground font-mono text-xs">{node.ip}</div>
+                  <div className="col-span-2 text-muted-foreground">{node.managementPort}</div>
+                  <div className="col-span-1">
+                    <input
+                      type="checkbox"
+                      checked={node.enabled}
+                      disabled
+                      className="w-4 h-4 cursor-not-allowed"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(node.status)}`}>
+                      {node.status === 'online' ? '在线' : node.status === 'offline' ? '离线' : '维护中'}
+                    </span>
+                  </div>
+                  <div className="col-span-1 flex items-center gap-2">
+                    <button
+                      onClick={() => handleAddSubIP(node.id)}
+                      className="p-1 hover:bg-secondary rounded transition-colors"
+                      title="添加子IP"
+                    >
+                      <Plus size={16} className="text-muted-foreground" />
+                    </button>
+                    <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
+                      <Edit2 size={16} className="text-muted-foreground" />
+                    </button>
+                    <button className="p-1 hover:bg-red-100 rounded transition-colors" title="删除">
+                      <Trash2 size={16} className="text-red-600" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 展开的子IP 列表 */}
+                {expandedNodes.has(node.id) && (node.subIPs || []).length > 0 && (
+                  <div className="bg-secondary/5 border-b border-border px-6 py-3">
+                    <div className="space-y-2">
+                      <div className="text-sm font-semibold text-foreground mb-2">子 IP 列表：</div>
+                      {(node.subIPs || []).map((subip) => (
+                        <div key={subip.id} className="flex items-center justify-between bg-background border border-border rounded px-3 py-2">
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={subip.enabled}
+                              disabled
+                              className="w-4 h-4 cursor-not-allowed"
+                            />
+                            <code className="text-xs font-mono text-muted-foreground">{subip.ip}</code>
+                            <span className="text-xs text-muted-foreground">({subip.createdDate})</span>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteSubIP(node.id, subip.id)}
+                            className="p-1 hover:bg-red-100 rounded transition-colors"
+                            title="删除"
+                          >
+                            <Trash2 size={14} className="text-red-600" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('ip')}>
-                    <div className="flex items-center">
-                      IP
-                      <SortIcon field="ip" />
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('managementPort')}>
-                    <div className="flex items-center">
-                      管理端口
-                      <SortIcon field="managementPort" />
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">启用</th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('status')}>
-                    <div className="flex items-center">
-                      状态
-                      <SortIcon field="status" />
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredNodes.map((node, index) => (
-                  <tr
-                    key={node.id}
-                    className={`border-b border-border hover:bg-secondary/30 transition-colors ${
-                      selectedNodes.has(node.id) ? 'bg-primary/10' : index % 2 === 0 ? 'bg-background' : 'bg-secondary/10'
-                    }`}
-                  >
-                    <td className="text-center py-3 px-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedNodes.has(node.id)}
-                        onChange={() => handleSelectNode(node.id)}
-                        className="w-4 h-4 cursor-pointer"
-                      />
-                    </td>
-                    <td className="py-3 px-4 font-medium text-foreground">{node.name}</td>
-                    <td className="py-3 px-4 text-muted-foreground font-mono">{node.ip}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{node.managementPort}</td>
-                    <td className="py-3 px-4">
-                      <input
-                        type="checkbox"
-                        checked={node.enabled}
-                        disabled
-                        className="w-4 h-4 cursor-not-allowed"
-                      />
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(node.status)}`}>
-                        {node.status === 'online' ? '在线' : node.status === 'offline' ? '离线' : '维护中'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <button className="p-1 hover:bg-secondary rounded transition-colors" title="添加子IP">
-                          <PlusIcon size={16} className="text-muted-foreground" />
-                        </button>
-                        <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
-                          <Edit2 size={16} className="text-muted-foreground" />
-                        </button>
-                        <button className="p-1 hover:bg-red-100 rounded transition-colors" title="删除">
-                          <Trash2 size={16} className="text-red-600" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </Card>
+
+        {/* 添加子IP 模态框 */}
+        {showAddSubIPModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-96 border border-border p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-foreground">添加子 IP</h2>
+                <button
+                  onClick={() => {
+                    setShowAddSubIPModal(false);
+                    setSelectedNodeId(null);
+                    setNewSubIP('');
+                  }}
+                  className="p-1 hover:bg-secondary rounded transition-colors"
+                >
+                  <X size={20} className="text-muted-foreground" />
+                </button>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">IP 地址</label>
+                <input
+                  type="text"
+                  placeholder="例如：192.168.1.100"
+                  value={newSubIP}
+                  onChange={(e) => setNewSubIP(e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddSubIPModal(false);
+                    setSelectedNodeId(null);
+                    setNewSubIP('');
+                  }}
+                >
+                  取消
+                </Button>
+                <Button onClick={handleSaveSubIP}>添加</Button>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

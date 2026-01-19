@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { generateMockDomains, generateMockDNSRecords, Domain } from '@/lib/mockData';
+import { generateMockDomains, Domain } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ChevronRight, Search, Plus, Edit2, Trash2, Eye } from 'lucide-react';
 
@@ -69,7 +69,11 @@ export default function Domains() {
     return 0;
   });
 
-  const dnsRecords = selectedDomain ? generateMockDNSRecords(selectedDomain.id) : [];
+  const dnsRecords = selectedDomain ? [
+    { id: '1', type: 'A', name: selectedDomain.name, value: '192.168.1.1', ttl: 3600 },
+    { id: '2', type: 'CNAME', name: `www.${selectedDomain.name}`, value: selectedDomain.name, ttl: 3600 },
+    { id: '3', type: 'MX', name: selectedDomain.name, value: `mail.${selectedDomain.name}`, ttl: 3600 },
+  ] : [];
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
@@ -265,21 +269,14 @@ export default function Domains() {
                     <p className="font-medium text-foreground">{selectedDomain.name}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">所有者</p>
-                    <p className="font-medium text-foreground">{selectedDomain.owner}</p>
-                  </div>
-                  <div>
                     <p className="text-sm text-muted-foreground mb-1">注册商</p>
                     <p className="font-medium text-foreground">{selectedDomain.registrar}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">DNS 提供商</p>
-                    <p className="font-medium text-foreground">{selectedDomain.dnsProvider}</p>
+                    <p className="text-sm text-muted-foreground mb-1">SSL 状态</p>
+                    <p className="font-medium text-foreground">{selectedDomain.sslStatus}</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">IP 地址</p>
-                    <p className="font-medium text-foreground font-mono text-sm">{selectedDomain.ipAddress}</p>
-                  </div>
+
                   <div className="pt-4 border-t border-border">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-sm text-muted-foreground">创建日期</p>
@@ -297,7 +294,7 @@ export default function Domains() {
               <Card className="p-6 border border-border">
                 <h3 className="text-lg font-bold text-foreground mb-4">DNS 记录</h3>
                 <div className="space-y-2">
-                  {dnsRecords.map((record) => (
+                  {dnsRecords.map((record: any) => (
                     <div key={record.id} className="p-3 bg-secondary/30 rounded-lg border border-border/50">
                       <div className="flex items-center justify-between mb-2">
                         <span className="inline-block px-2 py-1 bg-primary/10 text-primary text-xs font-bold rounded">

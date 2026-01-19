@@ -1,48 +1,13 @@
-/**
- * 假数据生成工具
- * 用于 CMDB 后台系统的数据模拟
- */
+// 数据接口定义
 
 export interface Domain {
   id: string;
   name: string;
-  status: 'active' | 'inactive' | 'expired';
   registrar: string;
+  status: 'active' | 'inactive' | 'expired';
   expiryDate: string;
+  sslStatus: 'valid' | 'warning' | 'expired';
   createdDate: string;
-  owner: string;
-  ipAddress: string;
-  dnsProvider: string;
-  sslStatus: 'valid' | 'expired' | 'warning';
-}
-
-export interface DashboardStats {
-  totalDomains: number;
-  activeDomains: number;
-  expiringSoon: number;
-  sslWarnings: number;
-  uptime: number;
-  lastUpdated: string;
-}
-
-export interface DomainRecord {
-  id: string;
-  type: 'A' | 'AAAA' | 'CNAME' | 'MX' | 'TXT' | 'NS';
-  name: string;
-  value: string;
-  ttl: number;
-}
-
-export interface ServerInfo {
-  id: string;
-  name: string;
-  ip: string;
-  status: 'online' | 'offline' | 'maintenance';
-  cpu: number;
-  memory: number;
-  disk: number;
-  os: string;
-  lastCheck: string;
 }
 
 export interface Website {
@@ -50,8 +15,19 @@ export interface Website {
   domain: string;
   cname: string;
   lineGroup: string;
-  https: 'enabled' | 'disabled';
-  status: 'active' | 'inactive' | 'maintenance';
+  https: boolean;
+  status: 'active' | 'inactive';
+  createdDate: string;
+}
+
+export interface Server {
+  id: string;
+  name: string;
+  ip: string;
+  cpu: number;
+  memory: number;
+  disk: number;
+  status: 'online' | 'offline' | 'maintenance';
   createdDate: string;
 }
 
@@ -72,6 +48,13 @@ export interface DNSConfig {
   status: 'active' | 'inactive';
 }
 
+export interface SubIP {
+  id: string;
+  ip: string;
+  enabled: boolean;
+  createdDate: string;
+}
+
 export interface Node {
   id: string;
   name: string;
@@ -81,222 +64,85 @@ export interface Node {
   status: 'online' | 'offline' | 'maintenance';
   lineGroupId: string;
   createdDate: string;
+  subIPs?: SubIP[];
+}
+
+export interface NodeGroup {
+  id: string;
+  name: string;
+  description?: string;
+  subIPs: SubIP[];
+  createdDate: string;
 }
 
 // 生成假域名数据
 export const generateMockDomains = (): Domain[] => {
   const statuses: Array<'active' | 'inactive' | 'expired'> = ['active', 'active', 'active', 'inactive', 'expired'];
   const registrars = ['GoDaddy', 'Namecheap', 'Domain.com', 'Alibaba Cloud', 'Tencent Cloud'];
-  const dnsProviders = ['CloudFlare', 'Route 53', 'Alibaba Cloud DNS', 'Tencent Cloud DNS', 'Google DNS'];
-  const sslStatuses: Array<'valid' | 'expired' | 'warning'> = ['valid', 'valid', 'valid', 'warning', 'expired'];
-  
-  const domains = [
-    'example.com',
-    'myapp.io',
-    'company.cn',
-    'service.net',
-    'platform.org',
-    'cloud.dev',
-    'api.tech',
-    'data.ai',
-    'web.store',
-    'mobile.app',
-  ];
+  const domains = ['example.com', 'myapp.io', 'company.cn', 'service.net', 'platform.org', 'cloud.dev', 'api.tech', 'data.ai', 'web.store', 'mobile.app'];
 
   return domains.map((domain, index) => ({
     id: `domain-${index + 1}`,
     name: domain,
-    status: statuses[index % statuses.length],
     registrar: registrars[index % registrars.length],
+    status: statuses[index % statuses.length],
     expiryDate: new Date(Date.now() + Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    createdDate: new Date(Date.now() - Math.random() * 1000 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    owner: `Owner ${index + 1}`,
-    ipAddress: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-    dnsProvider: dnsProviders[index % dnsProviders.length],
-    sslStatus: sslStatuses[index % sslStatuses.length],
+    sslStatus: ['valid', 'valid', 'valid', 'warning', 'expired'][index % 5] as 'valid' | 'warning' | 'expired',
+    createdDate: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   }));
 };
 
-// 生成仪表板统计数据
-export const generateDashboardStats = (): DashboardStats => {
-  const domains = generateMockDomains();
-  const activeDomains = domains.filter(d => d.status === 'active').length;
-  const expiringSoon = domains.filter(d => {
-    const expiryDate = new Date(d.expiryDate);
-    const daysUntilExpiry = (expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-    return daysUntilExpiry < 30 && daysUntilExpiry > 0;
-  }).length;
-  const sslWarnings = domains.filter(d => d.sslStatus !== 'valid').length;
-
-  return {
-    totalDomains: domains.length,
-    activeDomains,
-    expiringSoon,
-    sslWarnings,
-    uptime: 99.98,
-    lastUpdated: new Date().toISOString(),
-  };
-};
-
-// 生成 DNS 记录
-export const generateMockDNSRecords = (domainId: string): DomainRecord[] => {
-  const recordTypes: Array<'A' | 'AAAA' | 'CNAME' | 'MX' | 'TXT' | 'NS'> = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS'];
-  
-  return [
-    {
-      id: `${domainId}-record-1`,
-      type: 'A',
-      name: '@',
-      value: '192.168.1.1',
-      ttl: 3600,
-    },
-    {
-      id: `${domainId}-record-2`,
-      type: 'CNAME',
-      name: 'www',
-      value: 'example.com',
-      ttl: 3600,
-    },
-    {
-      id: `${domainId}-record-3`,
-      type: 'MX',
-      name: '@',
-      value: 'mail.example.com',
-      ttl: 3600,
-    },
-    {
-      id: `${domainId}-record-4`,
-      type: 'TXT',
-      name: '@',
-      value: 'v=spf1 include:_spf.google.com ~all',
-      ttl: 3600,
-    },
-    {
-      id: `${domainId}-record-5`,
-      type: 'NS',
-      name: '@',
-      value: 'ns1.cloudflare.com',
-      ttl: 172800,
-    },
-  ];
-};
-
-// 生成服务器信息
-export const generateMockServers = (): ServerInfo[] => {
-  const statuses: Array<'online' | 'offline' | 'maintenance'> = ['online', 'online', 'online', 'offline', 'maintenance'];
-  const osTypes = ['Ubuntu 22.04', 'CentOS 8', 'Debian 11', 'Windows Server 2022', 'Alpine Linux'];
-  
-  return [
-    {
-      id: 'server-1',
-      name: 'Web Server 1',
-      ip: '192.168.1.10',
-      status: 'online',
-      cpu: 45,
-      memory: 62,
-      disk: 78,
-      os: 'Ubuntu 22.04',
-      lastCheck: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 'server-2',
-      name: 'Database Server',
-      ip: '192.168.1.20',
-      status: 'online',
-      cpu: 72,
-      memory: 85,
-      disk: 92,
-      os: 'CentOS 8',
-      lastCheck: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 'server-3',
-      name: 'Cache Server',
-      ip: '192.168.1.30',
-      status: 'online',
-      cpu: 28,
-      memory: 45,
-      disk: 34,
-      os: 'Debian 11',
-      lastCheck: new Date(Date.now() - 1 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 'server-4',
-      name: 'Backup Server',
-      ip: '192.168.1.40',
-      status: 'offline',
-      cpu: 0,
-      memory: 0,
-      disk: 0,
-      os: 'Ubuntu 22.04',
-      lastCheck: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: 'server-5',
-      name: 'Dev Server',
-      ip: '192.168.1.50',
-      status: 'maintenance',
-      cpu: 15,
-      memory: 32,
-      disk: 45,
-      os: 'Ubuntu 22.04',
-      lastCheck: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    },
-  ];
-};
-
-// 生成网站列表
+// 生成假网站数据
 export const generateMockWebsites = (): Website[] => {
-  const lineGroups = ['华东线路', '华北线路', '华南线路', '国际线路'];
   const domains = ['example.com', 'myapp.io', 'company.cn', 'service.net', 'platform.org', 'cloud.dev', 'api.tech', 'data.ai', 'web.store', 'mobile.app'];
-  
+  const lineGroups = ['线路1', '线路2', '线路3', '线路4'];
+
   return domains.map((domain, index) => ({
     id: `website-${index + 1}`,
     domain,
-    cname: `${domain.split('.')[0]}.cdn.example.com`,
+    cname: `cdn-${index + 1}.example.com`,
     lineGroup: lineGroups[index % lineGroups.length],
-    https: index % 2 === 0 ? 'enabled' : 'disabled',
-    status: ['active', 'active', 'active', 'inactive', 'maintenance'][index % 5] as 'active' | 'inactive' | 'maintenance',
-    createdDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    https: index % 2 === 0,
+    status: index % 3 === 0 ? 'inactive' : 'active',
+    createdDate: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   }));
 };
 
-// 生成线路分组
+// 生成假服务器数据
+export const generateMockServers = (): Server[] => {
+  const servers = [];
+  for (let i = 1; i <= 10; i++) {
+    servers.push({
+      id: `server-${i}`,
+      name: `服务器 ${i}`,
+      ip: `192.168.1.${i + 100}`,
+      cpu: Math.floor(Math.random() * 100),
+      memory: Math.floor(Math.random() * 100),
+      disk: Math.floor(Math.random() * 100),
+      status: ['online', 'online', 'online', 'offline', 'maintenance'][i % 5] as 'online' | 'offline' | 'maintenance',
+      createdDate: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    });
+  }
+  return servers;
+};
+
+// 生成假线路分组数据
 export const generateMockLineGroups = (): LineGroup[] => {
-  return [
-    {
-      id: 'line-1',
-      name: '华东线路',
-      description: '覆盖上海、浙江、江苏等地区',
-      cname: 'east.cdn.example.com',
-      nodeCount: 12,
-      createdDate: '2025-01-01',
-    },
-    {
-      id: 'line-2',
-      name: '华北线路',
-      description: '覆盖北京、天津、河北等地区',
-      cname: 'north.cdn.example.com',
-      nodeCount: 8,
-      createdDate: '2025-01-02',
-    },
-    {
-      id: 'line-3',
-      name: '华南线路',
-      description: '覆盖广东、深圳、福建等地区',
-      cname: 'south.cdn.example.com',
-      nodeCount: 10,
-      createdDate: '2025-01-03',
-    },
-    {
-      id: 'line-4',
-      name: '国际线路',
-      description: '覆盖香港、新加坡、日本等地区',
-      cname: 'intl.cdn.example.com',
-      nodeCount: 6,
-      createdDate: '2025-01-04',
-    },
+  const groups = [
+    { name: '华东线路', description: '上海、浙江、江苏等地区' },
+    { name: '华北线路', description: '北京、天津、河北等地区' },
+    { name: '华南线路', description: '广东、深圳、福建等地区' },
+    { name: '国际线路', description: '新加坡、日本、香港等地区' },
   ];
+
+  return groups.map((group, index) => ({
+    id: `line-${index + 1}`,
+    name: group.name,
+    description: group.description,
+    cname: `${group.name.toLowerCase()}.cdn.example.com`,
+    nodeCount: Math.floor(Math.random() * 5) + 3,
+    createdDate: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  }));
 };
 
 // 生成 DNS 配置
@@ -315,8 +161,19 @@ export const generateMockDNSConfigs = (): DNSConfig[] => {
 export const generateMockNodes = (): Node[] => {
   const lineGroupIds = ['line-1', 'line-2', 'line-3', 'line-4'];
   const nodes: Node[] = [];
-  
+
   for (let i = 1; i <= 12; i++) {
+    const subIPCount = Math.floor(Math.random() * 3) + 1;
+    const subIPs: SubIP[] = [];
+    for (let j = 1; j <= subIPCount; j++) {
+      subIPs.push({
+        id: `subip-${i}-${j}`,
+        ip: `192.168.${Math.floor(i / 4) + 1}.${(i % 4) * 50 + 10 + j}`,
+        enabled: j % 2 === 0,
+        createdDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      });
+    }
+
     nodes.push({
       id: `node-${i}`,
       name: `节点 ${i}`,
@@ -326,28 +183,58 @@ export const generateMockNodes = (): Node[] => {
       status: ['online', 'online', 'offline', 'maintenance'][i % 4] as 'online' | 'offline' | 'maintenance',
       lineGroupId: lineGroupIds[i % lineGroupIds.length],
       createdDate: new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      subIPs,
     });
   }
-  
+
   return nodes;
+};
+
+// 生成节点分组
+export const generateMockNodeGroups = (): NodeGroup[] => {
+  const groupNames = ['东中国节点', '西南节点', '华东节点', '华北节点'];
+  const groups: NodeGroup[] = [];
+
+  for (let i = 0; i < groupNames.length; i++) {
+    const subIPCount = Math.floor(Math.random() * 4) + 2;
+    const subIPs: SubIP[] = [];
+    for (let j = 1; j <= subIPCount; j++) {
+      subIPs.push({
+        id: `group-subip-${i}-${j}`,
+        ip: `10.${i}.${j}.${Math.floor(Math.random() * 256)}`,
+        enabled: j % 2 === 0,
+        createdDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      });
+    }
+
+    groups.push({
+      id: `group-${i + 1}`,
+      name: groupNames[i],
+      description: `${groupNames[i]}数据中心`,
+      subIPs,
+      createdDate: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    });
+  }
+
+  return groups;
 };
 
 // 生成时间序列数据（用于图表）
 export const generateTimeSeriesData = (days: number = 30) => {
   const data = [];
   const now = new Date();
-  
+
   for (let i = days; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
-    
+    const dateStr = date.toISOString().split('T')[0];
+
     data.push({
-      date: date.toISOString().split('T')[0],
-      requests: Math.floor(Math.random() * 10000) + 5000,
-      errors: Math.floor(Math.random() * 500) + 50,
-      uptime: 99 + Math.random() * 1,
+      date: dateStr,
+      requests: Math.floor(Math.random() * 20000) + 5000,
+      errors: Math.floor(Math.random() * 500),
     });
   }
-  
+
   return data;
 };

@@ -88,8 +88,8 @@ export default function Websites() {
     }
   };
 
-  const getHttpsBadgeColor = (https: string) => {
-    return https === 'enabled' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+  const getHttpsBadgeColor = (https: boolean) => {
+    return https ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
   };
 
   const breadcrumbs = [
@@ -206,7 +206,7 @@ export default function Websites() {
                     <td className="py-3 px-4 text-muted-foreground">{website.lineGroup}</td>
                     <td className="py-3 px-4">
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getHttpsBadgeColor(website.https)}`}>
-                        {website.https === 'enabled' ? '已启用' : '已禁用'}
+                        {website.https ? '已启用' : '已禁用'}
                       </span>
                     </td>
                     <td className="py-3 px-4">

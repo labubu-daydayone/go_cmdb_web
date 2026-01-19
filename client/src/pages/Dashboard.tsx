@@ -5,13 +5,18 @@
 
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { generateDashboardStats, generateMockServers, generateTimeSeriesData } from '@/lib/mockData';
+import { generateMockServers, generateTimeSeriesData } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { AlertCircle, CheckCircle, Clock, Server } from 'lucide-react';
 
 export default function Dashboard() {
-  const stats = generateDashboardStats();
+  const stats = {
+    totalDomains: 10,
+    activeDomains: 8,
+    expiringDomains: 2,
+    sslWarnings: 1,
+  };
   const servers = generateMockServers();
   const timeSeriesData = generateTimeSeriesData(30);
   const [selectedServers, setSelectedServers] = useState<Set<string>>(new Set());
@@ -82,7 +87,7 @@ export default function Dashboard() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-2">即将过期</p>
-                <p className="text-3xl font-bold text-amber-600">{stats.expiringSoon}</p>
+                <p className="text-3xl font-bold text-amber-600">{stats.expiringDomains}</p>
                 <p className="text-xs text-muted-foreground mt-2">30天内过期</p>
               </div>
               <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
@@ -263,7 +268,7 @@ export default function Dashboard() {
                         <span className="text-xs text-muted-foreground">{server.disk}%</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">{server.os}</td>
+                    <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">{server.status}</td>
                   </tr>
                 ))}
               </tbody>
