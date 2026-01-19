@@ -105,7 +105,7 @@ export default function LineGroups() {
   // 生成随机 CNAME 前缀
   const generateCNAMEPrefix = () => {
     const randomStr = Math.random().toString(36).substring(2, 8);
-    return `cdn-${randomStr}`;
+    return randomStr; // 只生成随机字符，不带前缀
   };
 
   const handleAddNodeGroup = (nodeGroup: NodeGroup) => {
@@ -322,28 +322,30 @@ export default function LineGroups() {
                   </Button>
                 </div>
 
-                {/* 添加节点分组 */}
+                {/* 添加节点分组 - 下拉框多选 */}
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-xs font-medium text-foreground">添加节点分组：</label>
-                    <div className="flex items-center gap-2">
-                      {availableNodeGroups.map((nodeGroup) => (
-                        <Button
-                          key={nodeGroup.id}
-                          size="sm"
-                          variant={formData.nodeGroups.find(ng => ng.id === nodeGroup.id) ? 'default' : 'outline'}
-                          onClick={() => handleAddNodeGroup(nodeGroup)}
-                          className="text-xs"
-                        >
-                          {nodeGroup.name}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
+                  <label className="text-xs font-medium text-foreground mb-2 block">添加节点分组：</label>
+                  <select
+                    multiple
+                    value={formData.nodeGroups.map(ng => ng.id)}
+                    onChange={(e) => {
+                      const selectedIds = Array.from(e.target.selectedOptions, option => option.value);
+                      const selectedNodeGroups = availableNodeGroups.filter(ng => selectedIds.includes(ng.id));
+                      setFormData({ ...formData, nodeGroups: selectedNodeGroups });
+                    }}
+                    className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    {availableNodeGroups.map((nodeGroup) => (
+                      <option key={nodeGroup.id} value={nodeGroup.id}>
+                        {nodeGroup.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground mt-1">按 Ctrl/Cmd 键多选</p>
 
                   {/* 已添加的节点分组 */}
                   {formData.nodeGroups.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pl-0">
+                    <div className="flex flex-wrap gap-2 mt-3">
                       {formData.nodeGroups.map((nodeGroup) => (
                         <div
                           key={nodeGroup.id}
