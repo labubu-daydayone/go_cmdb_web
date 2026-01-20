@@ -306,11 +306,10 @@ export default function OriginGroups() {
                         <select
                           value={address.type}
                           onChange={(e) => handleUpdateAddress(address.id, 'type', e.target.value)}
-                          className="px-2 py-1 border border-border rounded bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                          className="w-[70px] px-2 py-1 border border-border rounded bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-primary"
                         >
                           <option value="主源">主源</option>
                           <option value="备源">备源</option>
-                          <option value="活跃">活跃</option>
                         </select>
                         <span className="text-muted-foreground">协议：</span>
                         <select
@@ -324,17 +323,19 @@ export default function OriginGroups() {
                         <span className="text-muted-foreground">地址：</span>
                         <input
                           type="text"
-                          value={`${address.ip}${address.port ? ':' + address.port : ''}`}
+                          value={address.ip ? `${address.ip}${address.port && address.port !== 80 ? ':' + address.port : ''}` : ''}
                           onChange={(e) => {
                             const value = e.target.value;
                             const parts = value.split(':');
                             handleUpdateAddress(address.id, 'ip', parts[0]);
                             if (parts[1]) {
                               handleUpdateAddress(address.id, 'port', Number(parts[1]));
+                            } else {
+                              handleUpdateAddress(address.id, 'port', 80);
                             }
                           }}
-                          placeholder="1.1.1.1:80"
-                          className="flex-1 px-2 py-1 border border-border rounded bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                          placeholder="8.8.8.8:80"
+                          className="w-40 px-2 py-1 border border-border rounded bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                         <input
                           type="number"
