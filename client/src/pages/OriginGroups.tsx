@@ -13,6 +13,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 interface OriginAddress {
   id: string;
+  type: string; // 主源/备源/活跃
+  protocol: string; // http/https
   ip: string;
   port?: number;
   weight?: number;
@@ -34,7 +36,7 @@ export default function OriginGroups() {
       id: '1',
       name: '标准回源',
       type: '主源',
-      addresses: [{ id: '1-1', ip: '192.168.1.1', port: 80, weight: 1, remark: '主要回源地址' }],
+      addresses: [{ id: '1-1', type: '主源', protocol: 'http', ip: '192.168.1.1', port: 80, weight: 1, remark: '主要回源地址' }],
       description: '使用标准回源配置',
       status: 'active',
     },
@@ -43,8 +45,8 @@ export default function OriginGroups() {
       name: '高可用回源',
       type: '活跃',
       addresses: [
-        { id: '2-1', ip: '192.168.1.2', port: 80, weight: 1, remark: '主要回源' },
-        { id: '2-2', ip: '192.168.1.3', port: 80, weight: 1, remark: '备用回源' }
+        { id: '2-1', type: '主源', protocol: 'http', ip: '192.168.1.2', port: 80, weight: 1, remark: '主要回源' },
+        { id: '2-2', type: '备源', protocol: 'http', ip: '192.168.1.3', port: 80, weight: 1, remark: '备用回源' }
       ],
       description: '多源站高可用配置',
       status: 'active',
@@ -53,7 +55,7 @@ export default function OriginGroups() {
       id: '3',
       name: '加速回源',
       type: '备源',
-      addresses: [{ id: '3-1', ip: '192.168.1.3', port: 443, weight: 1, remark: 'HTTPS回源' }],
+      addresses: [{ id: '3-1', type: '备源', protocol: 'https', ip: '192.168.1.3', port: 443, weight: 1, remark: 'HTTPS回源' }],
       description: '优化加速的回源配置',
       status: 'inactive',
     },
@@ -84,7 +86,7 @@ export default function OriginGroups() {
   const [formData, setFormData] = useState({
     name: '',
     type: '主源',
-    addresses: [{ id: '1', ip: '', port: 80, weight: 1, remark: '' }] as OriginAddress[],
+    addresses: [{ id: '1', type: '主源', protocol: 'http', ip: '', port: 80, weight: 1, remark: '' }] as OriginAddress[],
     description: '',
   });
 
@@ -106,7 +108,7 @@ export default function OriginGroups() {
       ...formData,
       addresses: [
         ...formData.addresses,
-        { id: Date.now().toString(), ip: '', port: 80, weight: 1, remark: '' }
+        { id: Date.now().toString(), type: '主源', protocol: 'http', ip: '', port: 80, weight: 1, remark: '' }
       ]
     });
   };
@@ -138,7 +140,7 @@ export default function OriginGroups() {
     setFormData({
       name: '',
       type: '主源',
-      addresses: [{ id: '1', ip: '', port: 80, weight: 1, remark: '' }],
+      addresses: [{ id: '1', type: '主源', protocol: 'http', ip: '', port: 80, weight: 1, remark: '' }],
       description: '',
     });
   };
@@ -268,8 +270,9 @@ export default function OriginGroups() {
         {/* 添加分组表单 */}
         {showAddForm && (
           <div className="fixed inset-0 bg-black/50 flex items-end z-50">
-            <Card className="w-full h-1/2 rounded-t-lg rounded-b-none space-y-4 p-6 overflow-y-auto">
-              <div className="flex items-center justify-between">
+            <Card className="w-full h-1/2 rounded-t-lg rounded-b-none flex flex-col">
+              {/* 标题栏 */}
+              <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
                 <h2 className="text-lg font-bold text-foreground">添加回源分组</h2>
                 <button
                   onClick={resetForm}
@@ -279,111 +282,95 @@ export default function OriginGroups() {
                 </button>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-foreground mb-1">分组名称</label>
+              {/* 可滚动内容区域 */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-3">
+                {/* 分组名称：标签和输入框在同一行 */}
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-medium text-foreground whitespace-nowrap">分组名称：</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="输入分组名称"
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="flex-1 px-3 py-2 border border-border rounded bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-foreground mb-1">类型</label>
-                  <select
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="主源">主源</option>
-                    <option value="备源">备源</option>
-                    <option value="活跃">活跃</option>
-                  </select>
                 </div>
 
                 {/* 回源地址列表 */}
                 <div>
-                  <label className="block text-xs font-medium text-foreground mb-2">回源地址</label>
-                  <div className="space-y-3">
+                  <label className="block text-sm font-medium text-foreground mb-2">回源地址</label>
+                  <div className="space-y-2">
                     {formData.addresses.map((address, index) => (
-                      <div key={address.id} className="border border-border rounded-lg p-3 space-y-2 bg-secondary/5">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-semibold text-foreground">地址 {index + 1}</span>
-                          {formData.addresses.length > 1 && (
-                            <button
-                              onClick={() => handleRemoveAddress(address.id)}
-                              className="text-red-600 hover:text-red-700 p-1"
-                              title="删除地址"
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </button>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="col-span-2">
-                            <input
-                              type="text"
-                              value={address.ip}
-                              onChange={(e) => handleUpdateAddress(address.id, 'ip', e.target.value)}
-                              placeholder="IP 地址"
-                              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
-                          </div>
-                          <div>
-                            <input
-                              type="number"
-                              value={address.port || 80}
-                              onChange={(e) => handleUpdateAddress(address.id, 'port', Number(e.target.value))}
-                              placeholder="端口"
-                              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
-                          </div>
-                          <div>
-                            <input
-                              type="number"
-                              value={address.weight || 1}
-                              onChange={(e) => handleUpdateAddress(address.id, 'weight', Number(e.target.value))}
-                              placeholder="权重"
-                              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <input
-                              type="text"
-                              value={address.remark || ''}
-                              onChange={(e) => handleUpdateAddress(address.id, 'remark', e.target.value)}
-                              placeholder="备注（可选）"
-                              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
-                          </div>
-                        </div>
+                      <div key={address.id} className="flex items-center gap-2 text-sm">
+                        <span className="text-muted-foreground">类型：</span>
+                        <select
+                          value={address.type}
+                          onChange={(e) => handleUpdateAddress(address.id, 'type', e.target.value)}
+                          className="px-2 py-1 border border-border rounded bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                        >
+                          <option value="主源">主源</option>
+                          <option value="备源">备源</option>
+                          <option value="活跃">活跃</option>
+                        </select>
+                        <span className="text-muted-foreground">协议：</span>
+                        <select
+                          value={address.protocol}
+                          onChange={(e) => handleUpdateAddress(address.id, 'protocol', e.target.value)}
+                          className="px-2 py-1 border border-border rounded bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                        >
+                          <option value="http">http</option>
+                          <option value="https">https</option>
+                        </select>
+                        <span className="text-muted-foreground">地址：</span>
+                        <input
+                          type="text"
+                          value={`${address.ip}${address.port ? ':' + address.port : ''}`}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            const parts = value.split(':');
+                            handleUpdateAddress(address.id, 'ip', parts[0]);
+                            if (parts[1]) {
+                              handleUpdateAddress(address.id, 'port', Number(parts[1]));
+                            }
+                          }}
+                          placeholder="1.1.1.1:80"
+                          className="flex-1 px-2 py-1 border border-border rounded bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                        <span className="text-muted-foreground w-6 text-center">{index + 1}</span>
+                        {formData.addresses.length > 1 && (
+                          <button
+                            onClick={() => handleRemoveAddress(address.id)}
+                            className="text-red-600 hover:text-red-700 p-1"
+                            title="删除地址"
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </button>
+                        )}
                       </div>
                     ))}
                     <button
                       onClick={handleAddAddress}
-                      className="w-full border border-dashed border-border rounded-lg p-3 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                      className="text-sm text-primary hover:text-primary/80 font-medium"
                     >
                       + 添加地址
                     </button>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-foreground mb-1">描述</label>
+                <div className="flex items-start gap-3">
+                  <label className="text-sm font-medium text-foreground whitespace-nowrap pt-2">描述：</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="输入分组描述"
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                    className="flex-1 px-3 py-2 border border-border rounded bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                     rows={3}
                   />
                 </div>
               </div>
 
-              <div className="sticky bottom-0 bg-background border-t border-border px-0 py-4 flex gap-2 justify-end -mx-6 px-6">
+              {/* 底部按钮栏 */}
+              <div className="border-t border-border p-6 pt-4 flex gap-2 justify-end bg-background">
                 <Button variant="outline" onClick={resetForm} className="text-sm">
                   取消
                 </Button>
