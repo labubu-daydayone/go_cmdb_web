@@ -17,6 +17,7 @@ import WifiOffIcon from '@mui/icons-material/WifiOff';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useWebsiteUpdates } from '@/hooks/useWebsiteUpdates';
 import { Toast, ToastType } from '@/components/Toast';
+import { useListParams } from '@/hooks/useUrlParams';
 
 type SortField = 'domain' | 'cname' | 'lineGroup' | 'https' | 'status';
 type SortOrder = 'asc' | 'desc';
@@ -88,9 +89,16 @@ export default function Websites() {
   useState(() => {
     setWsConnected(connected);
   });
+  
+  // 使用 URL 参数同步
+  const [urlParams, setUrlParams] = useListParams({
+    defaultPage: 1,
+    defaultPageSize: 15,
+    defaultSearch: '',
+    defaultFilters: { status: 'all' },
+  });
+  
   const [selectedWebsites, setSelectedWebsites] = useState<Set<string>>(new Set());
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('domain');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -99,8 +107,6 @@ export default function Websites() {
   const [addFormTab, setAddFormTab] = useState<AddFormTab>('template');
   const [editFormTab, setEditFormTab] = useState<AddFormTab>('template');
   const [templatePage, setTemplatePage] = useState(1);
-  const [listPage, setListPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(15);
   
   const [formData, setFormData] = useState<FormData>({
     domain: '',
@@ -279,8 +285,8 @@ export default function Websites() {
   };
 
   const filteredWebsites = websites.filter(w => {
-    const matchesSearch = w.domain.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || w.status === filterStatus;
+    const matchesSearch = w.domain.toLowerCase().includes(urlParams.search.toLowerCase());
+    const matchesStatus = urlParams.status === 'all' || w.status === urlParams.status;
     return matchesSearch && matchesStatus;
   });
 
@@ -293,8 +299,9 @@ export default function Websites() {
     return sortOrder === 'asc' ? comparison : -comparison;
   });
 
-  const paginatedWebsites = sortedWebsites.slice((listPage - 1) * itemsPerPage, listPage * itemsPerPage);
-  const totalPages = Math.ceil(sortedWebsites.length / itemsPerPage);
+  const startIndex = (urlParams.page - 1) * urlParams.pageSize;
+  const endIndex = startIndex + urlParams.pageSize;
+  const paginatedWebsites = sortedWebsites.slice(startIndex, endIndex);
 
   const mockTemplates = [
     { id: '1', name: '标准回源', type: '主源', address: '192.168.1.1' },
@@ -356,14 +363,14 @@ export default function Websites() {
         <div className="flex gap-4">
           <input
             type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={urlParams.search}
+            onChange={(e) => setUrlParams({ search: e.target.value })}
             placeholder="搜索域名..."
             className="flex-1 px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
+            value={urlParams.status}
+            onChange={(e) => setUrlParams({ status: e.target.value })}
             className="px-4 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="all">全部状态</option>
@@ -481,17 +488,12 @@ export default function Websites() {
 
           {/* 分页 */}
           <Pagination
-            current={listPage}
+            current={urlParams.page}
             total={sortedWebsites.length}
-            pageSize={itemsPerPage}
+            pageSize={urlParams.pageSize}
             showSizeChanger
             onChange={(page, size) => {
-              setListPage(page);
-              setItemsPerPage(size);
-            }}
-            onShowSizeChange={(current, size) => {
-              setListPage(1);
-              setItemsPerPage(size);
+              setUrlParams({ page, pageSize: size });
             }}
           />
         </Card>

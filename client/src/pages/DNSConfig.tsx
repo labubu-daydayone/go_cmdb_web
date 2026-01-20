@@ -16,6 +16,7 @@ import { Popconfirm } from '@/components/Popconfirm';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { useListParams } from '@/hooks/useUrlParams';
 
 export default function DNSConfigPage() {
   const [dnsConfigs, setDnsConfigs] = useState<DNSConfig[]>(generateMockDNSConfigs());

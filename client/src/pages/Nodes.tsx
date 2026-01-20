@@ -3,7 +3,7 @@
  * 显示所有节点信息和管理功能，支持展开显示子IP
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
 import { Pagination } from '@/components/Pagination';
@@ -16,6 +16,7 @@ import { Popconfirm } from '@/components/Popconfirm';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
+import { useListParams } from '@/hooks/useUrlParams';
 
 type SortField = 'name' | 'ip' | 'managementPort' | 'status';
 type SortOrder = 'asc' | 'desc';
@@ -34,11 +35,17 @@ interface NodeFormData {
 }
 
 export default function Nodes() {
+  // 使用 URL 参数同步
+  const [urlParams, setUrlParams] = useListParams({
+    defaultPage: 1,
+    defaultPageSize: 15,
+    defaultSearch: '',
+    defaultFilters: { status: 'all' },
+  });
+
   const [nodes, setNodes] = useState<Node[]>(generateMockNodes());
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [showAddSubIPModal, setShowAddSubIPModal] = useState(false);
@@ -199,9 +206,9 @@ export default function Nodes() {
   };
 
   const baseFilteredNodes = nodes.filter(node => {
-    const matchesSearch = node.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         node.ip.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || node.status === filterStatus;
+    const matchesSearch = node.name.toLowerCase().includes(urlParams.search.toLowerCase()) ||
+                         node.ip.toLowerCase().includes(urlParams.search.toLowerCase());
+    const matchesStatus = urlParams.status === 'all' || node.status === urlParams.status;
     return matchesSearch && matchesStatus;
   });
 
@@ -220,10 +227,8 @@ export default function Nodes() {
   });
 
   // 分页
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
+  const startIndex = (urlParams.page - 1) * urlParams.pageSize;
+  const endIndex = startIndex + urlParams.pageSize;
   const filteredNodes = sortedNodes.slice(startIndex, endIndex);
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -302,14 +307,14 @@ export default function Nodes() {
             <input
               type="text"
               placeholder="搜索节点名称或 IP..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={urlParams.search}
+              onChange={(e) => setUrlParams({ search: e.target.value })}
               className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
+            value={urlParams.status}
+            onChange={(e) => setUrlParams({ status: e.target.value })}
             className="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="all">全部状态</option>
@@ -557,17 +562,12 @@ export default function Nodes() {
             ))}
           </div>
           <Pagination
-            current={currentPage}
+            current={urlParams.page}
             total={sortedNodes.length}
-            pageSize={pageSize}
+            pageSize={urlParams.pageSize}
             showSizeChanger
             onChange={(page, size) => {
-              setCurrentPage(page);
-              setPageSize(size);
-            }}
-            onShowSizeChange={(current, size) => {
-              setCurrentPage(1);
-              setPageSize(size);
+              setUrlParams({ page, pageSize: size });
             }}
           />
         </Card>

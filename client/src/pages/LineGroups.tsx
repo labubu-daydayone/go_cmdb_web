@@ -17,6 +17,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { Popconfirm } from '@/components/Popconfirm';
 import HubIcon from '@mui/icons-material/Hub';
 import CloseIcon from '@mui/icons-material/Close';
+import { useListParams } from '@/hooks/useUrlParams';
 
 type SortField = 'name' | 'description' | 'cname' | 'nodeCount';
 type SortOrder = 'asc' | 'desc';

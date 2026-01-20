@@ -8,6 +8,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { Popconfirm } from '@/components/Popconfirm';
 import CloseIcon from '@mui/icons-material/Close';
 import DashboardLayout from '@/components/DashboardLayout';
+import { useListParams } from '@/hooks/useUrlParams';
 
 interface CacheRule {
   id: string;

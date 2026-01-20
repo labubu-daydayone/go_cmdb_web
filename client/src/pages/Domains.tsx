@@ -16,17 +16,22 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Popconfirm } from '@/components/Popconfirm';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { useListParams } from '@/hooks/useUrlParams';
 
 type SortField = 'name' | 'status' | 'expiryDate' | 'sslStatus';
 type SortOrder = 'asc' | 'desc';
 
 export default function Domains() {
+  // 使用 URL 参数同步
+  const [urlParams, setUrlParams] = useListParams({
+    defaultPage: 1,
+    defaultPageSize: 15,
+    defaultSearch: '',
+    defaultFilters: { status: 'all' },
+  });
+  
   const [domains] = useState<Domain[]>(generateMockDomains());
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
@@ -59,8 +64,8 @@ export default function Domains() {
   };
 
   const baseFilteredDomains = domains.filter(domain => {
-    const matchesSearch = domain.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || domain.status === filterStatus;
+    const matchesSearch = domain.name.toLowerCase().includes(urlParams.search.toLowerCase());
+    const matchesStatus = urlParams.status === 'all' || domain.status === urlParams.status;
     return matchesSearch && matchesStatus;
   });
 
@@ -79,8 +84,8 @@ export default function Domains() {
   });
 
   // 分页数据
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
+  const startIndex = (urlParams.page - 1) * urlParams.pageSize;
+  const endIndex = startIndex + urlParams.pageSize;
   const filteredDomains = sortedDomains.slice(startIndex, endIndex);
 
   const dnsRecords = selectedDomain ? [
@@ -139,16 +144,16 @@ export default function Domains() {
               <input
                 type="text"
                 placeholder="搜索域名..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={urlParams.search}
+                onChange={(e) => setUrlParams({ search: e.target.value })}
                 className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
           <div className="flex items-center gap-2">
             <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              value={urlParams.status}
+              onChange={(e) => setUrlParams({ status: e.target.value })}
               className="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="all">全部状态</option>
@@ -261,17 +266,12 @@ export default function Domains() {
               
               {/* 分页 */}
               <Pagination
-                current={currentPage}
+                current={urlParams.page}
                 total={sortedDomains.length}
-                pageSize={pageSize}
+                pageSize={urlParams.pageSize}
                 showSizeChanger
                 onChange={(page, size) => {
-                  setCurrentPage(page);
-                  setPageSize(size);
-                }}
-                onShowSizeChange={(current, size) => {
-                  setCurrentPage(1);
-                  setPageSize(size);
+                  setUrlParams({ page, pageSize: size });
                 }}
               />
             </Card>

@@ -13,6 +13,7 @@ import { generateMockNodes } from '@/lib/mockData';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
+import { useListParams } from '@/hooks/useUrlParams';
 
 export default function NodeGroups() {
   const [groups, setGroups] = useState<NodeGroup[]>(generateMockNodeGroups());
