@@ -509,133 +509,146 @@ export default function Websites() {
                     </select>
                   </div>
                   
-                  {/* 第三排：回源地址 */}
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs font-medium text-foreground w-16 flex-shrink-0">回源地址：</label>
-                    <input
-                      type="text"
-                      placeholder="输入回源地址"
-                      className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                  {/* 第三排：线路配置和缓存规则 */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-medium text-foreground whitespace-nowrap">线路：</label>
+                      <select
+                        value={formData.lineGroup}
+                        onChange={(e) => setFormData({ ...formData, lineGroup: e.target.value })}
+                        className="w-32 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option>线路1</option>
+                        <option>线路2</option>
+                        <option>线路3</option>
+                        <option>线路4</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-medium text-foreground whitespace-nowrap">缓存规则：</label>
+                      <select
+                        value={formData.cacheRules}
+                        onChange={(e) => setFormData({ ...formData, cacheRules: e.target.value })}
+                        className="w-40 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="">-- 请选择缓存规则 --</option>
+                        <option value="首页缓存">首页缓存</option>
+                        <option value="图片缓存">图片缓存</option>
+                        <option value="API缓存">API缓存</option>
+                      </select>
+                    </div>
                   </div>
 
-                  {/* 编辑表单的 Tab */}
-                  <div className="flex gap-2 border-b border-border overflow-x-auto">
-                    <button
-                      onClick={() => setConfigTab('https')}
-                      className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
-                        configTab === 'https'
-                          ? 'text-primary border-primary'
-                          : 'text-muted-foreground border-transparent hover:text-foreground'
-                      }`}
-                    >
-                      HTTPS配置
-                    </button>
-                    <button
-                      onClick={() => setConfigTab('cache')}
-                      className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
-                        configTab === 'cache'
-                          ? 'text-primary border-primary'
-                          : 'text-muted-foreground border-transparent hover:text-foreground'
-                      }`}
-                    >
-                      缓存规则
-                    </button>
+                  {/* HTTPS配置 */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.httpsForceRedirect}
+                          onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">HTTPS强制跳转</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.hstsEnabled}
+                          onChange={(e) => setFormData({ ...formData, hstsEnabled: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">HSTS</span>
+                      </label>
+                    </div>
                   </div>
 
-                  {/* HTTPS 配置内容 */}
-                  {configTab === 'https' && (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-6">
+                  {/* 回源配置 */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-medium text-foreground">回源配置</label>
+                    <div className="flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.useOriginGroup || false}
+                          onChange={(e) => setFormData({ ...formData, useOriginGroup: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">使用分组</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.redirectEnabled || false}
+                          onChange={(e) => setFormData({ ...formData, redirectEnabled: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">重定向</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.originConfigEnabled || false}
+                          onChange={(e) => setFormData({ ...formData, originConfigEnabled: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">回源配置</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* 证书配置 */}
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="block text-xs font-medium text-foreground">证书配置</label>
+                      <div className="flex gap-4">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
-                            type="checkbox"
-                            checked={formData.httpsForceRedirect}
-                            onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
-                            className="w-4 h-4 rounded border-border"
+                            type="radio"
+                            name="certificateType"
+                            value="manual"
+                            checked={formData.certificateType === 'manual'}
+                            onChange={(e) => setFormData({ ...formData, certificateType: 'manual' })}
+                            className="w-4 h-4"
                           />
-                          <span className="text-xs font-medium text-foreground">HTTPS强制跳转</span>
+                          <span className="text-xs text-foreground">手动</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
-                            type="checkbox"
-                            checked={formData.hstsEnabled}
-                            onChange={(e) => setFormData({ ...formData, hstsEnabled: e.target.checked })}
-                            className="w-4 h-4 rounded border-border"
+                            type="radio"
+                            name="certificateType"
+                            value="auto"
+                            checked={formData.certificateType === 'auto'}
+                            onChange={(e) => setFormData({ ...formData, certificateType: 'auto' })}
+                            className="w-4 h-4"
                           />
-                          <span className="text-xs font-medium text-foreground">开启HSTS</span>
+                          <span className="text-xs text-foreground">自动</span>
                         </label>
                       </div>
-                      <div className="space-y-1">
-                        <label className="block text-xs font-medium text-foreground">证书配置</label>
-                        <div className="flex gap-4">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="radio"
-                              name="certificateType"
-                              value="manual"
-                              checked={formData.certificateType === 'manual'}
-                              onChange={(e) => setFormData({ ...formData, certificateType: 'manual' })}
-                              className="w-4 h-4"
-                            />
-                            <span className="text-xs text-foreground">手动</span>
-                          </label>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="radio"
-                              name="certificateType"
-                              value="auto"
-                              checked={formData.certificateType === 'auto'}
-                              onChange={(e) => setFormData({ ...formData, certificateType: 'auto' })}
-                              className="w-4 h-4"
-                            />
-                            <span className="text-xs text-foreground">自动</span>
-                          </label>
+                    </div>
+                    {formData.certificateType === 'manual' && (
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-xs font-medium text-foreground mb-1">证书</label>
+                          <textarea
+                            value={formData.certificateData}
+                            onChange={(e) => setFormData({ ...formData, certificateData: e.target.value })}
+                            placeholder="输入证书内容（PEM/CRT 格式）"
+                            className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                            rows={3}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-foreground mb-1">私钥</label>
+                          <textarea
+                            placeholder="输入私钥内容（KEY 格式）"
+                            className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                            rows={3}
+                          />
                         </div>
                       </div>
-                      {formData.certificateType === 'manual' && (
-                        <div className="space-y-2">
-                          <div>
-                            <label className="block text-xs font-medium text-foreground mb-1">证书</label>
-                            <textarea
-                              value={formData.certificateData}
-                              onChange={(e) => setFormData({ ...formData, certificateData: e.target.value })}
-                              placeholder="输入证书内容（PEM/CRT 格式）"
-                              className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                              rows={3}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-foreground mb-1">私钥</label>
-                            <textarea
-                              placeholder="输入私钥内容（KEY 格式）"
-                              className="w-full px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                              rows={3}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* 缓存规则内容 */}
-                  {configTab === 'cache' && (
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-xs font-medium text-foreground mb-1">缓存规则选择</label>
-                        <select
-                          value={formData.cacheRules}
-                          onChange={(e) => setFormData({ ...formData, cacheRules: e.target.value })}
-                          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        >
-                          <option value="">-- 请选择缓存规则 --</option>
-                          <option value="首页缓存">首页缓存</option>
-                          <option value="图片缓存">图片缓存</option>
-                          <option value="API缓存">API缓存</option>
-                        </select>
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               ) : (
                 // 添加表单
@@ -650,7 +663,8 @@ export default function Websites() {
                       rows={4}
                     />
                   </div>
-                  <div className="flex gap-6 items-center">
+                  {/* 线路配置和缓存规则 */}
+                  <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       <label className="text-xs font-medium text-foreground whitespace-nowrap">线路：</label>
                       <select
@@ -664,48 +678,77 @@ export default function Websites() {
                         <option>线路4</option>
                       </select>
                     </div>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.https}
-                        onChange={(e) => setFormData({ ...formData, https: e.target.checked })}
-                        className="w-4 h-4 rounded border-border"
-                      />
-                      <span className="text-xs font-medium text-foreground">HTTPS</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.httpsForceRedirect}
-                        onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
-                        className="w-4 h-4 rounded border-border"
-                      />
-                      <span className="text-xs font-medium text-foreground">HTTPS强制跳转</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.hstsEnabled}
-                        onChange={(e) => setFormData({ ...formData, hstsEnabled: e.target.checked })}
-                        className="w-4 h-4 rounded border-border"
-                      />
-                      <span className="text-xs font-medium text-foreground">HSTS</span>
-                    </label>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-medium text-foreground whitespace-nowrap">缓存规则：</label>
+                      <select
+                        value={formData.cacheRules}
+                        onChange={(e) => setFormData({ ...formData, cacheRules: e.target.value })}
+                        className="w-40 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="">-- 请选择缓存规则 --</option>
+                        <option value="首页缓存">首页缓存</option>
+                        <option value="图片缓存">图片缓存</option>
+                        <option value="API缓存">API缓存</option>
+                      </select>
+                    </div>
                   </div>
 
-                  {/* 缓存规则选择 */}
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs font-medium text-foreground whitespace-nowrap">缓存规则：</label>
-                    <select
-                      value={formData.cacheRules}
-                      onChange={(e) => setFormData({ ...formData, cacheRules: e.target.value })}
-                      className="w-40 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="">-- 请选择缓存规则 --</option>
-                      <option value="首页缓存">首页缓存</option>
-                      <option value="图片缓存">图片缓存</option>
-                      <option value="API缓存">API缓存</option>
-                    </select>
+                  {/* HTTPS配置 */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.httpsForceRedirect}
+                          onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">HTTPS强制跳转</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.hstsEnabled}
+                          onChange={(e) => setFormData({ ...formData, hstsEnabled: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">HSTS</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* 回源配置 */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-medium text-foreground">回源配置</label>
+                    <div className="flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.useOriginGroup || false}
+                          onChange={(e) => setFormData({ ...formData, useOriginGroup: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">使用分组</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.redirectEnabled || false}
+                          onChange={(e) => setFormData({ ...formData, redirectEnabled: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">重定向</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.originConfigEnabled || false}
+                          onChange={(e) => setFormData({ ...formData, originConfigEnabled: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">回源配置</span>
+                      </label>
+                    </div>
                   </div>
 
                   {/* 配置切换按钮 */}
