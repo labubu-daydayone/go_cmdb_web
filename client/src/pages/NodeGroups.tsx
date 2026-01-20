@@ -8,7 +8,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Popconfirm } from '@/components/Popconfirm';
-import Transfer, { TransferItem } from '@/components/Transfer';
+import TreeTransfer, { TreeNode } from '@/components/TreeTransfer';
 import { generateMockNodes } from '@/lib/mockData';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -24,11 +24,16 @@ export default function NodeGroups() {
   const [newGroupDesc, setNewGroupDesc] = useState('');
   const [selectedNodeKeys, setSelectedNodeKeys] = useState<string[]>([]);
   
-  // 获取所有节点作为穿梭框数据源
+  // 获取所有节点作为树形穿梭框数据源
   const allNodes = generateMockNodes();
-  const nodeTransferData: TransferItem[] = allNodes.map(node => ({
+  const nodeTreeData: TreeNode[] = allNodes.map(node => ({
     key: node.id,
     title: `${node.name} (${node.ip})`,
+    children: node.subIPs?.map(subip => ({
+      key: subip.id,
+      title: subip.ip,
+      disabled: false,
+    })) || [],
     disabled: false,
   }));
 
@@ -279,8 +284,8 @@ export default function NodeGroups() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-3">选择节点</label>
-                  <Transfer
-                    dataSource={nodeTransferData}
+                  <TreeTransfer
+                    dataSource={nodeTreeData}
                     targetKeys={selectedNodeKeys}
                     onChange={setSelectedNodeKeys}
                     titles={['可选节点', '已选节点']}
