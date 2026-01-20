@@ -122,8 +122,13 @@ export const Pagination: React.FC<PaginationProps> = ({
   const pageNumbers = renderPageNumbers();
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-background">
-      {/* 左侧：每页显示数量选择 */}
+    <div className="flex items-center justify-end gap-4 px-6 py-4 border-t border-border bg-background">
+      {/* 显示范围 */}
+      <div className="text-sm text-muted-foreground">
+        {total > 0 ? `${startItem}-${endItem} 条，共 ${total} 条` : '暂无数据'}
+      </div>
+
+      {/* 每页显示数量选择 */}
       {showSizeChanger && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>每页</span>
@@ -156,21 +161,16 @@ export const Pagination: React.FC<PaginationProps> = ({
         </div>
       )}
 
-      {/* 中间：显示范围 */}
-      <div className="text-sm text-muted-foreground">
-        {total > 0 ? `${startItem}-${endItem} 条，共 ${total} 条` : '暂无数据'}
-      </div>
-
-      {/* 右侧：分页按钮 */}
+      {/* 分页按钮 */}
       <div className="flex items-center gap-2">
-        {/* 上一页 */}
+        {/* 上一页 - 只显示 < 图标 */}
         <button
           onClick={() => handlePageChange(current - 1)}
           disabled={disabled || current === 1}
-          className="px-3 py-1.5 text-sm border border-border rounded hover:bg-secondary/50 hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-border transition-colors flex items-center gap-1"
+          className="min-w-[32px] h-8 px-2 text-sm border border-border rounded hover:bg-secondary/50 hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-border transition-colors flex items-center justify-center"
+          title="上一页"
         >
           <ChevronLeftIcon fontSize="small" />
-          上一页
         </button>
 
         {/* 页码按钮 */}
@@ -204,13 +204,13 @@ export const Pagination: React.FC<PaginationProps> = ({
           })}
         </div>
 
-        {/* 下一页 */}
+        {/* 下一页 - 只显示 > 图标 */}
         <button
           onClick={() => handlePageChange(current + 1)}
           disabled={disabled || current === totalPages}
-          className="px-3 py-1.5 text-sm border border-border rounded hover:bg-secondary/50 hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-border transition-colors flex items-center gap-1"
+          className="min-w-[32px] h-8 px-2 text-sm border border-border rounded hover:bg-secondary/50 hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-border transition-colors flex items-center justify-center"
+          title="下一页"
         >
-          下一页
           <ChevronRightIcon fontSize="small" />
         </button>
       </div>
