@@ -266,11 +266,13 @@ export default function Nodes() {
 
         {/* 节点列表 */}
         <Card className="border border-border overflow-hidden">
-          <div className="px-6 py-3 border-b border-border flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              {selectedNodes.size > 0 ? `已选择 ${selectedNodes.size} 个` : `共 ${filteredNodes.length} 个`}
-            </span>
-          </div>
+          {selectedNodes.size > 0 && (
+            <div className="px-6 py-3 border-b border-border flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                已选择 {selectedNodes.size} 个
+              </span>
+            </div>
+          )}
           <div className="space-y-0 overflow-x-auto">
             {/* 表头 */}
             <div className="grid grid-cols-11 gap-4 px-6 py-3 bg-secondary/20 border-b border-border font-semibold text-sm text-muted-foreground min-w-[900px]">
@@ -397,7 +399,6 @@ export default function Nodes() {
                   <div className="bg-secondary/5 border-b border-border px-6 py-3">
                     <div className="space-y-2 overflow-x-auto">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="text-sm font-semibold text-foreground">子 IP 列表（共 {subIPs.length} 个）</div>
                         {subIPs.length > pageInfo.pageSize && (
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <span>每页显示</span>
@@ -471,7 +472,6 @@ export default function Nodes() {
                       {subIPs.length > pageInfo.pageSize && (
                         <div className="flex items-center justify-between pt-2 border-t border-border mt-2">
                           <span className="text-xs text-muted-foreground">
-                            {startIndex + 1}-{Math.min(endIndex, subIPs.length)} 条，共 {subIPs.length} 条
                           </span>
                           <div className="flex items-center gap-2">
                             <button

@@ -112,11 +112,13 @@ export default function DNSConfigPage() {
 
         {/* DNS 配置列表 */}
         <Card className="border border-border overflow-hidden">
-          <div className="px-6 py-3 border-b border-border flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              {selectedConfigs.size > 0 ? `已选择 ${selectedConfigs.size} 个` : `共 ${dnsConfigs.length} 个`}
-            </span>
-          </div>
+          {selectedConfigs.size > 0 && (
+            <div className="px-6 py-3 border-b border-border flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                已选择 {selectedConfigs.size} 个
+              </span>
+            </div>
+          )}
           <div className="overflow-x-auto w-full">
             <table className="w-full text-sm min-w-[900px]">
               <thead>
@@ -186,9 +188,6 @@ export default function DNSConfigPage() {
                     <td className="py-3 px-4 text-muted-foreground">{config.createdDate}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
-                          <EditIcon fontSize="small" className="text-muted-foreground"/>
-                        </button>
                         <Popconfirm
                           title="确认删除？"
                           description="删除后无法恢复，是否继续？"

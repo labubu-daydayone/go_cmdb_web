@@ -40,6 +40,7 @@ export default function LineGroups() {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     name: '',
     cnamePrefix: '',
@@ -158,14 +159,27 @@ export default function LineGroups() {
     });
   };
 
+  const handleEdit = (lineGroup: LineGroup) => {
+    setEditingId(lineGroup.id);
+    setFormData({
+      name: lineGroup.name,
+      cnamePrefix: lineGroup.cname.split('.')[0] || '',
+      domain: lineGroup.cname.split('.').slice(1).join('.') || '',
+      nodeGroups: [],
+    });
+    setShowForm(true);
+  };
+
   const handleSubmit = () => {
-    console.log('Submit form:', formData);
+    console.log('Submit form:', formData, 'Editing ID:', editingId);
     setShowForm(false);
+    setEditingId(null);
     setFormData({ name: '', cnamePrefix: '', domain: '', nodeGroups: [] });
   };
 
   const handleCancel = () => {
     setShowForm(false);
+    setEditingId(null);
     setFormData({ name: '', cnamePrefix: '', domain: '', nodeGroups: [] });
   };
 
@@ -202,11 +216,13 @@ export default function LineGroups() {
 
         {/* 线路分组列表 */}
         <Card className="border border-border overflow-hidden">
-          <div className="px-6 py-3 border-b border-border flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              {selectedLineGroups.size > 0 ? `已选择 ${selectedLineGroups.size} 个` : `共 ${filteredLineGroups.length} 个`}
-            </span>
-          </div>
+          {selectedLineGroups.size > 0 && (
+            <div className="px-6 py-3 border-b border-border flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                已选择 {selectedLineGroups.size} 个
+              </span>
+            </div>
+          )}
           <div className="overflow-x-auto w-full">
             <table className="w-full text-sm min-w-[800px]">
               <thead>
@@ -225,11 +241,8 @@ export default function LineGroups() {
                       <SortIcon field="name" />
                     </div>
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('description')}>
-                    <div className="flex items-center">
-                      说明
-                      <SortIcon field="description" />
-                    </div>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">
+                    节点组
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('cname')}>
                     <div className="flex items-center">
@@ -263,7 +276,9 @@ export default function LineGroups() {
                       />
                     </td>
                     <td className="py-3 px-4 font-medium text-foreground">{lineGroup.name}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{lineGroup.description}</td>
+                    <td className="py-3 px-4 text-muted-foreground">
+                      <span className="text-xs">{lineGroup.nodeGroups || '节点分组1, 节点分组2'}</span>
+                    </td>
                     <td className="py-3 px-4 text-muted-foreground">{lineGroup.cname}</td>
                     <td className="py-3 px-4">
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">
@@ -273,19 +288,20 @@ export default function LineGroups() {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <button className="p-1 hover:bg-secondary rounded transition-colors" title="查看节点">
-                          <HubIcon fontSize="small" className="text-muted-foreground"/>
-                        </button>
-                        <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
+                        <button 
+                          className="p-1 hover:bg-secondary rounded transition-colors" 
+                          title="编辑"
+                          onClick={() => handleEdit(lineGroup)}
+                        >
                           <EditIcon fontSize="small" className="text-muted-foreground"/>
                         </button>
                         <Popconfirm
                           title="确认删除？"
                           description="删除后无法恢复，是否继续？"
-                          onConfirm={() => console.log('Delete line group', group.id)}
+                          onConfirm={() => console.log('Delete line group', lineGroup.id)}
                         >
-                          <button className="p-1 hover:bg-red-100 rounded transition-colors" title="删除">
-                            <DeleteIcon fontSize="small" className="text-red-600"/>
+                          <button className="p-1 hover:bg-secondary rounded transition-colors" title="删除">
+                            <DeleteIcon fontSize="small" className="text-destructive"/>
                           </button>
                         </Popconfirm>
                       </div>
@@ -320,7 +336,7 @@ export default function LineGroups() {
             >
               {/* 标题栏 */}
               <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
-                <h2 className="text-lg font-bold text-foreground">添加线路分组</h2>
+                <h2 className="text-lg font-bold text-foreground">{editingId ? '编辑线路分组' : '添加线路分组'}</h2>
                 <button onClick={handleCancel} className="text-muted-foreground hover:text-foreground">
                   ✕
                 </button>
@@ -394,7 +410,7 @@ export default function LineGroups() {
                   取消
                 </Button>
                 <Button onClick={handleSubmit}>
-                  添加
+                  {editingId ? '保存' : '添加'}
                 </Button>
               </div>
             </div>

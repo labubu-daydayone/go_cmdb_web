@@ -63,6 +63,7 @@ export default function OriginGroups() {
   ]);
 
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
@@ -93,13 +94,23 @@ export default function OriginGroups() {
 
   const handleAddGroup = () => {
     if (formData.name.trim() && formData.addresses.some(addr => addr.ip.trim())) {
-      const newGroup: OriginGroup = {
-        id: String(groups.length + 1),
-        ...formData,
-        addresses: formData.addresses.filter(addr => addr.ip.trim()),
-        status: 'active',
-      };
-      setGroups([...groups, newGroup]);
+      if (editingId) {
+        // 编辑模式：更新现有分组
+        setGroups(groups.map(g => 
+          g.id === editingId 
+            ? { ...g, ...formData, addresses: formData.addresses.filter(addr => addr.ip.trim()) }
+            : g
+        ));
+      } else {
+        // 添加模式：创建新分组
+        const newGroup: OriginGroup = {
+          id: String(groups.length + 1),
+          ...formData,
+          addresses: formData.addresses.filter(addr => addr.ip.trim()),
+          status: 'active',
+        };
+        setGroups([...groups, newGroup]);
+      }
       resetForm();
     }
   };
@@ -138,6 +149,7 @@ export default function OriginGroups() {
 
   const resetForm = () => {
     setShowAddForm(false);
+    setEditingId(null);
     setFormData({
       name: '',
       type: '主源',
@@ -166,11 +178,13 @@ export default function OriginGroups() {
 
         {/* 分组列表 */}
         <Card className="overflow-hidden">
-          <div className="px-6 py-3 border-b border-border bg-secondary/10">
-            <span className="text-sm text-muted-foreground">
-              {selectedGroups.size > 0 ? `已选择 ${selectedGroups.size} 个` : `共 ${groups.length} 个分组`}
-            </span>
-          </div>
+          {selectedGroups.size > 0 && (
+            <div className="px-6 py-3 border-b border-border bg-secondary/10">
+              <span className="text-sm text-muted-foreground">
+                已选择 {selectedGroups.size} 个
+              </span>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -184,7 +198,6 @@ export default function OriginGroups() {
                     />
                   </th>
                   <th className="text-left py-3 px-4 font-medium text-foreground">名称</th>
-                  <th className="text-left py-3 px-4 font-medium text-foreground">类型</th>
                   <th className="text-left py-3 px-4 font-medium text-foreground">地址</th>
                   <th className="text-left py-3 px-4 font-medium text-foreground">描述</th>
                   <th className="text-left py-3 px-4 font-medium text-foreground">状态</th>
@@ -207,7 +220,6 @@ export default function OriginGroups() {
                       />
                     </td>
                     <td className="py-3 px-4 text-foreground font-medium">{group.name}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{group.type}</td>
                     <td className="py-3 px-4 text-muted-foreground">
                       <div className="space-y-1">
                         {group.addresses.map((addr, idx) => (
@@ -233,7 +245,20 @@ export default function OriginGroups() {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
-                        <button className="p-1 hover:bg-secondary rounded transition-colors">
+                        <button 
+                          className="p-1 hover:bg-secondary rounded transition-colors"
+                          onClick={() => {
+                            setEditingId(group.id);
+                            setFormData({
+                              name: group.name,
+                              type: group.type,
+                              addresses: group.addresses,
+                              description: group.description,
+                            });
+                            setShowAddForm(true);
+                          }}
+                          title="编辑"
+                        >
                           <CreateIcon fontSize="small" className="text-muted-foreground"/>
                         </button>
                         <Popconfirm
@@ -277,7 +302,7 @@ export default function OriginGroups() {
             <Card className="w-[800px] h-full rounded-none flex flex-col" onClick={(e) => e.stopPropagation()}>
               {/* 标题栏 */}
               <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
-                <h2 className="text-lg font-bold text-foreground">添加回源分组</h2>
+                <h2 className="text-lg font-bold text-foreground">{editingId ? '编辑回源分组' : '添加回源分组'}</h2>
                 <button
                   onClick={resetForm}
                   className="text-muted-foreground hover:text-foreground"
@@ -391,7 +416,7 @@ export default function OriginGroups() {
                   取消
                 </Button>
                 <Button onClick={handleAddGroup} className="text-sm">
-                  添加
+                  {editingId ? '保存' : '添加'}
                 </Button>
               </div>
             </Card>

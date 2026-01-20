@@ -299,7 +299,6 @@ export default function Websites() {
                 </div>
               )}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">共 {websites.length} 个网站</p>
           </div>
           <div className="flex gap-2">
             <Popconfirm
