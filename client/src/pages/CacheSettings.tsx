@@ -370,29 +370,40 @@ export default function CacheSettings() {
                   {/* 规则行 */}
                   <div className="space-y-4">
                     {formData.rules.map((rule, index) => (
-                      <div key={rule.id} className="flex items-center gap-6 pb-4 border-b border-border/50">
-                        {/* 类型 */}
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                          <label className="text-sm font-medium text-foreground w-12">
-                            类型:
-                          </label>
-                          <select
-                            value={rule.ruleType}
-                            onChange={(e) =>
-                              handleUpdateRule(rule.id, {
-                                ruleType: e.target.value as 'directory' | 'suffix' | 'file',
-                              })
-                            }
-                            className="px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary min-w-32"
+                      <div key={rule.id} className="pb-4 border-b border-border/50 space-y-3">
+                        {/* 第一行：类型和删除按钮 */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <label className="text-sm font-medium text-foreground w-12">
+                              类型:
+                            </label>
+                            <select
+                              value={rule.ruleType}
+                              onChange={(e) =>
+                                handleUpdateRule(rule.id, {
+                                  ruleType: e.target.value as 'directory' | 'suffix' | 'file',
+                                })
+                              }
+                              className="px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary min-w-32"
+                            >
+                              <option value="directory">目录</option>
+                              <option value="suffix">后缀</option>
+                              <option value="file">文件</option>
+                            </select>
+                          </div>
+                          
+                          {/* 删除按钮 */}
+                          <button
+                            onClick={() => handleRemoveRule(rule.id)}
+                            className="p-2 hover:bg-destructive/10 rounded transition-colors"
+                            title="删除规则"
                           >
-                            <option value="directory">目录</option>
-                            <option value="suffix">后缀</option>
-                            <option value="file">文件</option>
-                          </select>
+                            <DeleteIcon fontSize="small" className="text-destructive"/>
+                          </button>
                         </div>
 
-                        {/* 规则 */}
-                        <div className="flex items-center gap-3 flex-1">
+                        {/* 第二行：规则 */}
+                        <div className="flex items-center gap-3">
                           <label className="text-sm font-medium text-foreground w-12 flex-shrink-0">
                             规则:
                           </label>
@@ -407,45 +418,37 @@ export default function CacheSettings() {
                           />
                         </div>
 
-                        {/* TTL */}
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                          <label className="text-sm font-medium text-foreground w-12">
-                            TTL:
-                          </label>
-                          <input
-                            type="number"
-                            value={rule.ttl}
-                            onChange={(e) =>
-                              handleUpdateRule(rule.id, { ttl: parseInt(e.target.value) })
-                            }
-                            min="1"
-                            className="w-32 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
+                        {/* 第三行：TTL 和强制缓存 */}
+                        <div className="flex items-center gap-6">
+                          <div className="flex items-center gap-3">
+                            <label className="text-sm font-medium text-foreground w-12">
+                              TTL:
+                            </label>
+                            <input
+                              type="number"
+                              value={rule.ttl}
+                              onChange={(e) =>
+                                handleUpdateRule(rule.id, { ttl: parseInt(e.target.value) })
+                              }
+                              min="1"
+                              className="w-32 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
 
-                        {/* 强制缓存勾选框 */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <input
-                            type="checkbox"
-                            checked={rule.forceCache || false}
-                            onChange={(e) =>
-                              handleUpdateRule(rule.id, { forceCache: e.target.checked })
-                            }
-                            className="w-4 h-4 cursor-pointer"
-                          />
-                          <label className="text-sm font-medium text-foreground cursor-pointer">
-                            强制缓存
-                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={rule.forceCache || false}
+                              onChange={(e) =>
+                                handleUpdateRule(rule.id, { forceCache: e.target.checked })
+                              }
+                              className="w-4 h-4 cursor-pointer"
+                            />
+                            <label className="text-sm font-medium text-foreground cursor-pointer">
+                              强制缓存
+                            </label>
+                          </div>
                         </div>
-
-                        {/* 删除按钮 */}
-                        <button
-                          onClick={() => handleRemoveRule(rule.id)}
-                          className="p-2 hover:bg-destructive/10 rounded transition-colors flex-shrink-0"
-                          title="删除规则"
-                        >
-                          <DeleteIcon fontSize="small" className="text-destructive"/>
-                        </button>
                       </div>
                     ))}
                   </div>
