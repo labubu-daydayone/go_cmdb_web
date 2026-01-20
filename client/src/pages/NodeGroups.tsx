@@ -114,16 +114,15 @@ export default function NodeGroups() {
           </div>
           <div className="overflow-x-auto w-full">
             <div className="w-full text-sm overflow-x-auto">
-              <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-border bg-secondary/30 font-semibold text-foreground min-w-[900px]">
-                <div className="col-span-1 text-center">
+              <div className="grid grid-cols-11 gap-4 px-6 py-3 border-b border-border bg-secondary/30 font-semibold text-foreground min-w-[900px]">
+                <div className="col-span-1 flex items-center gap-1 px-2">
                   <input
                     type="checkbox"
                     checked={selectedGroups.size === filteredGroups.length && filteredGroups.length > 0}
                     onChange={handleSelectAll}
-                    className="w-4 h-4 cursor-pointer"
+                    className="w-4 h-4 cursor-pointer flex-shrink-0"
                   />
                 </div>
-                <div className="col-span-1 text-center"></div>
                 <div className="col-span-2">分组名称</div>
                 <div className="col-span-3">描述</div>
                 <div className="col-span-2">子 IP 数量</div>
@@ -134,22 +133,20 @@ export default function NodeGroups() {
               {filteredGroups.map((group, index) => (
                 <div key={group.id}>
                   <div
-                    className={`grid grid-cols-12 gap-4 px-6 py-3 border-b border-border hover:bg-secondary/30 transition-colors min-w-[900px] ${
+                    className={`grid grid-cols-11 gap-4 px-6 py-3 border-b border-border hover:bg-secondary/30 transition-colors min-w-[900px] ${
                       selectedGroups.has(group.id) ? 'bg-primary/10' : index % 2 === 0 ? 'bg-background' : 'bg-secondary/10'
                     }`}
                   >
-                    <div className="col-span-1 text-center">
+                    <div className="col-span-1 flex items-center gap-1 px-2">
                       <input
                         type="checkbox"
                         checked={selectedGroups.has(group.id)}
                         onChange={() => handleSelectGroup(group.id)}
-                        className="w-4 h-4 cursor-pointer"
+                        className="w-4 h-4 cursor-pointer flex-shrink-0"
                       />
-                    </div>
-                    <div className="col-span-1 text-center">
                       <button
                         onClick={() => handleToggleExpand(group.id)}
-                        className="p-1 hover:bg-secondary rounded transition-colors"
+                        className="p-0.5 hover:bg-secondary rounded transition-colors flex-shrink-0"
                         title={expandedGroups.has(group.id) ? '收起' : '展开'}
                       >
                         {expandedGroups.has(group.id) ? (

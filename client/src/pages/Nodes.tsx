@@ -215,16 +215,15 @@ export default function Nodes() {
           </div>
           <div className="space-y-0 overflow-x-auto">
             {/* 表头 */}
-            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-secondary/20 border-b border-border font-semibold text-sm text-muted-foreground min-w-[900px]">
-              <div className="col-span-1 text-center">
+            <div className="grid grid-cols-11 gap-4 px-6 py-3 bg-secondary/20 border-b border-border font-semibold text-sm text-muted-foreground min-w-[900px]">
+              <div className="col-span-1 flex items-center gap-1 px-2">
                 <input
                   type="checkbox"
                   checked={selectedNodes.size === filteredNodes.length && filteredNodes.length > 0}
                   onChange={handleSelectAll}
-                  className="w-4 h-4 cursor-pointer"
+                  className="w-4 h-4 cursor-pointer flex-shrink-0"
                 />
               </div>
-              <div className="col-span-1 text-center"></div>
               <div className="col-span-2 cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('name')}>
                 <div className="flex items-center">
                   名称
@@ -257,22 +256,20 @@ export default function Nodes() {
             {filteredNodes.map((node, index) => (
               <div key={node.id}>
                 <div
-                  className={`grid grid-cols-12 gap-4 px-6 py-3 border-b border-border hover:bg-secondary/30 transition-colors min-w-[900px] ${
+                  className={`grid grid-cols-11 gap-4 px-6 py-3 border-b border-border hover:bg-secondary/30 transition-colors min-w-[900px] ${
                     selectedNodes.has(node.id) ? 'bg-primary/10' : index % 2 === 0 ? 'bg-background' : 'bg-secondary/10'
                   }`}
                 >
-                  <div className="col-span-1 text-center">
+                  <div className="col-span-1 flex items-center gap-1 px-2">
                     <input
                       type="checkbox"
                       checked={selectedNodes.has(node.id)}
                       onChange={() => handleSelectNode(node.id)}
-                      className="w-4 h-4 cursor-pointer"
+                      className="w-4 h-4 cursor-pointer flex-shrink-0"
                     />
-                  </div>
-                  <div className="col-span-1 text-center">
                     <button
                       onClick={() => handleToggleExpand(node.id)}
-                      className="p-1 hover:bg-secondary rounded transition-colors"
+                      className="p-0.5 hover:bg-secondary rounded transition-colors flex-shrink-0"
                       title={expandedNodes.has(node.id) ? '收起' : '展开'}
                     >
                       {expandedNodes.has(node.id) ? (

@@ -48,6 +48,25 @@ export default function OriginGroups() {
   ]);
 
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
+
+  const handleSelectAll = () => {
+    if (selectedGroups.size === groups.length) {
+      setSelectedGroups(new Set());
+    } else {
+      setSelectedGroups(new Set(groups.map(g => g.id)));
+    }
+  };
+
+  const handleSelectGroup = (id: string) => {
+    const newSelected = new Set(selectedGroups);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedGroups(newSelected);
+  };
   const [formData, setFormData] = useState({
     name: '',
     type: '主源',
@@ -101,10 +120,23 @@ export default function OriginGroups() {
 
         {/* 分组列表 */}
         <Card className="overflow-hidden">
+          <div className="px-6 py-3 border-b border-border bg-secondary/10">
+            <span className="text-sm text-muted-foreground">
+              {selectedGroups.size > 0 ? `已选择 ${selectedGroups.size} 个` : `共 ${groups.length} 个分组`}
+            </span>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-secondary/50">
+                  <th className="w-12 px-2 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedGroups.size === groups.length && groups.length > 0}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                  </th>
                   <th className="text-left py-3 px-4 font-medium text-foreground">名称</th>
                   <th className="text-left py-3 px-4 font-medium text-foreground">类型</th>
                   <th className="text-left py-3 px-4 font-medium text-foreground">地址</th>
@@ -116,6 +148,14 @@ export default function OriginGroups() {
               <tbody>
                 {groups.map((group) => (
                   <tr key={group.id} className="border-b border-border hover:bg-secondary/30 transition-colors">
+                    <td className="w-12 px-2 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedGroups.has(group.id)}
+                        onChange={() => handleSelectGroup(group.id)}
+                        className="w-4 h-4 cursor-pointer"
+                      />
+                    </td>
                     <td className="py-3 px-4 text-foreground font-medium">{group.name}</td>
                     <td className="py-3 px-4 text-muted-foreground">{group.type}</td>
                     <td className="py-3 px-4 text-muted-foreground">{group.address}</td>
