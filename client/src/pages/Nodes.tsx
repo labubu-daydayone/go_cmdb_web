@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
+import { Pagination } from '@/components/Pagination';
 import { generateMockNodes, Node } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
 import AddIcon from '@mui/icons-material/Add';
@@ -117,7 +118,7 @@ export default function Nodes() {
     return matchesSearch && matchesStatus;
   });
 
-  const filteredNodes = [...baseFilteredNodes].sort((a, b) => {
+  const sortedNodes = [...baseFilteredNodes].sort((a, b) => {
     let aValue: any = a[sortField];
     let bValue: any = b[sortField];
 
@@ -130,6 +131,13 @@ export default function Nodes() {
     if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
     return 0;
   });
+
+  // 分页
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const filteredNodes = sortedNodes.slice(startIndex, endIndex);
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
@@ -349,6 +357,20 @@ export default function Nodes() {
               </div>
             ))}
           </div>
+          <Pagination
+            current={currentPage}
+            total={sortedNodes.length}
+            pageSize={pageSize}
+            showSizeChanger
+            onChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            onShowSizeChange={(current, size) => {
+              setCurrentPage(1);
+              setPageSize(size);
+            }}
+          />
         </Card>
 
         {/* 添加子IP 模态框 */}

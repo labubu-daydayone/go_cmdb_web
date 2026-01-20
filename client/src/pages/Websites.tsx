@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
+import { Pagination } from '@/components/Pagination';
 import { generateMockWebsites, Website } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
 import AddIcon from '@mui/icons-material/Add';
@@ -95,7 +96,7 @@ export default function Websites() {
   const [addFormTab, setAddFormTab] = useState<AddFormTab>('origin');
   const [templatePage, setTemplatePage] = useState(1);
   const [listPage, setListPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(15);
   
   const [formData, setFormData] = useState<FormData>({
     domain: '',
@@ -403,25 +404,20 @@ export default function Websites() {
           </div>
 
           {/* 分页 */}
-          <div className="px-6 py-4 border-t border-border flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">{listPage} / {totalPages}</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setListPage(Math.max(1, listPage - 1))}
-                disabled={listPage === 1}
-                className="px-3 py-1 border border-border rounded-lg text-xs hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                上一页
-              </button>
-              <button
-                onClick={() => setListPage(Math.min(totalPages, listPage + 1))}
-                disabled={listPage === totalPages}
-                className="px-3 py-1 border border-border rounded-lg text-xs hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                下一页
-              </button>
-            </div>
-          </div>
+          <Pagination
+            current={listPage}
+            total={sortedWebsites.length}
+            pageSize={itemsPerPage}
+            showSizeChanger
+            onChange={(page, size) => {
+              setListPage(page);
+              setItemsPerPage(size);
+            }}
+            onShowSizeChange={(current, size) => {
+              setListPage(1);
+              setItemsPerPage(size);
+            }}
+          />
         </Card>
       </div>
 

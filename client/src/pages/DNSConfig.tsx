@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
+import { Pagination } from '@/components/Pagination';
 import { generateMockDNSConfigs, DNSConfig } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
 import AddIcon from '@mui/icons-material/Add';
@@ -22,6 +23,13 @@ export default function DNSConfigPage() {
   const [newDomain, setNewDomain] = useState('');
   const [newToken, setNewToken] = useState('');
   const [showTokens, setShowTokens] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+
+  // 分页数据
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedConfigs = dnsConfigs.slice(startIndex, endIndex);
 
   const handleSelectConfig = (configId: string) => {
     const newSelected = new Set(selectedConfigs);
@@ -128,7 +136,7 @@ export default function DNSConfigPage() {
                 </tr>
               </thead>
               <tbody>
-                {dnsConfigs.map((config, index) => (
+                {paginatedConfigs.map((config, index) => (
                   <tr
                     key={config.id}
                     className={`border-b border-border hover:bg-secondary/30 transition-colors ${
@@ -194,6 +202,20 @@ export default function DNSConfigPage() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            current={currentPage}
+            total={dnsConfigs.length}
+            pageSize={pageSize}
+            showSizeChanger
+            onChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            onShowSizeChange={(current, size) => {
+              setCurrentPage(1);
+              setPageSize(size);
+            }}
+          />
         </Card>
 
         {/* 添加配置模态框 */}

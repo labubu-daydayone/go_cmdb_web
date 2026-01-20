@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
+import { Pagination } from '@/components/Pagination';
 import { generateMockNodeGroups, NodeGroup } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
 import AddIcon from '@mui/icons-material/Add';
@@ -72,10 +73,17 @@ export default function NodeGroups() {
     });
   };
 
-  const filteredGroups = groups.filter(group =>
+  const sortedGroups = groups.filter(group =>
     group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (group.description || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // 分页
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const filteredGroups = sortedGroups.slice(startIndex, endIndex);
 
   const breadcrumbs = [
     { label: '首页', href: '/' },
@@ -195,6 +203,20 @@ export default function NodeGroups() {
               ))}
             </div>
           </div>
+          <Pagination
+            current={currentPage}
+            total={sortedGroups.length}
+            pageSize={pageSize}
+            showSizeChanger
+            onChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            onShowSizeChange={(current, size) => {
+              setCurrentPage(1);
+              setPageSize(size);
+            }}
+          />
         </Card>
 
         {showAddGroupModal && (

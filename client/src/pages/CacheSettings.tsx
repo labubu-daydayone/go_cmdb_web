@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
+import { Pagination } from '@/components/Pagination';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -61,7 +62,7 @@ export default function CacheSettings() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [listPage, setListPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(15);
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -305,29 +306,20 @@ export default function CacheSettings() {
           </div>
 
           {/* 分页 */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-border">
-              <span className="text-sm text-muted-foreground">
-                {listPage} / {totalPages}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setListPage(Math.max(1, listPage - 1))}
-                  disabled={listPage === 1}
-                  className="px-3 py-1 border border-border rounded-lg text-xs hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  上一页
-                </button>
-                <button
-                  onClick={() => setListPage(Math.min(totalPages, listPage + 1))}
-                  disabled={listPage === totalPages}
-                  className="px-3 py-1 border border-border rounded-lg text-xs hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  下一页
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            current={listPage}
+            total={filteredSettings.length}
+            pageSize={itemsPerPage}
+            showSizeChanger
+            onChange={(page, size) => {
+              setListPage(page);
+              setItemsPerPage(size);
+            }}
+            onShowSizeChange={(current, size) => {
+              setListPage(1);
+              setItemsPerPage(size);
+            }}
+          />
         </Card>
 
         {/* 添加/编辑表单 */}
