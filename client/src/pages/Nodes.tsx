@@ -30,6 +30,8 @@ export default function Nodes() {
   const [showAddSubIPModal, setShowAddSubIPModal] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [newSubIP, setNewSubIP] = useState('');
+  // 子IP分页状态：为每个节点单独维护分页信息
+  const [subIPPages, setSubIPPages] = useState<Record<string, { currentPage: number; pageSize: number }>>({});
 
   const handleSelectNode = (nodeId: string) => {
     const newSelected = new Set(selectedNodes);
@@ -321,39 +323,111 @@ export default function Nodes() {
                 </div>
 
                 {/* 展开的子IP 列表 */}
-                {expandedNodes.has(node.id) && (node.subIPs || []).length > 0 && (
+                {expandedNodes.has(node.id) && (node.subIPs || []).length > 0 && (() => {
+                  const subIPs = node.subIPs || [];
+                  const pageInfo = subIPPages[node.id] || { currentPage: 1, pageSize: 10 };
+                  const startIndex = (pageInfo.currentPage - 1) * pageInfo.pageSize;
+                  const endIndex = startIndex + pageInfo.pageSize;
+                  const paginatedSubIPs = subIPs.slice(startIndex, endIndex);
+                  const totalPages = Math.ceil(subIPs.length / pageInfo.pageSize);
+
+                  return (
                   <div className="bg-secondary/5 border-b border-border px-6 py-3">
                     <div className="space-y-2 overflow-x-auto">
-                      <div className="text-sm font-semibold text-foreground mb-2">子 IP 列表：</div>
-                      {(node.subIPs || []).map((subip) => (
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm font-semibold text-foreground">子 IP 列表（共 {subIPs.length} 个）</div>
+                        {subIPs.length > pageInfo.pageSize && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>每页显示</span>
+                            <select
+                              value={pageInfo.pageSize}
+                              onChange={(e) => {
+                                const newPageSize = Number(e.target.value);
+                                setSubIPPages({
+                                  ...subIPPages,
+                                  [node.id]: { currentPage: 1, pageSize: newPageSize }
+                                });
+                              }}
+                              className="border border-border rounded px-2 py-1 bg-background"
+                            >
+                              <option value={5}>5</option>
+                              <option value={10}>10</option>
+                              <option value={20}>20</option>
+                              <option value={50}>50</option>
+                            </select>
+                            <span>条</span>
+                          </div>
+                        )}
+                      </div>
+                      {paginatedSubIPs.map((subip) => (
                         <div key={subip.id} className="flex items-center justify-between bg-background border border-border rounded px-3 py-2">
                           <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={subip.enabled}
-                              onChange={() => handleToggleSubIPEnabled(node.id, subip.id)}
-                              className="w-4 h-4 cursor-pointer"
-                            />
                             <code className="text-xs font-mono text-muted-foreground">{subip.ip}</code>
                             <span className="text-xs text-muted-foreground">({subip.createdDate})</span>
-                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                              subip.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                            }`}>
-                              {subip.enabled ? '已启用' : '已禁用'}
-                            </span>
                           </div>
-                          <button
-                            onClick={() => handleDeleteSubIP(node.id, subip.id)}
-                            className="p-1 hover:bg-red-100 rounded transition-colors"
-                            title="删除"
-                          >
-                            <DeleteIcon fontSize="small" className="text-red-600"/>
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleToggleSubIPEnabled(node.id, subip.id)}
+                              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                                subip.enabled 
+                                  ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                              title={subip.enabled ? '点击禁用' : '点击启用'}
+                            >
+                              {subip.enabled ? '已启用' : '已禁用'}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSubIP(node.id, subip.id)}
+                              className="p-1 hover:bg-red-100 rounded transition-colors"
+                              title="删除"
+                            >
+                              <DeleteIcon fontSize="small" className="text-red-600"/>
+                            </button>
+                          </div>
                         </div>
                       ))}
+                      {/* 子IP分页控件 */}
+                      {subIPs.length > pageInfo.pageSize && (
+                        <div className="flex items-center justify-between pt-2 border-t border-border mt-2">
+                          <span className="text-xs text-muted-foreground">
+                            {startIndex + 1}-{Math.min(endIndex, subIPs.length)} 条，共 {subIPs.length} 条
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setSubIPPages({
+                                  ...subIPPages,
+                                  [node.id]: { ...pageInfo, currentPage: Math.max(1, pageInfo.currentPage - 1) }
+                                });
+                              }}
+                              disabled={pageInfo.currentPage === 1}
+                              className="px-2 py-1 border border-border rounded text-xs hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              上一页
+                            </button>
+                            <span className="text-xs text-muted-foreground">
+                              {pageInfo.currentPage} / {totalPages}
+                            </span>
+                            <button
+                              onClick={() => {
+                                setSubIPPages({
+                                  ...subIPPages,
+                                  [node.id]: { ...pageInfo, currentPage: Math.min(totalPages, pageInfo.currentPage + 1) }
+                                });
+                              }}
+                              disabled={pageInfo.currentPage === totalPages}
+                              className="px-2 py-1 border border-border rounded text-xs hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              下一页
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
+                  );
+                })()}
               </div>
             ))}
           </div>
