@@ -54,6 +54,7 @@ export default function Nodes() {
     port: '80',
     subIPs: [],
   });
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 
   const handleSelectNode = (nodeId: string) => {
     const newSelected = new Set(selectedNodes);
@@ -144,6 +145,48 @@ export default function Nodes() {
       }
       return node;
     }));
+  };
+
+  const handleEditNode = (node: Node) => {
+    setEditingNodeId(node.id);
+    setNodeFormData({
+      name: node.name,
+      ip: node.ip,
+      port: node.managementPort.toString(),
+      subIPs: node.subIPs || [],
+    });
+    setShowAddNodeForm(true);
+  };
+
+  const handleSubmitNode = () => {
+    if (editingNodeId) {
+      // 编辑模式
+      setNodes(nodes.map(node => 
+        node.id === editingNodeId 
+          ? {
+              ...node,
+              name: nodeFormData.name,
+              ip: nodeFormData.ip,
+              managementPort: parseInt(nodeFormData.port),
+              subIPs: nodeFormData.subIPs,
+            }
+          : node
+      ));
+      setEditingNodeId(null);
+    } else {
+      // 新增模式
+      const newNode: Node = {
+        id: `node-${Date.now()}`,
+        name: nodeFormData.name,
+        ip: nodeFormData.ip,
+        managementPort: parseInt(nodeFormData.port),
+        status: 'online',
+        subIPs: nodeFormData.subIPs,
+      };
+      setNodes([...nodes, newNode]);
+    }
+    setShowAddNodeForm(false);
+    setNodeFormData({ name: '', ip: '', port: '80', subIPs: [] });
   };
 
   const handleSort = (field: SortField) => {
@@ -364,14 +407,11 @@ export default function Nodes() {
                         {node.enabled ? '已启用' : '已禁用'}
                       </button>
                     </Popconfirm>
-                    <button
-                      onClick={() => handleAddSubIP(node.id)}
-                      className="p-1 hover:bg-secondary rounded transition-colors"
-                      title="添加子IP"
+                    <button 
+                      className="p-1 hover:bg-secondary rounded transition-colors" 
+                      title="编辑"
+                      onClick={() => handleEditNode(node)}
                     >
-                      <AddIcon fontSize="small" className="text-muted-foreground"/>
-                    </button>
-                    <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
                       <EditIcon fontSize="small" className="text-muted-foreground"/>
                     </button>
                     <Popconfirm
@@ -532,15 +572,17 @@ export default function Nodes() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={() => {
             setShowAddNodeForm(false);
             setNodeFormData({ name: '', ip: '', port: '80', subIPs: [] });
+            setEditingNodeId(null);
           }}>
             <Card className="w-[800px] h-full rounded-none flex flex-col border-0 p-0" onClick={(e) => e.stopPropagation()}>
               {/* 标题栏 */}
               <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
-                <h2 className="text-lg font-bold text-foreground">添加节点</h2>
+                <h2 className="text-lg font-bold text-foreground">{editingNodeId ? '编辑节点' : '添加节点'}</h2>
                 <button
                   onClick={() => {
                     setShowAddNodeForm(false);
                     setNodeFormData({ name: '', ip: '', port: '80', subIPs: [] });
+                    setEditingNodeId(null);
                   }}
                   className="text-muted-foreground hover:text-foreground"
                 >
@@ -657,16 +699,12 @@ export default function Nodes() {
                   onClick={() => {
                     setShowAddNodeForm(false);
                     setNodeFormData({ name: '', ip: '', port: '80', subIPs: [] });
+                    setEditingNodeId(null);
                   }}
                 >
                   取消
                 </Button>
-                <Button onClick={() => {
-                  console.log('添加节点:', nodeFormData);
-                  // TODO: 实际添加节点逻辑
-                  setShowAddNodeForm(false);
-                  setNodeFormData({ name: '', ip: '', port: '80', subIPs: [] });
-                }}>添加</Button>
+                <Button onClick={handleSubmitNode}>{editingNodeId ? '保存' : '添加'}</Button>
               </div>
             </Card>
           </div>
