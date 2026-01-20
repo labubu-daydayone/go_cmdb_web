@@ -336,7 +336,13 @@ export default function OriginGroups() {
                           placeholder="1.1.1.1:80"
                           className="flex-1 px-2 py-1 border border-border rounded bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                         />
-                        <span className="text-muted-foreground w-6 text-center">{index + 1}</span>
+                        <input
+                          type="number"
+                          value={address.weight || 1}
+                          onChange={(e) => handleUpdateAddress(address.id, 'weight', Number(e.target.value))}
+                          placeholder="1"
+                          className="w-16 px-2 py-1 border border-border rounded bg-background text-foreground text-xs text-center focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
                         {formData.addresses.length > 1 && (
                           <button
                             onClick={() => handleRemoveAddress(address.id)}
