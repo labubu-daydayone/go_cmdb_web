@@ -11,11 +11,19 @@ import { Pagination } from '@/components/Pagination';
 import CreateIcon from '@mui/icons-material/Create';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+interface OriginAddress {
+  id: string;
+  ip: string;
+  port?: number;
+  weight?: number;
+  remark?: string;
+}
+
 interface OriginGroup {
   id: string;
   name: string;
   type: string;
-  address: string;
+  addresses: OriginAddress[];
   description: string;
   status: 'active' | 'inactive';
 }
@@ -26,7 +34,7 @@ export default function OriginGroups() {
       id: '1',
       name: '标准回源',
       type: '主源',
-      address: '192.168.1.1',
+      addresses: [{ id: '1-1', ip: '192.168.1.1', port: 80, weight: 1, remark: '主要回源地址' }],
       description: '使用标准回源配置',
       status: 'active',
     },
@@ -34,7 +42,10 @@ export default function OriginGroups() {
       id: '2',
       name: '高可用回源',
       type: '活跃',
-      address: '192.168.1.2',
+      addresses: [
+        { id: '2-1', ip: '192.168.1.2', port: 80, weight: 1, remark: '主要回源' },
+        { id: '2-2', ip: '192.168.1.3', port: 80, weight: 1, remark: '备用回源' }
+      ],
       description: '多源站高可用配置',
       status: 'active',
     },
@@ -42,7 +53,7 @@ export default function OriginGroups() {
       id: '3',
       name: '加速回源',
       type: '备源',
-      address: '192.168.1.3',
+      addresses: [{ id: '3-1', ip: '192.168.1.3', port: 443, weight: 1, remark: 'HTTPS回源' }],
       description: '优化加速的回源配置',
       status: 'inactive',
     },
@@ -73,20 +84,49 @@ export default function OriginGroups() {
   const [formData, setFormData] = useState({
     name: '',
     type: '主源',
-    address: '',
+    addresses: [{ id: '1', ip: '', port: 80, weight: 1, remark: '' }] as OriginAddress[],
     description: '',
   });
 
   const handleAddGroup = () => {
-    if (formData.name.trim() && formData.address.trim()) {
+    if (formData.name.trim() && formData.addresses.some(addr => addr.ip.trim())) {
       const newGroup: OriginGroup = {
         id: String(groups.length + 1),
         ...formData,
+        addresses: formData.addresses.filter(addr => addr.ip.trim()),
         status: 'active',
       };
       setGroups([...groups, newGroup]);
       resetForm();
     }
+  };
+
+  const handleAddAddress = () => {
+    setFormData({
+      ...formData,
+      addresses: [
+        ...formData.addresses,
+        { id: Date.now().toString(), ip: '', port: 80, weight: 1, remark: '' }
+      ]
+    });
+  };
+
+  const handleRemoveAddress = (id: string) => {
+    if (formData.addresses.length > 1) {
+      setFormData({
+        ...formData,
+        addresses: formData.addresses.filter(addr => addr.id !== id)
+      });
+    }
+  };
+
+  const handleUpdateAddress = (id: string, field: keyof OriginAddress, value: any) => {
+    setFormData({
+      ...formData,
+      addresses: formData.addresses.map(addr =>
+        addr.id === id ? { ...addr, [field]: value } : addr
+      )
+    });
   };
 
   const handleDeleteGroup = (id: string) => {
@@ -98,7 +138,7 @@ export default function OriginGroups() {
     setFormData({
       name: '',
       type: '主源',
-      address: '',
+      addresses: [{ id: '1', ip: '', port: 80, weight: 1, remark: '' }],
       description: '',
     });
   };
@@ -165,7 +205,17 @@ export default function OriginGroups() {
                     </td>
                     <td className="py-3 px-4 text-foreground font-medium">{group.name}</td>
                     <td className="py-3 px-4 text-muted-foreground">{group.type}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{group.address}</td>
+                    <td className="py-3 px-4 text-muted-foreground">
+                      <div className="space-y-1">
+                        {group.addresses.map((addr, idx) => (
+                          <div key={addr.id} className="text-xs">
+                            <code className="font-mono">{addr.ip}</code>
+                            {addr.port && addr.port !== 80 && <span className="text-muted-foreground">:{addr.port}</span>}
+                            {addr.remark && <span className="text-muted-foreground ml-2">({addr.remark})</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </td>
                     <td className="py-3 px-4 text-muted-foreground text-xs">{group.description}</td>
                     <td className="py-3 px-4">
                       <span
@@ -241,29 +291,83 @@ export default function OriginGroups() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-foreground mb-1">类型</label>
-                    <select
-                      value={formData.type}
-                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="主源">主源</option>
-                      <option value="备源">备源</option>
-                      <option value="活跃">活跃</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="block text-xs font-medium text-foreground mb-1">类型</label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="主源">主源</option>
+                    <option value="备源">备源</option>
+                    <option value="活跃">活跃</option>
+                  </select>
+                </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-foreground mb-1">地址</label>
-                    <input
-                      type="text"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      placeholder="输入 IP 地址"
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                {/* 回源地址列表 */}
+                <div>
+                  <label className="block text-xs font-medium text-foreground mb-2">回源地址</label>
+                  <div className="space-y-3">
+                    {formData.addresses.map((address, index) => (
+                      <div key={address.id} className="border border-border rounded-lg p-3 space-y-2 bg-secondary/5">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-foreground">地址 {index + 1}</span>
+                          {formData.addresses.length > 1 && (
+                            <button
+                              onClick={() => handleRemoveAddress(address.id)}
+                              className="text-red-600 hover:text-red-700 p-1"
+                              title="删除地址"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="col-span-2">
+                            <input
+                              type="text"
+                              value={address.ip}
+                              onChange={(e) => handleUpdateAddress(address.id, 'ip', e.target.value)}
+                              placeholder="IP 地址"
+                              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <input
+                              type="number"
+                              value={address.port || 80}
+                              onChange={(e) => handleUpdateAddress(address.id, 'port', Number(e.target.value))}
+                              placeholder="端口"
+                              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <input
+                              type="number"
+                              value={address.weight || 1}
+                              onChange={(e) => handleUpdateAddress(address.id, 'weight', Number(e.target.value))}
+                              placeholder="权重"
+                              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <input
+                              type="text"
+                              value={address.remark || ''}
+                              onChange={(e) => handleUpdateAddress(address.id, 'remark', e.target.value)}
+                              placeholder="备注（可选）"
+                              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      onClick={handleAddAddress}
+                      className="w-full border border-dashed border-border rounded-lg p-3 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                    >
+                      + 添加地址
+                    </button>
                   </div>
                 </div>
 
