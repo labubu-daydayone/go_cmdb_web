@@ -177,8 +177,6 @@ export default function Dashboard() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-foreground">服务器列表</h3>
-            {selectedServers.size > 0 && (
-            )}
           </div>
           <div className="overflow-x-auto">
             <table className="w-auto text-sm">

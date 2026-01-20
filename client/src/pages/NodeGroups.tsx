@@ -153,12 +153,6 @@ export default function NodeGroups() {
         </div>
 
         <Card className="border border-border overflow-hidden">
-          {selectedGroups.size > 0 && (
-            <div className="px-6 py-3 border-b border-border flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-              </span>
-            </div>
-          )}
           <div className="overflow-x-auto w-full">
             <div className="w-full text-sm overflow-x-auto">
               <div className="grid grid-cols-11 gap-4 px-6 py-3 border-b border-border bg-secondary/30 font-semibold text-foreground min-w-[900px]">

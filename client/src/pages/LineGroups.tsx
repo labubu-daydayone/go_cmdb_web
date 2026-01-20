@@ -216,12 +216,6 @@ export default function LineGroups() {
 
         {/* 线路分组列表 */}
         <Card className="border border-border overflow-hidden">
-          {selectedLineGroups.size > 0 && (
-            <div className="px-6 py-3 border-b border-border flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-              </span>
-            </div>
-          )}
           <div className="overflow-x-auto w-full">
             <table className="w-full text-sm min-w-[800px]">
               <thead>

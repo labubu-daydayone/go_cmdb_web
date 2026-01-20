@@ -178,12 +178,6 @@ export default function OriginGroups() {
 
         {/* 分组列表 */}
         <Card className="overflow-hidden">
-          {selectedGroups.size > 0 && (
-            <div className="px-6 py-3 border-b border-border bg-secondary/10">
-              <span className="text-sm text-muted-foreground">
-              </span>
-            </div>
-          )}
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

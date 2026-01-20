@@ -309,12 +309,6 @@ export default function Nodes() {
 
         {/* 节点列表 */}
         <Card className="border border-border overflow-hidden">
-          {selectedNodes.size > 0 && (
-            <div className="px-6 py-3 border-b border-border flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-              </span>
-            </div>
-          )}
           <div className="space-y-0 overflow-x-auto">
             {/* 表头 */}
             <div className="grid grid-cols-11 gap-4 px-6 py-3 bg-secondary/20 border-b border-border font-semibold text-sm text-muted-foreground min-w-[900px]">
