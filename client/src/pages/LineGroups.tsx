@@ -113,13 +113,14 @@ export default function LineGroups() {
   // 分页
   const {
     currentPage,
-    pageSize,
+    itemsPerPage: pageSize,
     paginatedData: filteredLineGroups,
-    totalItems,
     totalPages,
     handlePageChange,
-    handlePageSizeChange,
-  } = usePagination(sortedLineGroups, 15);
+    handleItemsPerPageChange: handlePageSizeChange,
+  } = usePagination({ data: sortedLineGroups, initialItemsPerPage: 15 });
+
+  const totalItems = sortedLineGroups.length;
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
