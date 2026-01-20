@@ -301,7 +301,7 @@ export default function OriginGroups() {
                   <label className="block text-sm font-medium text-foreground mb-2">回源地址</label>
                   <div className="space-y-2">
                     {formData.addresses.map((address, index) => (
-                      <div key={address.id} className="flex items-center gap-2 text-sm">
+                      <div key={address.id} className="flex items-center gap-2 text-sm ml-4">
                         <span className="text-muted-foreground">类型：</span>
                         <select
                           value={address.type}
