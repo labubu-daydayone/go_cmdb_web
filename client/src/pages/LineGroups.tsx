@@ -6,6 +6,8 @@
 import { useState } from 'react';
 import { Card } from '@/components/mui/Card';
 import { Button, MultiSelect } from '@/components/mui';
+import { Pagination } from '@/components/mui/Pagination';
+import { usePagination } from '@/hooks/usePagination';
 import type { MultiSelectOption } from '@/components/mui/MultiSelect';
 import { generateMockLineGroups, LineGroup } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -94,7 +96,7 @@ export default function LineGroups() {
     return matchesSearch;
   });
 
-  const filteredLineGroups = [...baseFilteredLineGroups].sort((a, b) => {
+  const sortedLineGroups = [...baseFilteredLineGroups].sort((a, b) => {
     let aValue: any = a[sortField];
     let bValue: any = b[sortField];
 
@@ -107,6 +109,17 @@ export default function LineGroups() {
     if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
     return 0;
   });
+
+  // 分页
+  const {
+    currentPage,
+    pageSize,
+    paginatedData: filteredLineGroups,
+    totalItems,
+    totalPages,
+    handlePageChange,
+    handlePageSizeChange,
+  } = usePagination(sortedLineGroups, 10);
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
@@ -274,6 +287,14 @@ export default function LineGroups() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={totalItems}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
         </Card>
 
         {/* 添加线路分组表单 - 上滑动设计 */}

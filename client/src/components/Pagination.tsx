@@ -128,39 +128,6 @@ export const Pagination: React.FC<PaginationProps> = ({
         {total > 0 ? `${startItem}-${endItem} 条，共 ${total} 条` : '暂无数据'}
       </div>
 
-      {/* 每页显示数量选择 */}
-      {showSizeChanger && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>每页</span>
-          <Select
-            value={pageSize}
-            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-            disabled={disabled}
-            size="small"
-            sx={{
-              minWidth: 80,
-              height: 32,
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'var(--border)',
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'var(--primary)',
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'var(--primary)',
-              },
-            }}
-          >
-            {pageSizeOptions.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
-              </MenuItem>
-            ))}
-          </Select>
-          <span>条</span>
-        </div>
-      )}
-
       {/* 分页按钮 */}
       <div className="flex items-center gap-2">
         {/* 上一页 - 只显示 < 图标 */}
@@ -214,6 +181,39 @@ export const Pagination: React.FC<PaginationProps> = ({
           <ChevronRightIcon fontSize="small" />
         </button>
       </div>
+
+      {/* 每页显示数量选择 */}
+      {showSizeChanger && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>每页</span>
+          <Select
+            value={pageSize}
+            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            disabled={disabled}
+            size="small"
+            sx={{
+              minWidth: 80,
+              height: 32,
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'var(--border)',
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'var(--primary)',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'var(--primary)',
+              },
+            }}
+          >
+            {pageSizeOptions.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </Select>
+          <span>条</span>
+        </div>
+      )}
     </div>
   );
 };
