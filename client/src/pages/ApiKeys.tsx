@@ -213,9 +213,11 @@ export default function ApiKeys() {
           {/* 分页 */}
           <div className="border-t border-border p-4">
             <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
+              current={currentPage}
+              total={filteredKeys.length}
+              onChange={(page) => setCurrentPage(page)}
+              pageSize={itemsPerPage}
+              showSizeChanger={true}
             />
           </div>
         </Card>

@@ -201,12 +201,7 @@ export default function Domains() {
                           <SortIcon field="expiryDate" />
                         </div>
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-foreground cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('sslStatus')}>
-                        <div className="flex items-center">
-                          SSL
-                          <SortIcon field="sslStatus" />
-                        </div>
-                      </th>
+
                       <th className="text-left py-3 px-4 font-semibold text-foreground">操作</th>
                     </tr>
                   </thead>
@@ -230,12 +225,9 @@ export default function Domains() {
                           />
                         </td>
                         <td className="py-3 px-4 cursor-pointer" onClick={() => setSelectedDomain(domain)}>
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">🌐</span>
-                            <div>
-                              <p className="font-medium text-foreground">{domain.name}</p>
-                              <p className="text-xs text-muted-foreground">{domain.registrar}</p>
-                            </div>
+                          <div>
+                            <p className="font-medium text-foreground">{domain.name}</p>
+                            <p className="text-xs text-muted-foreground">{domain.registrar}</p>
                           </div>
                         </td>
                         <td className="py-3 px-4 cursor-pointer" onClick={() => setSelectedDomain(domain)}>
@@ -244,11 +236,7 @@ export default function Domains() {
                           </span>
                         </td>
                         <td className="py-3 px-4 text-muted-foreground cursor-pointer" onClick={() => setSelectedDomain(domain)}>{domain.expiryDate}</td>
-                        <td className="py-3 px-4 cursor-pointer" onClick={() => setSelectedDomain(domain)}>
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSSLBadgeColor(domain.sslStatus)}`}>
-                            {domain.sslStatus === 'valid' ? '有效' : domain.sslStatus === 'warning' ? '警告' : '已过期'}
-                          </span>
-                        </td>
+
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
                             <button className="p-1 hover:bg-secondary rounded transition-colors" title="查看">
