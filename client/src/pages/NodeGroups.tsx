@@ -8,6 +8,8 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Popconfirm } from '@/components/Popconfirm';
+import Transfer, { TransferItem } from '@/components/Transfer';
+import { generateMockNodes } from '@/lib/mockData';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
@@ -20,6 +22,15 @@ export default function NodeGroups() {
   const [showAddGroupModal, setShowAddGroupModal] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDesc, setNewGroupDesc] = useState('');
+  const [selectedNodeKeys, setSelectedNodeKeys] = useState<string[]>([]);
+  
+  // 获取所有节点作为穿梭框数据源
+  const allNodes = generateMockNodes();
+  const nodeTransferData: TransferItem[] = allNodes.map(node => ({
+    key: node.id,
+    title: `${node.name} (${node.ip})`,
+    disabled: false,
+  }));
 
   const handleSelectGroup = (groupId: string) => {
     const newSelected = new Set(selectedGroups);
@@ -226,7 +237,7 @@ export default function NodeGroups() {
         </Card>
 
         {showAddGroupModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={() => { setShowAddGroupModal(false); setNewGroupName(''); setNewGroupDesc(''); }}>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={() => { setShowAddGroupModal(false); setNewGroupName(''); setNewGroupDesc(''); setSelectedNodeKeys([]); }}>
             <Card className="w-[800px] h-full rounded-none flex flex-col border-0 p-0" onClick={(e) => e.stopPropagation()}>
               {/* 标题栏 */}
               <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
@@ -236,6 +247,7 @@ export default function NodeGroups() {
                     setShowAddGroupModal(false);
                     setNewGroupName('');
                     setNewGroupDesc('');
+                    setSelectedNodeKeys([]);
                   }}
                   className="text-muted-foreground hover:text-foreground"
                 >
@@ -244,26 +256,36 @@ export default function NodeGroups() {
               </div>
 
               {/* 可滚动内容区域 */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-foreground whitespace-nowrap">分组名称:</label>
+                  <input
+                    type="text"
+                    value={newGroupName}
+                    onChange={(e) => setNewGroupName(e.target.value)}
+                    placeholder="输入分组名称"
+                    className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-foreground whitespace-nowrap">描述:</label>
+                  <textarea
+                    value={newGroupDesc}
+                    onChange={(e) => setNewGroupDesc(e.target.value)}
+                    placeholder="输入分组描述"
+                    className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    rows={2}
+                  />
+                </div>
                 <div>
-                <label className="block text-sm font-medium text-foreground mb-2">分组名称</label>
-                <input
-                  type="text"
-                  value={newGroupName}
-                  onChange={(e) => setNewGroupName(e.target.value)}
-                  placeholder="输入分组名称"
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">描述</label>
-                <textarea
-                  value={newGroupDesc}
-                  onChange={(e) => setNewGroupDesc(e.target.value)}
-                  placeholder="输入分组描述"
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  rows={3}
-                />
+                  <label className="block text-sm font-medium text-foreground mb-3">选择节点</label>
+                  <Transfer
+                    dataSource={nodeTransferData}
+                    targetKeys={selectedNodeKeys}
+                    onChange={setSelectedNodeKeys}
+                    titles={['可选节点', '已选节点']}
+                    height={350}
+                  />
                 </div>
               </div>
 
@@ -275,6 +297,7 @@ export default function NodeGroups() {
                     setShowAddGroupModal(false);
                     setNewGroupName('');
                     setNewGroupDesc('');
+                    setSelectedNodeKeys([]);
                   }}
                 >
                   取消
