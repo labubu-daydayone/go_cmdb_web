@@ -273,8 +273,8 @@ export default function OriginGroups() {
 
         {/* 添加分组表单 */}
         {showAddForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-end z-50">
-            <Card className="w-full h-1/2 rounded-t-lg rounded-b-none flex flex-col">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={resetForm}>
+            <Card className="w-[500px] h-full rounded-none flex flex-col" onClick={(e) => e.stopPropagation()}>
               {/* 标题栏 */}
               <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
                 <h2 className="text-lg font-bold text-foreground">添加回源分组</h2>

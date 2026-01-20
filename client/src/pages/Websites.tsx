@@ -430,18 +430,18 @@ export default function Websites() {
 
       {/* H5 风格的表单 - 上滑动画 */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-black/30 flex items-end z-50 animate-in fade-in duration-200">
-          <Card className="w-full rounded-t-2xl border-0 p-0 h-2/3 overflow-y-auto bg-background animate-in slide-in-from-bottom duration-300">
-            {/* 表单头部 */}
-            <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
-              <h2 className="text-base font-bold text-foreground">{editingId ? '编辑网站' : '添加网站'}</h2>
-              <button onClick={resetForm} className="p-1 hover:bg-secondary rounded transition-colors">
-                <CloseIcon fontSize="medium" className="text-muted-foreground"/>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={resetForm}>
+          <Card className="w-[500px] h-full rounded-none border-0 p-0 flex flex-col bg-background" onClick={(e) => e.stopPropagation()}>
+            {/* 标题栏 */}
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
+              <h2 className="text-lg font-bold text-foreground">{editingId ? '编辑网站' : '添加网站'}</h2>
+              <button onClick={resetForm} className="text-muted-foreground hover:text-foreground">
+                ✕
               </button>
             </div>
 
-            {/* 表单内容 */}
-            <div className="p-6 pb-24 space-y-3" style={{paddingTop: '0px', paddingBottom: '0px'}}>
+            {/* 可滚动内容区域 */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-3">
               {editingId ? (
                 // 编辑表单
                 <div className="space-y-3">
@@ -818,8 +818,8 @@ export default function Websites() {
               )}
             </div>
 
-            {/* 底部按钮 */}
-            <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border px-6 py-4 flex gap-3 justify-end">
+            {/* 底部按钮栏 */}
+            <div className="border-t border-border p-6 pt-4 flex gap-2 justify-end bg-background">
               <button
                 onClick={resetForm}
                 className="px-4 py-2 border border-border rounded-lg text-foreground text-xs hover:bg-secondary transition-colors"

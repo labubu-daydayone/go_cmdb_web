@@ -226,10 +226,25 @@ export default function DNSConfigPage() {
 
         {/* 添加配置模态框 */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <Card className="w-96 border border-border p-6 space-y-4">
-              <h2 className="text-lg font-bold text-foreground">添加 DNS 配置</h2>
-              <div className="space-y-3">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={() => { setShowAddModal(false); setNewDomain(''); setNewToken(''); }}>
+            <Card className="w-[400px] h-full rounded-none flex flex-col border-0 p-0" onClick={(e) => e.stopPropagation()}>
+              {/* 标题栏 */}
+              <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
+                <h2 className="text-lg font-bold text-foreground">添加 DNS 配置</h2>
+                <button
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setNewDomain('');
+                    setNewToken('');
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* 可滚动内容区域 */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">域名</label>
                   <input
@@ -251,7 +266,9 @@ export default function DNSConfigPage() {
                   />
                 </div>
               </div>
-              <div className="flex gap-2 justify-end">
+
+              {/* 底部按钮栏 */}
+              <div className="border-t border-border p-6 pt-4 flex gap-2 justify-end bg-background">
                 <Button
                   variant="outline"
                   onClick={() => {

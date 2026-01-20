@@ -313,20 +313,21 @@ export default function LineGroups() {
 
         {/* 添加线路分组表单 - 上滑动设计 */}
         {showForm && (
-          <div className="fixed inset-0 bg-black/50 z-50" onClick={handleCancel}>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={handleCancel}>
             <div
-              className="fixed bottom-0 left-0 right-0 bg-background border-t border-border rounded-t-lg h-1/2 overflow-y-auto"
+              className="w-[500px] h-full bg-background flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6 space-y-6">
-                {/* 标题 */}
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-foreground">添加线路分组</h2>
-                  <button onClick={handleCancel} className="p-1 hover:bg-secondary rounded transition-colors">
-                    <CloseIcon fontSize="medium" className="text-muted-foreground"/>
-                  </button>
-                </div>
+              {/* 标题栏 */}
+              <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
+                <h2 className="text-lg font-bold text-foreground">添加线路分组</h2>
+                <button onClick={handleCancel} className="text-muted-foreground hover:text-foreground">
+                  ✕
+                </button>
+              </div>
 
+              {/* 可滚动内容区域 */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* 名称 */}
                 <div className="flex items-center gap-2">
                   <label className="text-xs font-medium text-foreground whitespace-nowrap">名称：</label>
@@ -387,8 +388,8 @@ export default function LineGroups() {
                 </div>
               </div>
 
-              {/* 底部按钮 */}
-              <div className="sticky bottom-0 p-6 border-t border-border bg-background flex items-center justify-end gap-2">
+              {/* 底部按钮栏 */}
+              <div className="border-t border-border p-6 pt-4 flex gap-2 justify-end bg-background">
                 <Button variant="outline" onClick={handleCancel}>
                   取消
                 </Button>

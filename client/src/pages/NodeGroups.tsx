@@ -226,9 +226,10 @@ export default function NodeGroups() {
         </Card>
 
         {showAddGroupModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <Card className="w-96 border border-border p-6 space-y-4">
-              <div className="flex items-center justify-between">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={() => { setShowAddGroupModal(false); setNewGroupName(''); setNewGroupDesc(''); }}>
+            <Card className="w-[400px] h-full rounded-none flex flex-col border-0 p-0" onClick={(e) => e.stopPropagation()}>
+              {/* 标题栏 */}
+              <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
                 <h2 className="text-lg font-bold text-foreground">添加分组</h2>
                 <button
                   onClick={() => {
@@ -236,12 +237,15 @@ export default function NodeGroups() {
                     setNewGroupName('');
                     setNewGroupDesc('');
                   }}
-                  className="p-1 hover:bg-secondary rounded transition-colors"
+                  className="text-muted-foreground hover:text-foreground"
                 >
-                  <CloseIcon fontSize="medium" className="text-muted-foreground"/>
+                  ✕
                 </button>
               </div>
-              <div>
+
+              {/* 可滚动内容区域 */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div>
                 <label className="block text-sm font-medium text-foreground mb-2">分组名称</label>
                 <input
                   type="text"
@@ -260,8 +264,11 @@ export default function NodeGroups() {
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   rows={3}
                 />
+                </div>
               </div>
-              <div className="flex gap-2 justify-end">
+
+              {/* 底部按钮栏 */}
+              <div className="border-t border-border p-6 pt-4 flex gap-2 justify-end bg-background">
                 <Button
                   variant="outline"
                   onClick={() => {

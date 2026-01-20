@@ -330,23 +330,23 @@ export default function CacheSettings() {
 
         {/* 添加/编辑表单 */}
         {showAddForm && (
-          <div className="fixed inset-0 bg-black/30 flex items-end z-50 animate-in fade-in duration-200">
-            <Card className="w-full h-1/2 rounded-t-2xl border-0 p-0 overflow-hidden bg-background flex flex-col">
-              {/* 表单头部 */}
-              <div className="bg-background border-b border-border px-8 py-4 flex items-center justify-between flex-shrink-0">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={resetForm}>
+            <Card className="w-[500px] h-full rounded-none border-0 p-0 flex flex-col bg-background" onClick={(e) => e.stopPropagation()}>
+              {/* 标题栏 */}
+              <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
                 <h2 className="text-lg font-bold text-foreground">
                   {editingId ? '编辑缓存规则' : '添加缓存规则'}
                 </h2>
                 <button
                   onClick={resetForm}
-                  className="p-1 hover:bg-secondary rounded transition-colors"
+                  className="text-muted-foreground hover:text-foreground"
                 >
-                  <CloseIcon fontSize="medium" className="text-muted-foreground"/>
+                  ✕
                 </button>
               </div>
 
-              {/* 表单内容 - 可滚动 */}
-              <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
+              {/* 可滚动内容区域 */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* 缓存名称 */}
                 <div className="flex items-center gap-3">
                   <label className="text-sm font-medium text-foreground flex-shrink-0">
@@ -461,8 +461,8 @@ export default function CacheSettings() {
                 </div>
               </div>
 
-              {/* 表单按钮 - 固定在底部 */}
-              <div className="border-t border-border px-8 py-4 flex gap-3 justify-end flex-shrink-0 bg-background">
+              {/* 底部按钮栏 */}
+              <div className="border-t border-border p-6 pt-4 flex gap-2 justify-end bg-background">
                 <Button variant="outline" onClick={resetForm}>
                   取消
                 </Button>
