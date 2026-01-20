@@ -14,6 +14,7 @@ import FlashOnIcon from '@mui/icons-material/FlashOn';
 import CloseIcon from '@mui/icons-material/Close';
 import WifiIcon from '@mui/icons-material/Wifi';
 import WifiOffIcon from '@mui/icons-material/WifiOff';
+import ClearIcon from '@mui/icons-material/Clear';
 import { useWebsiteUpdates } from '@/hooks/useWebsiteUpdates';
 
 type SortField = 'domain' | 'cname' | 'lineGroup' | 'https' | 'status';
@@ -230,6 +231,19 @@ export default function Websites() {
     setWebsites(websites.filter(w => w.id !== websiteId));
   };
 
+  const handleClearCache = (websiteId: string) => {
+    console.log('Clearing cache for website:', websiteId);
+    // TODO: 调用清除缓存 API
+    alert(`已清除网站 ${websiteId} 的缓存`);
+  };
+
+  const handleBatchClearCache = () => {
+    console.log('Batch clearing cache for websites:', Array.from(selectedWebsites));
+    // TODO: 调用批量清除缓存 API
+    alert(`已清除 ${selectedWebsites.size} 个网站的缓存`);
+    setSelectedWebsites(new Set());
+  };
+
   const filteredWebsites = websites.filter(w => {
     const matchesSearch = w.domain.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || w.status === filterStatus;
@@ -287,7 +301,22 @@ export default function Websites() {
             </div>
             <p className="text-sm text-muted-foreground mt-1">共 {websites.length} 个网站</p>
           </div>
-          <Button onClick={() => setShowAddForm(true)}>添加网站</Button>
+          <div className="flex gap-2">
+            <Popconfirm
+              title="确认批量清除缓存？"
+              description={`将清除 ${selectedWebsites.size} 个网站的缓存，是否继续？`}
+              onConfirm={handleBatchClearCache}
+            >
+              <Button
+                variant="outline"
+                disabled={selectedWebsites.size === 0}
+                className="text-orange-600 border-orange-600 hover:bg-orange-50"
+              >
+                批量清除缓存 ({selectedWebsites.size})
+              </Button>
+            </Popconfirm>
+            <Button onClick={() => setShowAddForm(true)}>添加网站</Button>
+          </div>
         </div>
 
         {/* 搜索和筛选 */}
@@ -394,6 +423,15 @@ export default function Websites() {
                       <button onClick={() => handleEditWebsite(website)} className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
                         <EditIcon fontSize="small" className="text-primary"/>
                       </button>
+                      <Popconfirm
+                        title="确认清除缓存？"
+                        description="清除后需要重新生成缓存，是否继续？"
+                        onConfirm={() => handleClearCache(website.id)}
+                      >
+                        <button className="p-1 hover:bg-secondary rounded transition-colors" title="清除缓存">
+                          <ClearIcon fontSize="small" className="text-orange-600"/>
+                        </button>
+                      </Popconfirm>
                       <Popconfirm
                         title="确认删除？"
                         description="删除后无法恢复，是否继续？"
