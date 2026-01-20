@@ -20,6 +20,19 @@ import CloseIcon from '@mui/icons-material/Close';
 type SortField = 'name' | 'ip' | 'managementPort' | 'status';
 type SortOrder = 'asc' | 'desc';
 
+interface SubIP {
+  id: string;
+  ip: string;
+  enabled: boolean;
+}
+
+interface NodeFormData {
+  name: string;
+  ip: string;
+  port: string;
+  subIPs: SubIP[];
+}
+
 export default function Nodes() {
   const [nodes, setNodes] = useState<Node[]>(generateMockNodes());
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
@@ -33,6 +46,14 @@ export default function Nodes() {
   const [newSubIP, setNewSubIP] = useState('');
   // 子IP分页状态：为每个节点单独维护分页信息
   const [subIPPages, setSubIPPages] = useState<Record<string, { currentPage: number; pageSize: number }>>({});
+  // 添加节点表单状态
+  const [showAddNodeForm, setShowAddNodeForm] = useState(false);
+  const [nodeFormData, setNodeFormData] = useState<NodeFormData>({
+    name: '',
+    ip: '',
+    port: '80',
+    subIPs: [],
+  });
 
   const handleSelectNode = (nodeId: string) => {
     const newSelected = new Set(selectedNodes);
@@ -149,6 +170,12 @@ export default function Nodes() {
     return <span className="ml-1 text-primary text-xs">{sortOrder === 'asc' ? '↑' : '↓'}</span>;
   };
 
+  const handleToggleNodeEnabled = (nodeId: string) => {
+    setNodes(nodes.map(node => 
+      node.id === nodeId ? { ...node, enabled: !node.enabled } : node
+    ));
+  };
+
   const handleToggleSubIPEnabled = (nodeId: string, subIPId: string) => {
     setNodes(nodes.map(node => {
       if (node.id === nodeId) {
@@ -188,7 +215,7 @@ export default function Nodes() {
         {/* 页面标题和操作 */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">节点列表</h1>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setShowAddNodeForm(true)}>
             <AddIcon fontSize="small" />
             添加节点
           </Button>
@@ -253,8 +280,7 @@ export default function Nodes() {
                   <SortIcon field="managementPort" />
                 </div>
               </div>
-              <div className="col-span-1">启用</div>
-              <div className="col-span-2 cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('status')}>
+              <div className="col-span-3 cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('status')}>
                 <div className="flex items-center">
                   状态
                   <SortIcon field="status" />
@@ -293,20 +319,29 @@ export default function Nodes() {
                   <div className="col-span-2 font-medium text-foreground">{node.name}</div>
                   <div className="col-span-2 text-muted-foreground font-mono text-xs">{node.ip}</div>
                   <div className="col-span-1 text-muted-foreground">{node.managementPort}</div>
-                  <div className="col-span-1">
-                    <input
-                      type="checkbox"
-                      checked={node.enabled}
-                      disabled
-                      className="w-4 h-4 cursor-not-allowed"
-                    />
-                  </div>
-                  <div className="col-span-2">
+                  <div className="col-span-3">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(node.status)}`}>
                       {node.status === 'online' ? '在线' : node.status === 'offline' ? '离线' : '维护中'}
                     </span>
                   </div>
                   <div className="col-span-2 flex items-center gap-1">
+                    {/* 启用/禁用按钮 */}
+                    <Popconfirm
+                      title={node.enabled ? "确认禁用？" : "确认启用？"}
+                      description={node.enabled ? "禁用后该节点将不可用，是否继续？" : "启用后该节点将可以使用，是否继续？"}
+                      onConfirm={() => handleToggleNodeEnabled(node.id)}
+                    >
+                      <button
+                        className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                          node.enabled 
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                        title={node.enabled ? '点击禁用' : '点击启用'}
+                      >
+                        {node.enabled ? '已启用' : '已禁用'}
+                      </button>
+                    </Popconfirm>
                     <button
                       onClick={() => handleAddSubIP(node.id)}
                       className="p-1 hover:bg-secondary rounded transition-colors"
@@ -458,6 +493,142 @@ export default function Nodes() {
             }}
           />
         </Card>
+
+        {/* 添加节点表单 */}
+        {showAddNodeForm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={() => setShowAddNodeForm(false)}>
+            <Card className="w-[800px] h-full rounded-none flex flex-col border-0 p-0" onClick={(e) => e.stopPropagation()}>
+              {/* 标题栏 */}
+              <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
+                <h2 className="text-lg font-bold text-foreground">添加节点</h2>
+                <button
+                  onClick={() => setShowAddNodeForm(false)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* 可滚动内容区域 */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* 节点名称 */}
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-medium text-foreground flex-shrink-0 w-20">
+                    名称: <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={nodeFormData.name}
+                    onChange={(e) => setNodeFormData({ ...nodeFormData, name: e.target.value })}
+                    placeholder="例如：Node-01"
+                    className="flex-1 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                {/* IP 地址 */}
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-medium text-foreground flex-shrink-0 w-20">
+                    IP: <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={nodeFormData.ip}
+                    onChange={(e) => setNodeFormData({ ...nodeFormData, ip: e.target.value })}
+                    placeholder="192.168.1.1"
+                    className="flex-1 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                {/* 端口 */}
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-medium text-foreground flex-shrink-0 w-20">
+                    端口: <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={nodeFormData.port}
+                    onChange={(e) => setNodeFormData({ ...nodeFormData, port: e.target.value })}
+                    placeholder="80"
+                    className="w-32 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                {/* 子IP列表 */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-medium text-foreground">
+                      子IP列表:
+                    </label>
+                    <button
+                      onClick={() => {
+                        setNodeFormData({
+                          ...nodeFormData,
+                          subIPs: [...nodeFormData.subIPs, { id: `subip-${Date.now()}`, ip: '', enabled: true }]
+                        });
+                      }}
+                      className="text-sm text-primary hover:text-primary/80 transition-colors"
+                    >
+                      + 添加子IP
+                    </button>
+                  </div>
+
+                  {nodeFormData.subIPs.length === 0 ? (
+                    <div className="text-sm text-muted-foreground text-center py-4 border border-dashed border-border rounded-lg">
+                      暂无子IP，点击“+ 添加子IP”添加
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {nodeFormData.subIPs.map((subIP, index) => (
+                        <div key={subIP.id} className="flex items-center gap-3 ml-[31px]">
+                          <span className="text-sm text-muted-foreground w-8">{index + 1}.</span>
+                          <input
+                            type="text"
+                            value={subIP.ip}
+                            onChange={(e) => {
+                              const newSubIPs = [...nodeFormData.subIPs];
+                              newSubIPs[index] = { ...newSubIPs[index], ip: e.target.value };
+                              setNodeFormData({ ...nodeFormData, subIPs: newSubIPs });
+                            }}
+                            placeholder="192.168.1.100"
+                            className="flex-1 px-3 py-1 border border-border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                          <button
+                            onClick={() => {
+                              setNodeFormData({
+                                ...nodeFormData,
+                                subIPs: nodeFormData.subIPs.filter((_, i) => i !== index)
+                              });
+                            }}
+                            className="p-1 hover:bg-destructive/10 rounded transition-colors"
+                            title="删除子IP"
+                          >
+                            <DeleteIcon fontSize="small" className="text-destructive"/>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 底部按钮栏 */}
+              <div className="border-t border-border p-6 pt-4 flex gap-2 justify-end bg-background">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddNodeForm(false)}
+                >
+                  取消
+                </Button>
+                <Button onClick={() => {
+                  console.log('添加节点:', nodeFormData);
+                  // TODO: 实际添加节点逻辑
+                  setShowAddNodeForm(false);
+                  setNodeFormData({ name: '', ip: '', port: '80', subIPs: [] });
+                }}>添加</Button>
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* 添加子IP 模态框 */}
         {showAddSubIPModal && (
