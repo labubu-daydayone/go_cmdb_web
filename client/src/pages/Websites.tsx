@@ -311,10 +311,10 @@ export default function Websites() {
         {/* 网站列表表格 */}
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[900px]">
               <thead>
                 <tr className="border-b border-border bg-secondary/50">
-                  <th className="px-6 py-3 text-center">
+                  <th className="w-12 px-2 py-3 text-center">
                     <input
                       type="checkbox"
                       checked={selectedWebsites.size === paginatedWebsites.length && paginatedWebsites.length > 0}
@@ -363,7 +363,7 @@ export default function Websites() {
                       selectedWebsites.has(website.id) ? 'bg-primary/10' : index % 2 === 0 ? 'bg-background' : 'bg-secondary/10'
                     }`}
                   >
-                    <td className="px-6 py-3 text-center">
+                    <td className="w-12 px-2 py-3 text-center">
                       <input
                         type="checkbox"
                         checked={selectedWebsites.has(website.id)}

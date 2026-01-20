@@ -109,10 +109,10 @@ export default function DNSConfigPage() {
             </span>
           </div>
           <div className="overflow-x-auto w-full">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[900px]">
               <thead>
                 <tr className="border-b border-border bg-secondary/30">
-                  <th className="text-center py-3 px-4 font-semibold text-foreground w-12">
+                  <th className="text-center py-3 px-2 font-semibold text-foreground w-12">
                     <input
                       type="checkbox"
                       checked={selectedConfigs.size === dnsConfigs.length && dnsConfigs.length > 0}
@@ -135,7 +135,7 @@ export default function DNSConfigPage() {
                       selectedConfigs.has(config.id) ? 'bg-primary/10' : index % 2 === 0 ? 'bg-background' : 'bg-secondary/10'
                     }`}
                   >
-                    <td className="text-center py-3 px-4">
+                    <td className="text-center py-3 px-2">
                       <input
                         type="checkbox"
                         checked={selectedConfigs.has(config.id)}

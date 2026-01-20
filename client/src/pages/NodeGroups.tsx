@@ -113,8 +113,8 @@ export default function NodeGroups() {
             </span>
           </div>
           <div className="overflow-x-auto w-full">
-            <div className="w-full text-sm">
-              <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-border bg-secondary/30 font-semibold text-foreground">
+            <div className="w-full text-sm overflow-x-auto">
+              <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-border bg-secondary/30 font-semibold text-foreground min-w-[900px]">
                 <div className="col-span-1 text-center">
                   <input
                     type="checkbox"
@@ -127,14 +127,14 @@ export default function NodeGroups() {
                 <div className="col-span-2">分组名称</div>
                 <div className="col-span-3">描述</div>
                 <div className="col-span-2">子 IP 数量</div>
-                <div className="col-span-2">创建时间</div>
-                <div className="col-span-1">操作</div>
+                <div className="col-span-1">创建时间</div>
+                <div className="col-span-2">操作</div>
               </div>
 
               {filteredGroups.map((group, index) => (
                 <div key={group.id}>
                   <div
-                    className={`grid grid-cols-12 gap-4 px-6 py-3 border-b border-border hover:bg-secondary/30 transition-colors ${
+                    className={`grid grid-cols-12 gap-4 px-6 py-3 border-b border-border hover:bg-secondary/30 transition-colors min-w-[900px] ${
                       selectedGroups.has(group.id) ? 'bg-primary/10' : index % 2 === 0 ? 'bg-background' : 'bg-secondary/10'
                     }`}
                   >
@@ -162,8 +162,8 @@ export default function NodeGroups() {
                     <div className="col-span-2 font-medium text-foreground">{group.name}</div>
                     <div className="col-span-3 text-muted-foreground">{group.description || '-'}</div>
                     <div className="col-span-2 text-muted-foreground">{group.subIPs.length}</div>
-                    <div className="col-span-2 text-muted-foreground">{group.createdDate}</div>
-                    <div className="col-span-1">
+                    <div className="col-span-1 text-muted-foreground">{group.createdDate}</div>
+                    <div className="col-span-2">
                       <div className="flex items-center gap-2">
                         <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
                           <EditIcon fontSize="small" className="text-muted-foreground"/>

@@ -213,9 +213,9 @@ export default function Nodes() {
               {selectedNodes.size > 0 ? `已选择 ${selectedNodes.size} 个` : `共 ${filteredNodes.length} 个`}
             </span>
           </div>
-          <div className="space-y-0">
+          <div className="space-y-0 overflow-x-auto">
             {/* 表头 */}
-            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-secondary/20 border-b border-border font-semibold text-sm text-muted-foreground">
+            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-secondary/20 border-b border-border font-semibold text-sm text-muted-foreground min-w-[900px]">
               <div className="col-span-1 text-center">
                 <input
                   type="checkbox"
@@ -257,7 +257,7 @@ export default function Nodes() {
             {filteredNodes.map((node, index) => (
               <div key={node.id}>
                 <div
-                  className={`grid grid-cols-12 gap-4 px-6 py-3 border-b border-border hover:bg-secondary/30 transition-colors ${
+                  className={`grid grid-cols-12 gap-4 px-6 py-3 border-b border-border hover:bg-secondary/30 transition-colors min-w-[900px] ${
                     selectedNodes.has(node.id) ? 'bg-primary/10' : index % 2 === 0 ? 'bg-background' : 'bg-secondary/10'
                   }`}
                 >
@@ -318,7 +318,7 @@ export default function Nodes() {
                 {/* 展开的子IP 列表 */}
                 {expandedNodes.has(node.id) && (node.subIPs || []).length > 0 && (
                   <div className="bg-secondary/5 border-b border-border px-6 py-3">
-                    <div className="space-y-2">
+                    <div className="space-y-2 overflow-x-auto">
                       <div className="text-sm font-semibold text-foreground mb-2">子 IP 列表：</div>
                       {(node.subIPs || []).map((subip) => (
                         <div key={subip.id} className="flex items-center justify-between bg-background border border-border rounded px-3 py-2">
