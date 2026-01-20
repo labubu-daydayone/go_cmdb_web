@@ -7,6 +7,7 @@ import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/mui';
 import { Card } from '@/components/mui/Card';
+import { Pagination } from '@/components/Pagination';
 import CreateIcon from '@mui/icons-material/Create';
 import DeleteIcon from '@mui/icons-material/Delete';
 
@@ -49,6 +50,8 @@ export default function OriginGroups() {
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const handleSelectAll = () => {
     if (selectedGroups.size === groups.length) {
@@ -146,7 +149,11 @@ export default function OriginGroups() {
                 </tr>
               </thead>
               <tbody>
-                {groups.map((group) => (
+                {(() => {
+                  const startIndex = (currentPage - 1) * pageSize;
+                  const endIndex = startIndex + pageSize;
+                  const paginatedGroups = groups.slice(startIndex, endIndex);
+                  return paginatedGroups.map((group) => (
                   <tr key={group.id} className="border-b border-border hover:bg-secondary/30 transition-colors">
                     <td className="w-12 px-2 text-center">
                       <input
@@ -185,10 +192,27 @@ export default function OriginGroups() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  ));
+                })()}
               </tbody>
             </table>
           </div>
+          
+          {/* 分页 */}
+          <Pagination
+            current={currentPage}
+            total={groups.length}
+            pageSize={pageSize}
+            showSizeChanger
+            onChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            onShowSizeChange={(current, size) => {
+              setCurrentPage(1);
+              setPageSize(size);
+            }}
+          />
         </Card>
 
         {/* 添加分组表单 */}
