@@ -17,6 +17,8 @@ import OriginManagement from "./pages/OriginManagement";
 import OriginGroups from "./pages/OriginGroups";
 import CacheSettings from "./pages/CacheSettings";
 import Login from "./pages/Login";
+import ApiKeys from "./pages/ApiKeys";
+import Certificates from "./pages/Certificates";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
   const [, setLocation] = useLocation();
@@ -64,6 +66,12 @@ function Router() {
       </Route>
       <Route path={"/cache-settings"}>
         <ProtectedRoute component={CacheSettings} />
+      </Route>
+      <Route path={"/api-keys"}>
+        <ProtectedRoute component={ApiKeys} />
+      </Route>
+      <Route path={"/certificates"}>
+        <ProtectedRoute component={Certificates} />
       </Route>
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />

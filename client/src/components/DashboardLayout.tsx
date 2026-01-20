@@ -24,6 +24,8 @@ import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import SettingsEthernetOutlinedIcon from '@mui/icons-material/SettingsEthernetOutlined';
 import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
+import SecurityOutlinedIcon from '@mui/icons-material/SecurityOutlined';
 import { Button } from '@/components/mui';
 import { useMenu } from '@/contexts/MenuContext';
 import { colors } from '@/theme';
@@ -48,7 +50,14 @@ interface NavItem {
 
 const navigationItems: NavItem[] = [
   { label: '仪表板', href: '/', icon: <DashboardOutlinedIcon fontSize="small" /> },
-  { label: '域名管理', href: '/domains', icon: <LanguageOutlinedIcon fontSize="small" /> },
+  {
+    label: '域名管理',
+    icon: <LanguageOutlinedIcon fontSize="small" />,
+    children: [
+      { label: '域名列表', href: '/domains', icon: <ListAltOutlinedIcon fontSize="small" /> },
+      { label: '证书管理', href: '/certificates', icon: <SecurityOutlinedIcon fontSize="small" /> },
+    ],
+  },
   {
     label: '网站管理',
     icon: <PublicOutlinedIcon fontSize="small" />,
@@ -63,7 +72,13 @@ const navigationItems: NavItem[] = [
     ],
   },
   { label: '服务器', href: '/servers', icon: <StorageOutlinedIcon fontSize="small" /> },
-  { label: '配置', href: '/settings', icon: <SettingsOutlinedIcon fontSize="small" /> },
+  {
+    label: '设置',
+    icon: <SettingsOutlinedIcon fontSize="small" />,
+    children: [
+      { label: '密钥管理', href: '/api-keys', icon: <VpnKeyOutlinedIcon fontSize="small" /> },
+    ],
+  },
 ];
 
 export default function DashboardLayout({
