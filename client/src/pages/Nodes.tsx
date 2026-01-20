@@ -529,13 +529,19 @@ export default function Nodes() {
 
         {/* 添加节点表单 */}
         {showAddNodeForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={() => setShowAddNodeForm(false)}>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={() => {
+            setShowAddNodeForm(false);
+            setNodeFormData({ name: '', ip: '', port: '80', subIPs: [] });
+          }}>
             <Card className="w-[800px] h-full rounded-none flex flex-col border-0 p-0" onClick={(e) => e.stopPropagation()}>
               {/* 标题栏 */}
               <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
                 <h2 className="text-lg font-bold text-foreground">添加节点</h2>
                 <button
-                  onClick={() => setShowAddNodeForm(false)}
+                  onClick={() => {
+                    setShowAddNodeForm(false);
+                    setNodeFormData({ name: '', ip: '', port: '80', subIPs: [] });
+                  }}
                   className="text-muted-foreground hover:text-foreground"
                 >
                   ✕
@@ -648,7 +654,10 @@ export default function Nodes() {
               <div className="border-t border-border p-6 pt-4 flex gap-2 justify-end bg-background">
                 <Button
                   variant="outline"
-                  onClick={() => setShowAddNodeForm(false)}
+                  onClick={() => {
+                    setShowAddNodeForm(false);
+                    setNodeFormData({ name: '', ip: '', port: '80', subIPs: [] });
+                  }}
                 >
                   取消
                 </Button>
