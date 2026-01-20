@@ -524,40 +524,6 @@ export default function Websites() {
                     </div>
                   </div>
 
-                  {/* 回源配置 */}
-                  <div className="space-y-3">
-                    <label className="text-xs font-medium text-foreground">回源配置</label>
-                    <div className="flex items-center gap-6">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.useOriginGroup || false}
-                          onChange={(e) => setFormData({ ...formData, useOriginGroup: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
-                        />
-                        <span className="text-xs font-medium text-foreground">使用分组</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.redirectEnabled || false}
-                          onChange={(e) => setFormData({ ...formData, redirectEnabled: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
-                        />
-                        <span className="text-xs font-medium text-foreground">重定向</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.originConfigEnabled || false}
-                          onChange={(e) => setFormData({ ...formData, originConfigEnabled: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
-                        />
-                        <span className="text-xs font-medium text-foreground">回源配置</span>
-                      </label>
-                    </div>
-                  </div>
-
                   {/* HTTPS配置 */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-6">
@@ -675,40 +641,6 @@ export default function Websites() {
                         <option value="图片缓存">图片缓存</option>
                         <option value="API缓存">API缓存</option>
                       </select>
-                    </div>
-                  </div>
-
-                  {/* 回源配置 */}
-                  <div className="space-y-3">
-                    <label className="text-xs font-medium text-foreground">回源配置</label>
-                    <div className="flex items-center gap-6">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.useOriginGroup || false}
-                          onChange={(e) => setFormData({ ...formData, useOriginGroup: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
-                        />
-                        <span className="text-xs font-medium text-foreground">使用分组</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.redirectEnabled || false}
-                          onChange={(e) => setFormData({ ...formData, redirectEnabled: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
-                        />
-                        <span className="text-xs font-medium text-foreground">重定向</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.originConfigEnabled || false}
-                          onChange={(e) => setFormData({ ...formData, originConfigEnabled: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
-                        />
-                        <span className="text-xs font-medium text-foreground">回源配置</span>
-                      </label>
                     </div>
                   </div>
 
