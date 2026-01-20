@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Popover from '@mui/material/Popover';
-import { Button } from './ui/button';
+import { Button } from './mui';
 
 interface PopconfirmProps {
   title: string;
