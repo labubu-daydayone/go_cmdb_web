@@ -97,7 +97,7 @@ export default function DashboardLayout({
         style={{
           width: sidebarOpen ? '240px' : '80px',
           backgroundColor: colors.sidebar.background,
-          color: colors.sidebar.foreground,
+          color: colors.sidebar.text,
           transition: 'width 0.3s ease',
           display: 'flex',
           flexDirection: 'column',
@@ -142,7 +142,7 @@ export default function DashboardLayout({
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              color: colors.sidebar.foreground,
+              color: colors.sidebar.text,
               borderRadius: '8px',
               transition: 'background-color 0.2s',
             }}
@@ -187,13 +187,13 @@ export default function DashboardLayout({
                       borderRadius: '8px',
                       border: 'none',
                       cursor: 'pointer',
-                      backgroundColor: isExpanded ? 'colors.sidebar.hover' : 'transparent',
-                      color: colors.sidebar.foreground,
+                      backgroundColor: isExpanded ? colors.sidebar.hover : 'transparent',
+                      color: colors.sidebar.text,
                       transition: 'background-color 0.2s',
                     }}
                     onMouseEnter={(e) => {
                       if (!isExpanded) {
-                        e.currentTarget.style.backgroundColor = 'colors.sidebar.hover';
+                        e.currentTarget.style.backgroundColor = colors.sidebar.hover;
                       }
                     }}
                     onMouseLeave={(e) => {
@@ -233,13 +233,14 @@ export default function DashboardLayout({
                                 borderRadius: '8px',
                                 fontSize: '14px',
                                 textDecoration: 'none',
-                                backgroundColor: isChildActive ? colors.sidebar.active : 'transparent',
-                                color: colors.sidebar.foreground,
+                                backgroundColor: isChildActive ? colors.sidebar.activeBg : 'transparent',
+                                color: isChildActive ? colors.sidebar.active : colors.sidebar.text,
+                                borderLeft: isChildActive ? `3px solid ${colors.sidebar.active}` : '3px solid transparent',
                                 transition: 'background-color 0.2s',
                               }}
                               onMouseEnter={(e) => {
                                 if (!isChildActive) {
-                                  e.currentTarget.style.backgroundColor = 'colors.sidebar.hover';
+                                  e.currentTarget.style.backgroundColor = colors.sidebar.hover;
                                 }
                               }}
                               onMouseLeave={(e) => {
@@ -270,13 +271,14 @@ export default function DashboardLayout({
                     padding: '8px 12px',
                     borderRadius: '8px',
                     textDecoration: 'none',
-                    backgroundColor: isActive ? colors.sidebar.active : 'transparent',
-                    color: colors.sidebar.foreground,
+                    backgroundColor: isActive ? colors.sidebar.activeBg : 'transparent',
+                    color: isActive ? colors.sidebar.active : colors.sidebar.text,
+                    borderLeft: isActive ? `3px solid ${colors.sidebar.active}` : '3px solid transparent',
                     transition: 'background-color 0.2s',
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.backgroundColor = 'colors.sidebar.hover';
+                      e.currentTarget.style.backgroundColor = colors.sidebar.hover;
                     }
                   }}
                   onMouseLeave={(e) => {
