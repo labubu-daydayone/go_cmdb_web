@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { Card } from '@/components/mui/Card';
 import { Button, MultiSelect } from '@/components/mui';
-import { Pagination } from '@/components/mui/Pagination';
+import { Pagination } from '@/components/Pagination';
 import { usePagination } from '@/hooks/usePagination';
 import type { MultiSelectOption } from '@/components/mui/MultiSelect';
 import { generateMockLineGroups, LineGroup } from '@/lib/mockData';
@@ -119,7 +119,7 @@ export default function LineGroups() {
     totalPages,
     handlePageChange,
     handlePageSizeChange,
-  } = usePagination(sortedLineGroups, 10);
+  } = usePagination(sortedLineGroups, 15);
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {

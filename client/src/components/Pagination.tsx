@@ -37,10 +37,10 @@ export const Pagination: React.FC<PaginationProps> = ({
   defaultCurrent = 1,
   total,
   pageSize: controlledPageSize,
-  defaultPageSize = 10,
+  defaultPageSize = 15,
   disabled = false,
   showSizeChanger = false,
-  pageSizeOptions = [10, 20, 50, 100],
+  pageSizeOptions = [15, 20, 50, 100],
   onChange,
   onShowSizeChange,
 }) => {

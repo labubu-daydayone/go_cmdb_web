@@ -51,7 +51,7 @@ export default function OriginGroups() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(15);
 
   const handleSelectAll = () => {
     if (selectedGroups.size === groups.length) {

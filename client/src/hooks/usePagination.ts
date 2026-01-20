@@ -9,7 +9,7 @@ interface UsePaginationProps<T> {
   initialItemsPerPage?: number;
 }
 
-export function usePagination<T>({ data, initialItemsPerPage = 10 }: UsePaginationProps<T>) {
+export function usePagination<T>({ data, initialItemsPerPage = 15 }: UsePaginationProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(initialItemsPerPage);
 
