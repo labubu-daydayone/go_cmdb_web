@@ -120,28 +120,20 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
     checkedKeys: string[],
     onCheck: (node: TreeNode, checked: boolean) => void,
     level: number = 0,
-    isInTarget: boolean = false,
   ) => {
     const hasChildren = node.children && node.children.length > 0;
     const isExpanded = expandedKeys.has(node.key);
     const isChecked = isNodeChecked(node, checkedKeys);
     const isIndeterminate = isNodeIndeterminate(node, checkedKeys);
     const isInTargetList = targetKeys.includes(node.key);
-
-    // 如果是左侧列表，过滤掉已在右侧的节点
-    if (!isInTarget && isInTargetList) {
-      return null;
-    }
-
-    // 如果是右侧列表，只显示在targetKeys中的节点
-    if (isInTarget && !isInTargetList) {
-      return null;
-    }
+    const isDisabled = node.disabled || isInTargetList; // 已在右侧的节点禁用
 
     return (
       <div key={node.key}>
         <div
-          className={`flex items-center py-1 rounded hover:bg-secondary/30 transition-colors cursor-pointer ${
+          className={`flex items-center py-1 rounded transition-colors ${
+            isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary/30 cursor-pointer'
+          } ${
             isChecked ? 'bg-primary/10' : ''
           }`}
           style={{ paddingLeft: `${level * 20 + 8}px` }}
@@ -164,16 +156,16 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
           {!hasChildren && <div className="w-6" />}
           <div
             className="flex items-center flex-1"
-            onClick={() => !node.disabled && onCheck(node, !isChecked)}
+            onClick={() => !isDisabled && onCheck(node, !isChecked)}
           >
             <Checkbox
-              checked={isChecked}
+              checked={isChecked || isInTargetList}
               indeterminate={isIndeterminate}
-              disabled={node.disabled}
+              disabled={isDisabled}
               size="small"
               sx={{ padding: '4px' }}
             />
-            <span className={`text-sm ${node.disabled ? 'text-muted-foreground' : 'text-foreground'}`}>
+            <span className={`text-sm ${isDisabled ? 'text-muted-foreground' : 'text-foreground'}`}>
               {node.title}
             </span>
           </div>
@@ -181,7 +173,7 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
         {hasChildren && isExpanded && (
           <div>
             {node.children!.map(child => 
-              renderTreeNode(child, checkedKeys, onCheck, level + 1, isInTarget)
+              renderTreeNode(child, checkedKeys, onCheck, level + 1)
             )}
           </div>
         )}
@@ -261,7 +253,7 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
     );
   };
 
-  // 渲染树形列表（左侧）
+  // 渲染树形列表（左侧）- 始终显示所有节点
   const renderTreeList = (
     nodes: TreeNode[],
     checked: string[],
@@ -269,9 +261,8 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
     title: string,
   ) => {
     const allKeys = flattenTree(nodes);
-    const visibleKeys = allKeys.filter(key => !targetKeys.includes(key));
     const checkedCount = checked.length;
-    const totalCount = visibleKeys.length;
+    const totalCount = allKeys.length;
 
     return (
       <div className="flex flex-col border border-border rounded-lg bg-background">
@@ -292,7 +283,7 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
               暂无数据
             </div>
           ) : (
-            nodes.map(node => renderTreeNode(node, checked, onCheck, 0, false))
+            nodes.map(node => renderTreeNode(node, checked, onCheck, 0))
           )}
         </div>
       </div>
