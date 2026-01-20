@@ -422,19 +422,27 @@ export default function Nodes() {
                         )}
                       </div>
                       {paginatedSubIPs.map((subip) => (
-                        <div key={subip.id} className="flex items-center justify-between bg-background border border-border rounded px-3 py-2">
-                          <div className="flex items-center gap-3">
+                        <div key={subip.id} className="grid grid-cols-11 gap-4 px-6 py-2 bg-background border border-border rounded min-w-[900px]">
+                          {/* 空白占位：复选框列 */}
+                          <div className="col-span-1"></div>
+                          {/* 子IP信息：名称 + IP 列 */}
+                          <div className="col-span-4 flex items-center gap-3">
                             <code className="text-xs font-mono text-muted-foreground">{subip.ip}</code>
                             <span className="text-xs text-muted-foreground">({subip.createdDate})</span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          {/* 空白占位：端口列 */}
+                          <div className="col-span-1"></div>
+                          {/* 空白占位：状态列 */}
+                          <div className="col-span-3"></div>
+                          {/* 操作列：与主列表对齐 */}
+                          <div className="col-span-2 flex items-center gap-1">
                             <Popconfirm
                               title={subip.enabled ? "确认禁用子IP？" : "确认启用子IP？"}
                               description={subip.enabled ? "禁用后该子IP将不可用，是否继续？" : "启用后该子IP将可以使用，是否继续？"}
                               onConfirm={() => handleToggleSubIPEnabled(node.id, subip.id)}
                             >
                               <button
-                                className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                                   subip.enabled 
                                     ? 'bg-green-100 text-green-700 hover:bg-green-200' 
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
