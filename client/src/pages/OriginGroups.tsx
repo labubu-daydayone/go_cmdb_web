@@ -8,6 +8,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/mui';
 import { Card } from '@/components/mui/Card';
 import { Pagination } from '@/components/Pagination';
+import { Popconfirm } from '@/components/Popconfirm';
 import CreateIcon from '@mui/icons-material/Create';
 import DeleteIcon from '@mui/icons-material/Delete';
 
@@ -235,12 +236,15 @@ export default function OriginGroups() {
                         <button className="p-1 hover:bg-secondary rounded transition-colors">
                           <CreateIcon fontSize="small" className="text-muted-foreground"/>
                         </button>
-                        <button
-                          onClick={() => handleDeleteGroup(group.id)}
-                          className="p-1 hover:bg-secondary rounded transition-colors"
+                        <Popconfirm
+                          title="确认删除？"
+                          description="删除后无法恢复，是否继续？"
+                          onConfirm={() => handleDeleteGroup(group.id)}
                         >
-                          <DeleteIcon fontSize="small" className="text-destructive"/>
-                        </button>
+                          <button className="p-1 hover:bg-secondary rounded transition-colors">
+                            <DeleteIcon fontSize="small" className="text-destructive"/>
+                          </button>
+                        </Popconfirm>
                       </div>
                     </td>
                   </tr>
@@ -344,15 +348,20 @@ export default function OriginGroups() {
                           placeholder="1"
                           className="w-16 px-2 py-1 border border-border rounded bg-background text-foreground text-xs text-center focus:outline-none focus:ring-1 focus:ring-primary"
                         />
-                        {formData.addresses.length > 1 && (
-                          <button
-                            onClick={() => handleRemoveAddress(address.id)}
-                            className="text-red-600 hover:text-red-700 p-1"
-                            title="删除地址"
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </button>
-                        )}
+                          {formData.addresses.length > 1 && (
+                            <Popconfirm
+                              title="删除地址？"
+                              description="确认删除该回源地址？"
+                              onConfirm={() => handleRemoveAddress(address.id)}
+                            >
+                              <button
+                                className="text-red-600 hover:text-red-700 p-1"
+                                title="删除地址"
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </button>
+                            </Popconfirm>
+                          )}
                       </div>
                     ))}
                     <button

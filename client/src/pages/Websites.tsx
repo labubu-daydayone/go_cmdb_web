@@ -9,6 +9,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { Popconfirm } from '@/components/Popconfirm';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import CloseIcon from '@mui/icons-material/Close';
 import WifiIcon from '@mui/icons-material/Wifi';
@@ -393,9 +394,15 @@ export default function Websites() {
                       <button onClick={() => handleEditWebsite(website)} className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
                         <EditIcon fontSize="small" className="text-primary"/>
                       </button>
-                      <button onClick={() => handleDeleteWebsite(website.id)} className="p-1 hover:bg-secondary rounded transition-colors" title="删除">
-                        <DeleteIcon fontSize="small" className="text-destructive"/>
-                      </button>
+                      <Popconfirm
+                        title="确认删除？"
+                        description="删除后无法恢复，是否继续？"
+                        onConfirm={() => handleDeleteWebsite(website.id)}
+                      >
+                        <button className="p-1 hover:bg-secondary rounded transition-colors" title="删除">
+                          <DeleteIcon fontSize="small" className="text-destructive"/>
+                        </button>
+                      </Popconfirm>
                     </td>
                   </tr>
                 ))}

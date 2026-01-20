@@ -7,6 +7,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { Popconfirm } from '@/components/Popconfirm';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
@@ -173,13 +174,18 @@ export default function NodeGroups() {
                         <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
                           <EditIcon fontSize="small" className="text-muted-foreground"/>
                         </button>
-                        <button
-                          onClick={() => handleDeleteGroup(group.id)}
-                          className="p-1 hover:bg-red-100 rounded transition-colors"
-                          title="删除"
+                        <Popconfirm
+                          title="确认删除？"
+                          description="删除后无法恢复，是否继续？"
+                          onConfirm={() => handleDeleteGroup(group.id)}
                         >
-                          <DeleteIcon fontSize="small" className="text-red-600"/>
-                        </button>
+                          <button
+                            className="p-1 hover:bg-red-100 rounded transition-colors"
+                            title="删除"
+                          >
+                            <DeleteIcon fontSize="small" className="text-red-600"/>
+                          </button>
+                        </Popconfirm>
                       </div>
                     </div>
                   </div>

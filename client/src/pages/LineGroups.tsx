@@ -14,6 +14,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { Popconfirm } from '@/components/Popconfirm';
 import HubIcon from '@mui/icons-material/Hub';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -278,9 +279,15 @@ export default function LineGroups() {
                         <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
                           <EditIcon fontSize="small" className="text-muted-foreground"/>
                         </button>
-                        <button className="p-1 hover:bg-red-100 rounded transition-colors" title="删除">
-                          <DeleteIcon fontSize="small" className="text-red-600"/>
-                        </button>
+                        <Popconfirm
+                          title="确认删除？"
+                          description="删除后无法恢复，是否继续？"
+                          onConfirm={() => console.log('Delete line group', group.id)}
+                        >
+                          <button className="p-1 hover:bg-red-100 rounded transition-colors" title="删除">
+                            <DeleteIcon fontSize="small" className="text-red-600"/>
+                          </button>
+                        </Popconfirm>
                       </div>
                     </td>
                   </tr>
