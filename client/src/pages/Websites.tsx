@@ -16,6 +16,7 @@ import WifiIcon from '@mui/icons-material/Wifi';
 import WifiOffIcon from '@mui/icons-material/WifiOff';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useWebsiteUpdates } from '@/hooks/useWebsiteUpdates';
+import { Toast, ToastType } from '@/components/Toast';
 
 type SortField = 'domain' | 'cname' | 'lineGroup' | 'https' | 'status';
 type SortOrder = 'asc' | 'desc';
@@ -238,6 +239,7 @@ export default function Websites() {
   const [clearCacheType, setClearCacheType] = useState<'all' | 'url' | 'directory'>('all');
   const [clearCacheUrl, setClearCacheUrl] = useState('');
   const [clearCacheDirectory, setClearCacheDirectory] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const handleOpenClearCacheDialog = (websiteId: string) => {
     setClearCacheWebsiteId(websiteId);
@@ -265,14 +267,14 @@ export default function Websites() {
     
     console.log('Clearing cache:', { websiteId: clearCacheWebsiteId, type: clearCacheType, url: clearCacheUrl, directory: clearCacheDirectory });
     // TODO: 调用清除缓存 API
-    alert(message);
+    setToast({ message, type: 'success' });
     setClearCacheDialogOpen(false);
   };
 
   const handleBatchClearCache = () => {
     console.log('Batch clearing cache for websites:', Array.from(selectedWebsites));
     // TODO: 调用批量清除缓存 API
-    alert(`已清除 ${selectedWebsites.size} 个网站的缓存`);
+    setToast({ message: `已清除 ${selectedWebsites.size} 个网站的缓存`, type: 'success' });
     setSelectedWebsites(new Set());
   };
 
@@ -1163,6 +1165,15 @@ export default function Websites() {
             </div>
           </Card>
         </div>
+      )}
+      
+      {/* Toast 通知 */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </DashboardLayout>
   );
