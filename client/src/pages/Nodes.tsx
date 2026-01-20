@@ -234,9 +234,21 @@ export default function Nodes() {
   };
 
   const handleToggleNodeEnabled = (nodeId: string) => {
-    setNodes(nodes.map(node => 
-      node.id === nodeId ? { ...node, enabled: !node.enabled } : node
-    ));
+    setNodes(nodes.map(node => {
+      if (node.id === nodeId) {
+        const newEnabled = !node.enabled;
+        // 如果禁用节点，同时禁用所有子IP
+        if (!newEnabled && node.subIPs) {
+          return {
+            ...node,
+            enabled: newEnabled,
+            subIPs: node.subIPs.map(subip => ({ ...subip, enabled: false }))
+          };
+        }
+        return { ...node, enabled: newEnabled };
+      }
+      return node;
+    }));
   };
 
   const handleToggleSubIPEnabled = (nodeId: string, subIPId: string) => {

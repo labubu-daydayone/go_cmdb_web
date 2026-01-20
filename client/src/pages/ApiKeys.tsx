@@ -211,7 +211,7 @@ export default function ApiKeys() {
           </div>
 
           {/* 分页 */}
-          <div className="border-t border-border p-4">
+          <div className="p-4">
             <Pagination
               current={currentPage}
               total={filteredKeys.length}

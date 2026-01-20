@@ -55,6 +55,7 @@ export default function Certificates() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCertificates, setSelectedCertificates] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const itemsPerPage = 10;
@@ -186,7 +187,7 @@ export default function Certificates() {
           </div>
 
           {/* 分页 */}
-          <div className="border-t border-border p-4">
+          <div className="p-4">
             <Pagination
               current={currentPage}
               total={filteredCertificates.length}
