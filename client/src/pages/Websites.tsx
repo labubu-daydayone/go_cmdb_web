@@ -95,7 +95,8 @@ export default function Websites() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [configTab, setConfigTab] = useState<ConfigTab>('https');
-  const [addFormTab, setAddFormTab] = useState<AddFormTab>('origin');
+  const [addFormTab, setAddFormTab] = useState<AddFormTab>('template');
+  const [editFormTab, setEditFormTab] = useState<AddFormTab>('template');
   const [templatePage, setTemplatePage] = useState(1);
   const [listPage, setListPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
@@ -548,6 +549,149 @@ export default function Websites() {
                     </div>
                   </div>
 
+                  {/* 配置切换按钮 */}
+                  <div className="flex gap-2 border-b border-border overflow-x-auto">
+                    <button
+                      onClick={() => setEditFormTab('template')}
+                      className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
+                        editFormTab === 'template'
+                          ? 'text-primary border-primary'
+                          : 'text-muted-foreground border-transparent hover:text-foreground'
+                      }`}
+                    >
+                      使用分组
+                    </button>
+                    <button
+                      onClick={() => setEditFormTab('redirect')}
+                      className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
+                        editFormTab === 'redirect'
+                          ? 'text-primary border-primary'
+                          : 'text-muted-foreground border-transparent hover:text-foreground'
+                      }`}
+                    >
+                      重定向
+                    </button>
+                    <button
+                      onClick={() => setEditFormTab('origin')}
+                      className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
+                        editFormTab === 'origin'
+                          ? 'text-primary border-primary'
+                          : 'text-muted-foreground border-transparent hover:text-foreground'
+                      }`}
+                    >
+                      回源配置
+                    </button>
+                  </div>
+
+                  {/* 使用分组内容 */}
+                  {editFormTab === 'template' && (
+                    <div className="space-y-3">
+                      <table className="w-full text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-border">
+                            <th className="text-left py-2 px-2 font-medium text-foreground w-48">名称</th>
+                            <th className="text-left py-2 px-2 font-medium text-foreground w-24">类型</th>
+                            <th className="text-left py-2 px-2 font-medium text-foreground">地址</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginatedTemplates.map((group) => (
+                            <tr key={group.id} className="border-b border-border hover:bg-secondary/50 transition-colors">
+                              <td className="py-2 px-2 text-foreground w-48">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name="editTemplate"
+                                    value={group.id}
+                                    checked={formData.template === group.id}
+                                    onChange={() => setFormData({ ...formData, template: group.id })}
+                                    className="w-4 h-4 rounded-full border-border"
+                                  />
+                                  <span>{group.name}</span>
+                                </label>
+                              </td>
+                              <td className="py-2 px-2 text-muted-foreground w-24">{group.type}</td>
+                              <td className="py-2 px-2 text-muted-foreground">{group.address}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => setTemplatePage(Math.max(1, templatePage - 1))}
+                          disabled={templatePage === 1}
+                          className="px-3 py-1 border border-border rounded-lg text-xs hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          上一页
+                        </button>
+                        <button
+                          onClick={() => setTemplatePage(templatePage + 1)}
+                          className="px-3 py-1 border border-border rounded-lg text-xs hover:bg-secondary"
+                        >
+                          下一页
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 重定向内容 */}
+                  {editFormTab === 'redirect' && (
+                    <div className="space-y-3">
+                      <div className="flex gap-2 items-end">
+                        <input
+                          type="text"
+                          value={formData.redirectUrl}
+                          onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
+                          placeholder="输入重定向 URL"
+                          className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                        <select
+                          value={formData.redirectStatusCode}
+                          onChange={(e) => setFormData({ ...formData, redirectStatusCode: parseInt(e.target.value) as 301 | 302 })}
+                          className="w-20 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                        >
+                          <option value={301}>301</option>
+                          <option value={302}>302</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 回源配置内容 */}
+                  {editFormTab === 'origin' && (
+                    <div className="space-y-3">
+                      <div>
+                        <button onClick={handleAddOriginIP} className="text-primary text-xs hover:text-primary/80 font-medium">
+                          + 添加回源
+                        </button>
+                      </div>
+                      {formData.originIPs.map((ip, index) => (
+                        <div key={index} className="flex gap-2 items-end">
+                          <input
+                            type="text"
+                            value={ip.ip}
+                            onChange={(e) => handleOriginIPChange(index, 'ip', e.target.value)}
+                            placeholder="输入 IP 地址"
+                            className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                          <input
+                            type="text"
+                            value={ip.remark}
+                            onChange={(e) => handleOriginIPChange(index, 'remark', e.target.value)}
+                            placeholder="备注（如：主源站）"
+                            className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                          <button
+                            onClick={() => handleRemoveOriginIP(index)}
+                            className="p-1 hover:bg-secondary rounded transition-colors"
+                          >
+                            <CloseIcon fontSize="small" className="text-destructive"/>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {/* 证书配置 */}
                   <div className="space-y-3">
                     <div className="space-y-1">
@@ -671,14 +815,14 @@ export default function Websites() {
                   {/* 配置切换按钮 */}
                   <div className="flex gap-2 border-b border-border overflow-x-auto">
                     <button
-                      onClick={() => setAddFormTab('origin')}
+                      onClick={() => setAddFormTab('template')}
                       className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
-                        addFormTab === 'origin'
+                        addFormTab === 'template'
                           ? 'text-primary border-primary'
                           : 'text-muted-foreground border-transparent hover:text-foreground'
                       }`}
                     >
-                      回源配置
+                      使用分组
                     </button>
                     <button
                       onClick={() => setAddFormTab('redirect')}
@@ -691,75 +835,16 @@ export default function Websites() {
                       重定向
                     </button>
                     <button
-                      onClick={() => setAddFormTab('template')}
+                      onClick={() => setAddFormTab('origin')}
                       className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
-                        addFormTab === 'template'
+                        addFormTab === 'origin'
                           ? 'text-primary border-primary'
                           : 'text-muted-foreground border-transparent hover:text-foreground'
                       }`}
                     >
-                      使用分组
+                      回源配置
                     </button>
                   </div>
-
-                  {/* 回源配置内容 */}
-                  {addFormTab === 'origin' && (
-                    <div className="space-y-3">
-                      <div>
-                        <button onClick={handleAddOriginIP} className="text-primary text-xs hover:text-primary/80 font-medium">
-                          + 添加回源
-                        </button>
-                      </div>
-                      {formData.originIPs.map((ip, index) => (
-                        <div key={index} className="flex gap-2 items-end">
-                          <input
-                            type="text"
-                            value={ip.ip}
-                            onChange={(e) => handleOriginIPChange(index, 'ip', e.target.value)}
-                            placeholder="输入 IP 地址"
-                            className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                          />
-                          <input
-                            type="text"
-                            value={ip.remark}
-                            onChange={(e) => handleOriginIPChange(index, 'remark', e.target.value)}
-                            placeholder="备注（如：主源站）"
-                            className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                          />
-                          <button
-                            onClick={() => handleRemoveOriginIP(index)}
-                            className="p-1 hover:bg-secondary rounded transition-colors"
-                          >
-                            <CloseIcon fontSize="small" className="text-destructive"/>
-                          </button>
-                        </div>
-                      ))}
-                       </div>
-                  )}
-
-
-                  {/* 重定向内容 */}
-                  {addFormTab === 'redirect' && (
-                    <div className="space-y-3">
-                      <div className="flex gap-2 items-end">
-                        <input
-                          type="text"
-                          value={formData.redirectUrl}
-                          onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
-                          placeholder="输入重定向 URL"
-                          className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                        <select
-                          value={formData.redirectStatusCode}
-                          onChange={(e) => setFormData({ ...formData, redirectStatusCode: parseInt(e.target.value) as 301 | 302 })}
-                          className="w-20 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                        >
-                          <option value={301}>301</option>
-                          <option value={302}>302</option>
-                        </select>
-                      </div>
-                    </div>
-                  )}
 
                   {/* 使用分组内容 */}
                   {addFormTab === 'template' && (
@@ -809,6 +894,64 @@ export default function Websites() {
                           下一页
                         </button>
                       </div>
+                    </div>
+                  )}
+
+                  {/* 重定向内容 */}
+                  {addFormTab === 'redirect' && (
+                    <div className="space-y-3">
+                      <div className="flex gap-2 items-end">
+                        <input
+                          type="text"
+                          value={formData.redirectUrl}
+                          onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
+                          placeholder="输入重定向 URL"
+                          className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                        <select
+                          value={formData.redirectStatusCode}
+                          onChange={(e) => setFormData({ ...formData, redirectStatusCode: parseInt(e.target.value) as 301 | 302 })}
+                          className="w-20 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                        >
+                          <option value={301}>301</option>
+                          <option value={302}>302</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 回源配置内容 */}
+                  {addFormTab === 'origin' && (
+                    <div className="space-y-3">
+                      <div>
+                        <button onClick={handleAddOriginIP} className="text-primary text-xs hover:text-primary/80 font-medium">
+                          + 添加回源
+                        </button>
+                      </div>
+                      {formData.originIPs.map((ip, index) => (
+                        <div key={index} className="flex gap-2 items-end">
+                          <input
+                            type="text"
+                            value={ip.ip}
+                            onChange={(e) => handleOriginIPChange(index, 'ip', e.target.value)}
+                            placeholder="输入 IP 地址"
+                            className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                          <input
+                            type="text"
+                            value={ip.remark}
+                            onChange={(e) => handleOriginIPChange(index, 'remark', e.target.value)}
+                            placeholder="备注（如：主源站）"
+                            className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                          <button
+                            onClick={() => handleRemoveOriginIP(index)}
+                            className="p-1 hover:bg-secondary rounded transition-colors"
+                          >
+                            <CloseIcon fontSize="small" className="text-destructive"/>
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
