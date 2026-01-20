@@ -494,22 +494,7 @@ export default function Websites() {
                     />
                   </div>
                   
-                  {/* 第二排：线路 */}
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs font-medium text-foreground w-16 flex-shrink-0">线路：</label>
-                    <select
-                      value={formData.lineGroup}
-                      onChange={(e) => setFormData({ ...formData, lineGroup: e.target.value })}
-                      className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option>线路1</option>
-                      <option>线路2</option>
-                      <option>线路3</option>
-                      <option>线路4</option>
-                    </select>
-                  </div>
-                  
-                  {/* 第三排：线路配置和缓存规则 */}
+                  {/* 线路配置和缓存规则 */}
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       <label className="text-xs font-medium text-foreground whitespace-nowrap">线路：</label>
@@ -536,30 +521,6 @@ export default function Websites() {
                         <option value="图片缓存">图片缓存</option>
                         <option value="API缓存">API缓存</option>
                       </select>
-                    </div>
-                  </div>
-
-                  {/* HTTPS配置 */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-6">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.httpsForceRedirect}
-                          onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
-                        />
-                        <span className="text-xs font-medium text-foreground">HTTPS强制跳转</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.hstsEnabled}
-                          onChange={(e) => setFormData({ ...formData, hstsEnabled: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
-                        />
-                        <span className="text-xs font-medium text-foreground">HSTS</span>
-                      </label>
                     </div>
                   </div>
 
@@ -593,6 +554,30 @@ export default function Websites() {
                           className="w-4 h-4 rounded border-border"
                         />
                         <span className="text-xs font-medium text-foreground">回源配置</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* HTTPS配置 */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.httpsForceRedirect}
+                          onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">HTTPS强制跳转</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.hstsEnabled}
+                          onChange={(e) => setFormData({ ...formData, hstsEnabled: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">HSTS</span>
                       </label>
                     </div>
                   </div>
@@ -693,30 +678,6 @@ export default function Websites() {
                     </div>
                   </div>
 
-                  {/* HTTPS配置 */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-6">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.httpsForceRedirect}
-                          onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
-                        />
-                        <span className="text-xs font-medium text-foreground">HTTPS强制跳转</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.hstsEnabled}
-                          onChange={(e) => setFormData({ ...formData, hstsEnabled: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
-                        />
-                        <span className="text-xs font-medium text-foreground">HSTS</span>
-                      </label>
-                    </div>
-                  </div>
-
                   {/* 回源配置 */}
                   <div className="space-y-3">
                     <label className="text-xs font-medium text-foreground">回源配置</label>
@@ -747,6 +708,30 @@ export default function Websites() {
                           className="w-4 h-4 rounded border-border"
                         />
                         <span className="text-xs font-medium text-foreground">回源配置</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* HTTPS配置 */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.httpsForceRedirect}
+                          onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">HTTPS强制跳转</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.hstsEnabled}
+                          onChange={(e) => setFormData({ ...formData, hstsEnabled: e.target.checked })}
+                          className="w-4 h-4 rounded border-border"
+                        />
+                        <span className="text-xs font-medium text-foreground">HSTS</span>
                       </label>
                     </div>
                   </div>
@@ -821,7 +806,7 @@ export default function Websites() {
                   )}
 
 
-                  {/* 按钮 */}
+                  {/* 重定向内容 */}
                   {addFormTab === 'redirect' && (
                     <div className="space-y-3">
                       <div className="flex gap-2 items-end">
