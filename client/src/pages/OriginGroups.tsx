@@ -181,7 +181,6 @@ export default function OriginGroups() {
           {selectedGroups.size > 0 && (
             <div className="px-6 py-3 border-b border-border bg-secondary/10">
               <span className="text-sm text-muted-foreground">
-                已选择 {selectedGroups.size} 个
               </span>
             </div>
           )}

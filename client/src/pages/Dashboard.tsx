@@ -178,7 +178,6 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-foreground">服务器列表</h3>
             {selectedServers.size > 0 && (
-              <span className="text-sm text-muted-foreground">已选择 {selectedServers.size} 个</span>
             )}
           </div>
           <div className="overflow-x-auto">

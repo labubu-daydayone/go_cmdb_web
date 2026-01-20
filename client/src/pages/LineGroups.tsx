@@ -219,7 +219,6 @@ export default function LineGroups() {
           {selectedLineGroups.size > 0 && (
             <div className="px-6 py-3 border-b border-border flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                已选择 {selectedLineGroups.size} 个
               </span>
             </div>
           )}

@@ -115,7 +115,6 @@ export default function DNSConfigPage() {
           {selectedConfigs.size > 0 && (
             <div className="px-6 py-3 border-b border-border flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                已选择 {selectedConfigs.size} 个
               </span>
             </div>
           )}

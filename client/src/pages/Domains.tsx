@@ -169,7 +169,6 @@ export default function Domains() {
             <Card className="border border-border overflow-hidden">
               <div className="px-6 py-3 border-b border-border flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  {selectedDomains.size > 0 && `已选择 ${selectedDomains.size} 个`}
                 </span>
               </div>
               <div className="overflow-x-auto w-full">

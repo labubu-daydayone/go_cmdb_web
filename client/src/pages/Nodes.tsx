@@ -312,7 +312,6 @@ export default function Nodes() {
           {selectedNodes.size > 0 && (
             <div className="px-6 py-3 border-b border-border flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                已选择 {selectedNodes.size} 个
               </span>
             </div>
           )}
