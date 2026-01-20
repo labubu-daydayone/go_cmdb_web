@@ -237,12 +237,12 @@ export default function Nodes() {
     setNodes(nodes.map(node => {
       if (node.id === nodeId) {
         const newEnabled = !node.enabled;
-        // 如果禁用节点，同时禁用所有子IP
-        if (!newEnabled && node.subIPs) {
+        // 如果有子IP，同步更新所有子IP的状态
+        if (node.subIPs && node.subIPs.length > 0) {
           return {
             ...node,
             enabled: newEnabled,
-            subIPs: node.subIPs.map(subip => ({ ...subip, enabled: false }))
+            subIPs: node.subIPs.map(subip => ({ ...subip, enabled: newEnabled }))
           };
         }
         return { ...node, enabled: newEnabled };
