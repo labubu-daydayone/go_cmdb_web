@@ -43,7 +43,7 @@ export default function Nodes() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [showAddSubIPModal, setShowAddSubIPModal] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [newSubIP, setNewSubIP] = useState('');
+  const [newSubIPs, setNewSubIPs] = useState<SubIP[]>([]);
   // 子IP分页状态：为每个节点单独维护分页信息
   const [subIPPages, setSubIPPages] = useState<Record<string, { currentPage: number; pageSize: number }>>({});
   // 添加节点表单状态
@@ -85,33 +85,53 @@ export default function Nodes() {
 
   const handleAddSubIP = (nodeId: string) => {
     setSelectedNodeId(nodeId);
+    setNewSubIPs([{ id: `subip-${Date.now()}`, ip: '', enabled: true }]);
     setShowAddSubIPModal(true);
   };
 
+  const isValidIP = (ip: string): boolean => {
+    const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    return ipRegex.test(ip.trim());
+  };
+
   const handleSaveSubIP = () => {
-    if (selectedNodeId && newSubIP.trim()) {
-      setNodes(nodes.map(node => {
-        if (node.id === selectedNodeId) {
-          const subIPs = node.subIPs || [];
-          return {
-            ...node,
-            subIPs: [
-              ...subIPs,
-              {
-                id: `subip-${Date.now()}`,
-                ip: newSubIP,
-                enabled: true,
-                createdDate: new Date().toISOString().split('T')[0],
-              },
-            ],
-          };
-        }
-        return node;
-      }));
-      setNewSubIP('');
-      setShowAddSubIPModal(false);
-      setSelectedNodeId(null);
+    if (!selectedNodeId) return;
+    
+    // 验证所有IP
+    const validIPs = newSubIPs.filter(subIP => subIP.ip.trim() && isValidIP(subIP.ip));
+    
+    if (validIPs.length === 0) {
+      alert('请输入至少一个有效的IP地址');
+      return;
     }
+    
+    // 检查是否有无效IP
+    const invalidIPs = newSubIPs.filter(subIP => subIP.ip.trim() && !isValidIP(subIP.ip));
+    if (invalidIPs.length > 0) {
+      alert(`以下 IP 地址格式不正确：${invalidIPs.map(s => s.ip).join(', ')}`);
+      return;
+    }
+    
+    setNodes(nodes.map(node => {
+      if (node.id === selectedNodeId) {
+        const subIPs = node.subIPs || [];
+        return {
+          ...node,
+          subIPs: [
+            ...subIPs,
+            ...validIPs.map(subIP => ({
+              ...subIP,
+              id: `subip-${Date.now()}-${Math.random()}`,
+              createdDate: new Date().toLocaleDateString('zh-CN'),
+            })),
+          ],
+        };
+      }
+      return node;
+    }));
+    setShowAddSubIPModal(false);
+    setSelectedNodeId(null);
+    setNewSubIPs([]);
   };
 
   const handleDeleteSubIP = (nodeId: string, subIPId: string) => {
@@ -637,7 +657,7 @@ export default function Nodes() {
 
         {/* 添加子IP 模态框 */}
         {showAddSubIPModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={() => { setShowAddSubIPModal(false); setSelectedNodeId(null); setNewSubIP(''); }}>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={() => { setShowAddSubIPModal(false); setSelectedNodeId(null); setNewSubIPs([]); }}>
             <Card className="w-[800px] h-full rounded-none flex flex-col border-0 p-0" onClick={(e) => e.stopPropagation()}>
               {/* 标题栏 */}
               <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
@@ -646,7 +666,7 @@ export default function Nodes() {
                   onClick={() => {
                     setShowAddSubIPModal(false);
                     setSelectedNodeId(null);
-                    setNewSubIP('');
+                    setNewSubIPs([]);
                   }}
                   className="text-muted-foreground hover:text-foreground"
                 >
@@ -656,16 +676,65 @@ export default function Nodes() {
 
               {/* 可滚动内容区域 */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                <div>
-                <label className="block text-sm font-medium text-foreground mb-2">IP 地址</label>
-                <input
-                  type="text"
-                  placeholder="例如：192.168.1.100"
-                  value={newSubIP}
-                  onChange={(e) => setNewSubIP(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-medium text-foreground">
+                    IP 地址列表:
+                  </label>
+                  <button
+                    onClick={() => {
+                      setNewSubIPs([...newSubIPs, { id: `subip-${Date.now()}`, ip: '', enabled: true }]);
+                    }}
+                    className="text-sm text-primary hover:text-primary/80 transition-colors"
+                  >
+                    + 添加IP
+                  </button>
                 </div>
+
+                {newSubIPs.length === 0 ? (
+                  <div className="text-sm text-muted-foreground text-center py-4 border border-dashed border-border rounded-lg">
+                    暂无IP，点击“+ 添加IP”添加
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {newSubIPs.map((subIP, index) => {
+                      const isInvalid = subIP.ip.trim() && !isValidIP(subIP.ip);
+                      return (
+                        <div key={subIP.id} className="flex items-start gap-3">
+                          <span className="text-sm text-muted-foreground w-8 mt-2">{index + 1}.</span>
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              value={subIP.ip}
+                              onChange={(e) => {
+                                const newList = [...newSubIPs];
+                                newList[index] = { ...newList[index], ip: e.target.value };
+                                setNewSubIPs(newList);
+                              }}
+                              placeholder="192.168.1.100"
+                              className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 ${
+                                isInvalid 
+                                  ? 'border-red-500 focus:ring-red-500' 
+                                  : 'border-border focus:ring-primary'
+                              }`}
+                            />
+                            {isInvalid && (
+                              <p className="text-xs text-red-500 mt-1">IP地址格式不正确</p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => {
+                              setNewSubIPs(newSubIPs.filter((_, i) => i !== index));
+                            }}
+                            className="p-1 hover:bg-destructive/10 rounded transition-colors mt-1"
+                            title="删除IP"
+                          >
+                            <DeleteIcon fontSize="small" className="text-destructive"/>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* 底部按钮栏 */}
@@ -675,7 +744,7 @@ export default function Nodes() {
                   onClick={() => {
                     setShowAddSubIPModal(false);
                     setSelectedNodeId(null);
-                    setNewSubIP('');
+                    setNewSubIPs([]);
                   }}
                 >
                   取消
