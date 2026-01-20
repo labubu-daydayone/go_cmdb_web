@@ -1,6 +1,6 @@
 /**
  * Material UI Button 组件封装
- * 设计风格：极简主义 · 无彩色系统 · 黑白灰
+ * 设计风格：白色极简主义 · 深灰主按钮
  */
 
 import { Button as MuiButton, ButtonProps as MuiButtonProps } from '@mui/material';
@@ -20,21 +20,25 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     switch (variant) {
       case 'default':
-        // 主按钮：深灰黑背景 + 白色文字
+        // 主按钮：深灰黑背景 + 白色文字（专业、克制）
         muiVariant = 'contained';
         color = 'primary';
         sx = {
           ...sx,
-          backgroundColor: '#18181B',
+          backgroundColor: '#1F2937', // 深灰黑
           color: '#FFFFFF !important',
           border: 'none !important',
-          boxShadow: 'none !important',
+          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05) !important',
+          borderRadius: '6px',
+          fontWeight: 500,
           '&:hover': {
-            backgroundColor: '#000000',
+            backgroundColor: '#111827', // 更深灰
             border: 'none !important',
-            boxShadow: 'none !important',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1) !important',
             color: '#FFFFFF !important',
+            transform: 'translateY(-1px)',
           },
+          transition: 'all 0.2s ease',
         };
         break;
       case 'destructive':
@@ -43,42 +47,58 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         color = 'error';
         sx = {
           ...sx,
+          backgroundColor: '#EF4444',
+          color: '#FFFFFF !important',
           border: 'none !important',
-          boxShadow: 'none !important',
+          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05) !important',
+          borderRadius: '6px',
+          fontWeight: 500,
+          '&:hover': {
+            backgroundColor: '#DC2626',
+            boxShadow: '0 4px 6px -1px rgba(239, 68, 68, 0.3) !important',
+            transform: 'translateY(-1px)',
+          },
+          transition: 'all 0.2s ease',
         };
         break;
       case 'outline':
-        // 次要按钮：浅灰背景 + 深灰文字
-        muiVariant = 'contained';
+        // 次要按钮：白色背景 + 灰色边框 + 灰色文字
+        muiVariant: 'outlined';
         sx = { 
           ...sx, 
-          backgroundColor: '#F4F4F5',
-          color: '#18181B !important',
-          border: 'none !important',
+          backgroundColor: '#FFFFFF',
+          color: '#6B7280 !important',
+          border: '1px solid #E5E7EB !important',
           boxShadow: 'none !important',
+          borderRadius: '6px',
+          fontWeight: 500,
           '&:hover': {
-            backgroundColor: '#E4E4E7',
-            border: 'none !important',
+            backgroundColor: '#F9FAFB',
+            border: '1px solid #D1D5DB !important',
             boxShadow: 'none !important',
-            color: '#18181B !important',
+            color: '#6B7280 !important',
           },
+          transition: 'all 0.2s ease',
         };
         break;
       case 'secondary':
         // 同 outline
-        muiVariant = 'contained';
+        muiVariant = 'outlined';
         sx = { 
           ...sx, 
-          backgroundColor: '#F4F4F5',
-          color: '#18181B !important',
-          border: 'none !important',
+          backgroundColor: '#FFFFFF',
+          color: '#6B7280 !important',
+          border: '1px solid #E5E7EB !important',
           boxShadow: 'none !important',
+          borderRadius: '6px',
+          fontWeight: 500,
           '&:hover': {
-            backgroundColor: '#E4E4E7',
-            border: 'none !important',
+            backgroundColor: '#F9FAFB',
+            border: '1px solid #D1D5DB !important',
             boxShadow: 'none !important',
-            color: '#18181B !important',
+            color: '#6B7280 !important',
           },
+          transition: 'all 0.2s ease',
         };
         break;
       case 'ghost':
@@ -86,15 +106,18 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         muiVariant = 'text';
         sx = { 
           ...sx, 
-          color: '#52525B !important',
+          color: '#6B7280 !important',
           border: 'none !important',
           boxShadow: 'none !important',
+          borderRadius: '6px',
+          fontWeight: 500,
           '&:hover': {
-            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+            backgroundColor: '#F3F4F6',
             border: 'none !important',
             boxShadow: 'none !important',
-            color: '#18181B !important',
+            color: '#1F2937 !important',
           },
+          transition: 'all 0.2s ease',
         };
         break;
       case 'link':
@@ -102,14 +125,16 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         muiVariant = 'text';
         sx = { 
           ...sx, 
-          color: '#18181B !important',
+          color: '#6B7280 !important',
           textDecoration: 'underline',
           border: 'none !important',
           boxShadow: 'none !important',
+          fontWeight: 500,
           '&:hover': {
             backgroundColor: 'transparent',
-            color: '#000000 !important',
+            color: '#1F2937 !important',
           },
+          transition: 'all 0.2s ease',
         };
         break;
     }

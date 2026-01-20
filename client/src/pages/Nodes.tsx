@@ -215,7 +215,7 @@ export default function Nodes() {
           </div>
           <div className="space-y-0">
             {/* 表头 */}
-            <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-border bg-secondary/30 font-semibold text-foreground text-sm">
+            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-secondary/20 border-b border-border font-semibold text-sm text-muted-foreground">
               <div className="col-span-1 text-center">
                 <input
                   type="checkbox"
@@ -237,9 +237,9 @@ export default function Nodes() {
                   <SortIcon field="ip" />
                 </div>
               </div>
-              <div className="col-span-2 cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('managementPort')}>
+              <div className="col-span-1 cursor-pointer hover:bg-secondary/50 transition-colors" onClick={() => handleSort('managementPort')}>
                 <div className="flex items-center">
-                  管理端口
+                  端口
                   <SortIcon field="managementPort" />
                 </div>
               </div>
@@ -250,7 +250,7 @@ export default function Nodes() {
                   <SortIcon field="status" />
                 </div>
               </div>
-              <div className="col-span-1">操作</div>
+              <div className="col-span-2">操作</div>
             </div>
 
             {/* 节点行 */}
@@ -284,7 +284,7 @@ export default function Nodes() {
                   </div>
                   <div className="col-span-2 font-medium text-foreground">{node.name}</div>
                   <div className="col-span-2 text-muted-foreground font-mono text-xs">{node.ip}</div>
-                  <div className="col-span-2 text-muted-foreground">{node.managementPort}</div>
+                  <div className="col-span-1 text-muted-foreground">{node.managementPort}</div>
                   <div className="col-span-1">
                     <input
                       type="checkbox"
@@ -298,7 +298,7 @@ export default function Nodes() {
                       {node.status === 'online' ? '在线' : node.status === 'offline' ? '离线' : '维护中'}
                     </span>
                   </div>
-                  <div className="col-span-1 flex items-center gap-2">
+                  <div className="col-span-2 flex items-center gap-1">
                     <button
                       onClick={() => handleAddSubIP(node.id)}
                       className="p-1 hover:bg-secondary rounded transition-colors"
