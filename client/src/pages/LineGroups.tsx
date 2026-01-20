@@ -315,7 +315,7 @@ export default function LineGroups() {
         {showForm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={handleCancel}>
             <div
-              className="w-[500px] h-full bg-background flex flex-col"
+              className="w-[600px] h-full bg-background flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* 标题栏 */}

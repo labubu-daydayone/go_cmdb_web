@@ -431,7 +431,7 @@ export default function Websites() {
       {/* H5 风格的表单 - 上滑动画 */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={resetForm}>
-          <Card className="w-[500px] h-full rounded-none border-0 p-0 flex flex-col bg-background" onClick={(e) => e.stopPropagation()}>
+          <Card className="w-[600px] h-full rounded-none border-0 p-0 flex flex-col bg-background" onClick={(e) => e.stopPropagation()}>
             {/* 标题栏 */}
             <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
               <h2 className="text-lg font-bold text-foreground">{editingId ? '编辑网站' : '添加网站'}</h2>
