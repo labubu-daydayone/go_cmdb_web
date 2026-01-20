@@ -363,7 +363,17 @@ export default function DashboardLayout({
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{new Date().toLocaleDateString('zh-CN')}</span>
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => {
+                // 清除登录状态
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('user');
+                // 跳转到登录页
+                window.location.href = '/login';
+              }}
+            >
               登出
             </Button>
           </div>

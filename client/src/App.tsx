@@ -1,6 +1,7 @@
 // Material UI 不需要全局 Toaster 和 TooltipProvider
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
+import { useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { MenuProvider } from "./contexts/MenuContext";
@@ -15,20 +16,55 @@ import NodeGroups from "./pages/NodeGroups";
 import OriginManagement from "./pages/OriginManagement";
 import OriginGroups from "./pages/OriginGroups";
 import CacheSettings from "./pages/CacheSettings";
+import Login from "./pages/Login";
+
+function ProtectedRoute({ component: Component, ...rest }: any) {
+  const [, setLocation] = useLocation();
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setLocation('/login');
+    }
+  }, [isLoggedIn, setLocation]);
+
+  return isLoggedIn ? <Component {...rest} /> : null;
+}
 
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={Dashboard} />
-      <Route path={"/domains"} component={Domains} />
-      <Route path={"/websites"} component={Websites} />
-      <Route path={"/line-groups"} component={LineGroups} />
-      <Route path={"/dns-config"} component={DNSConfig} />
-      <Route path={"/nodes"} component={Nodes} />
-      <Route path={"/node-groups"} component={NodeGroups} />
-      <Route path={"/origin-management"} component={OriginManagement} />
-      <Route path={"/origin-groups"} component={OriginGroups} />
-      <Route path={"/cache-settings"} component={CacheSettings} />
+      <Route path={"/login"} component={Login} />
+      <Route path={"/"}>
+        <ProtectedRoute component={Dashboard} />
+      </Route>
+      <Route path={"/domains"}>
+        <ProtectedRoute component={Domains} />
+      </Route>
+      <Route path={"/websites"}>
+        <ProtectedRoute component={Websites} />
+      </Route>
+      <Route path={"/line-groups"}>
+        <ProtectedRoute component={LineGroups} />
+      </Route>
+      <Route path={"/dns-config"}>
+        <ProtectedRoute component={DNSConfig} />
+      </Route>
+      <Route path={"/nodes"}>
+        <ProtectedRoute component={Nodes} />
+      </Route>
+      <Route path={"/node-groups"}>
+        <ProtectedRoute component={NodeGroups} />
+      </Route>
+      <Route path={"/origin-management"}>
+        <ProtectedRoute component={OriginManagement} />
+      </Route>
+      <Route path={"/origin-groups"}>
+        <ProtectedRoute component={OriginGroups} />
+      </Route>
+      <Route path={"/cache-settings"}>
+        <ProtectedRoute component={CacheSettings} />
+      </Route>
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

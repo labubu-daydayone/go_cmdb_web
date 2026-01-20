@@ -232,10 +232,41 @@ export default function Websites() {
     setWebsites(websites.filter(w => w.id !== websiteId));
   };
 
-  const handleClearCache = (websiteId: string) => {
-    console.log('Clearing cache for website:', websiteId);
+  // 清除缓存对话框状态
+  const [clearCacheDialogOpen, setClearCacheDialogOpen] = useState(false);
+  const [clearCacheWebsiteId, setClearCacheWebsiteId] = useState<string>('');
+  const [clearCacheType, setClearCacheType] = useState<'all' | 'url' | 'directory'>('all');
+  const [clearCacheUrl, setClearCacheUrl] = useState('');
+  const [clearCacheDirectory, setClearCacheDirectory] = useState('');
+
+  const handleOpenClearCacheDialog = (websiteId: string) => {
+    setClearCacheWebsiteId(websiteId);
+    setClearCacheType('all');
+    setClearCacheUrl('');
+    setClearCacheDirectory('');
+    setClearCacheDialogOpen(true);
+  };
+
+  const handleClearCache = () => {
+    const website = websites.find(w => w.id === clearCacheWebsiteId);
+    let message = '';
+    
+    switch (clearCacheType) {
+      case 'all':
+        message = `已清除网站 ${website?.domain} 的所有缓存`;
+        break;
+      case 'url':
+        message = `已清除 URL: ${clearCacheUrl} 的缓存`;
+        break;
+      case 'directory':
+        message = `已清除目录: ${clearCacheDirectory} 的缓存`;
+        break;
+    }
+    
+    console.log('Clearing cache:', { websiteId: clearCacheWebsiteId, type: clearCacheType, url: clearCacheUrl, directory: clearCacheDirectory });
     // TODO: 调用清除缓存 API
-    alert(`已清除网站 ${websiteId} 的缓存`);
+    alert(message);
+    setClearCacheDialogOpen(false);
   };
 
   const handleBatchClearCache = () => {
@@ -423,15 +454,13 @@ export default function Websites() {
                       <button onClick={() => handleEditWebsite(website)} className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
                         <EditIcon fontSize="small" className="text-primary"/>
                       </button>
-                      <Popconfirm
-                        title="确认清除缓存？"
-                        description="清除后需要重新生成缓存，是否继续？"
-                        onConfirm={() => handleClearCache(website.id)}
+                      <button 
+                        className="p-1 hover:bg-secondary rounded transition-colors" 
+                        title="清除缓存"
+                        onClick={() => handleOpenClearCacheDialog(website.id)}
                       >
-                        <button className="p-1 hover:bg-secondary rounded transition-colors" title="清除缓存">
-                          <ClearIcon fontSize="small" className="text-orange-600"/>
-                        </button>
-                      </Popconfirm>
+                        <ClearIcon fontSize="small" className="text-orange-600"/>
+                      </button>
                       <Popconfirm
                         title="确认删除？"
                         description="删除后无法恢复，是否继续？"
@@ -1011,6 +1040,125 @@ export default function Websites() {
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-xs hover:bg-primary/90 transition-colors"
               >
                 {editingId ? '保存' : '添加'}
+              </button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* 清除缓存对话框 */}
+      {clearCacheDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-foreground">清除缓存</h3>
+              <button onClick={() => setClearCacheDialogOpen(false)} className="p-1 hover:bg-secondary rounded transition-colors">
+                <CloseIcon fontSize="small" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* 清除类型选择 */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  清除类型
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="clearCacheType"
+                      value="all"
+                      checked={clearCacheType === 'all'}
+                      onChange={(e) => setClearCacheType(e.target.value as 'all' | 'url' | 'directory')}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm text-foreground">清除所有缓存</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="clearCacheType"
+                      value="url"
+                      checked={clearCacheType === 'url'}
+                      onChange={(e) => setClearCacheType(e.target.value as 'all' | 'url' | 'directory')}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm text-foreground">指定 URL 清除</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="clearCacheType"
+                      value="directory"
+                      checked={clearCacheType === 'directory'}
+                      onChange={(e) => setClearCacheType(e.target.value as 'all' | 'url' | 'directory')}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm text-foreground">清除目录</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* URL 输入框 */}
+              {clearCacheType === 'url' && (
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    URL 地址
+                  </label>
+                  <input
+                    type="text"
+                    value={clearCacheUrl}
+                    onChange={(e) => setClearCacheUrl(e.target.value)}
+                    placeholder="例如: https://example.com/path/to/file.html"
+                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              )}
+
+              {/* 目录输入框 */}
+              {clearCacheType === 'directory' && (
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    目录路径
+                  </label>
+                  <input
+                    type="text"
+                    value={clearCacheDirectory}
+                    onChange={(e) => setClearCacheDirectory(e.target.value)}
+                    placeholder="例如: /images/ 或 /static/"
+                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              )}
+
+              {/* 提示信息 */}
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-sm text-yellow-800">
+                  {clearCacheType === 'all' && '将清除该网站的所有缓存，需要重新生成。'}
+                  {clearCacheType === 'url' && '将清除指定 URL 的缓存。'}
+                  {clearCacheType === 'directory' && '将清除指定目录下的所有缓存。'}
+                </p>
+              </div>
+            </div>
+
+            {/* 底部按钮 */}
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => setClearCacheDialogOpen(false)}
+                className="flex-1 px-4 py-2 border border-border rounded-md hover:bg-secondary transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleClearCache}
+                disabled={(
+                  (clearCacheType === 'url' && !clearCacheUrl) ||
+                  (clearCacheType === 'directory' && !clearCacheDirectory)
+                )}
+                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                确认清除
               </button>
             </div>
           </Card>
