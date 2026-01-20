@@ -121,7 +121,7 @@ export default function DashboardLayout({
                 style={{
                   width: '32px',
                   height: '32px',
-                  backgroundColor: colors.sidebar.accent,
+                  backgroundColor: colors.sidebar.active,
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
@@ -233,7 +233,7 @@ export default function DashboardLayout({
                                 borderRadius: '8px',
                                 fontSize: '14px',
                                 textDecoration: 'none',
-                                backgroundColor: isChildActive ? colors.sidebar.accent : 'transparent',
+                                backgroundColor: isChildActive ? colors.sidebar.active : 'transparent',
                                 color: colors.sidebar.foreground,
                                 transition: 'background-color 0.2s',
                               }}
@@ -270,7 +270,7 @@ export default function DashboardLayout({
                     padding: '8px 12px',
                     borderRadius: '8px',
                     textDecoration: 'none',
-                    backgroundColor: isActive ? colors.sidebar.accent : 'transparent',
+                    backgroundColor: isActive ? colors.sidebar.active : 'transparent',
                     color: colors.sidebar.foreground,
                     transition: 'background-color 0.2s',
                   }}
@@ -300,7 +300,7 @@ export default function DashboardLayout({
               style={{
                 width: '32px',
                 height: '32px',
-                backgroundColor: colors.sidebar.accent,
+                backgroundColor: colors.sidebar.active,
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',

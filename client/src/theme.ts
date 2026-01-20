@@ -1,65 +1,53 @@
 /**
  * CMDB 后台系统 - Material UI 主题配置
- * 设计风格：扁平化 · 时尚 · 简洁 · 现代
+ * 设计风格：极简主义 · 无彩色系统 · 黑白灰
  */
 
 import { createTheme } from '@mui/material/styles';
 
-// 色彩系统
+// 极简主义色彩系统 - 无彩色（Achromatic）
 export const colors = {
-  // 主色调 - 现代紫蓝渐变
-  primary: {
-    main: '#6366F1',      // Indigo 500
-    light: '#818CF8',     // Indigo 400
-    dark: '#4F46E5',      // Indigo 600
-    gradient: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+  // 黑色系 - 主要色调
+  black: {
+    pure: '#000000',      // 纯黑
+    dark: '#18181B',      // 深灰黑（主按钮、主要文字）
+    medium: '#27272A',    // 中深灰
   },
   
-  // 辅助色
-  success: {
-    main: '#10B981',      // Emerald 500
-    light: '#34D399',
-    dark: '#059669',
-  },
-  warning: {
-    main: '#F59E0B',      // Amber 500
-    light: '#FBBF24',
-    dark: '#D97706',
-  },
-  error: {
-    main: '#EF4444',      // Red 500
-    light: '#F87171',
-    dark: '#DC2626',
-  },
-  info: {
-    main: '#3B82F6',      // Blue 500
-    light: '#60A5FA',
-    dark: '#2563EB',
+  // 灰色系 - 层级区分
+  gray: {
+    900: '#18181B',       // 最深灰（主要文字）
+    800: '#27272A',       // 深灰
+    700: '#3F3F46',       // 中深灰
+    600: '#52525B',       // 中灰（次要文字）
+    500: '#71717A',       // 中浅灰
+    400: '#A1A1AA',       // 浅灰（辅助文字、图标）
+    300: '#D4D4D8',       // 极浅灰（边框）
+    200: '#E4E4E7',       // 更浅灰（分隔线）
+    100: '#F4F4F5',       // 背景灰（次要背景）
+    50: '#FAFAFA',        // 极浅背景
   },
   
-  // 中性色 - 极简灰度
-  background: {
-    default: '#FAFAFA',   // 极浅灰，几乎白色
-    paper: '#FFFFFF',     // 纯白
-    surface: '#F9FAFB',   // 表格头部等
-  },
-  border: {
-    light: '#F3F4F6',     // 极浅边框
-    main: '#E5E7EB',      // 浅灰边框
-    dark: '#D1D5DB',      // 中灰边框
-  },
-  text: {
-    primary: '#111827',   // 深灰黑
-    secondary: '#6B7280', // 中灰
-    disabled: '#9CA3AF',  // 浅灰
+  // 白色系
+  white: {
+    pure: '#FFFFFF',      // 纯白（卡片、主背景）
   },
   
-  // 侧边栏 - 深色模式
+  // 状态色 - 克制使用
+  status: {
+    success: '#10B981',   // 绿色（成功）
+    warning: '#F59E0B',   // 琥珀色（警告）
+    error: '#EF4444',     // 红色（错误）
+    info: '#3B82F6',      // 蓝色（信息）
+  },
+  
+  // 侧边栏 - 深色对比
   sidebar: {
-    background: '#1F2937', // Gray 800 - 深灰色
-    foreground: '#F9FAFB',       // Gray 50
-    accent: '#6366F1',     // Indigo 500
-    hover: 'rgba(99, 102, 241, 0.1)',
+    background: '#18181B',        // 深灰黑
+    foreground: '#FAFAFA',        // 极浅灰
+    icon: '#A1A1AA',              // 浅灰图标
+    hover: 'rgba(255, 255, 255, 0.1)',
+    active: '#FFFFFF',            // 纯白（选中状态）
     border: 'rgba(255, 255, 255, 0.1)',
   },
 };
@@ -69,51 +57,51 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: colors.primary.main,
-      light: colors.primary.light,
-      dark: colors.primary.dark,
-      contrastText: '#FFFFFF',
+      main: colors.black.dark,      // #18181B 深灰黑
+      light: colors.gray[600],      // #52525B 中灰
+      dark: colors.black.pure,      // #000000 纯黑
+      contrastText: colors.white.pure,
     },
     secondary: {
-      main: '#8B5CF6',      // Purple 500
-      light: '#A78BFA',
-      dark: '#7C3AED',
-      contrastText: '#FFFFFF',
+      main: colors.gray[100],       // #F4F4F5 背景灰
+      light: colors.gray[50],       // #FAFAFA 极浅背景
+      dark: colors.gray[200],       // #E4E4E7 更浅灰
+      contrastText: colors.black.dark,
     },
     success: {
-      main: colors.success.main,
-      light: colors.success.light,
-      dark: colors.success.dark,
-      contrastText: '#FFFFFF',
+      main: colors.status.success,
+      light: '#34D399',
+      dark: '#059669',
+      contrastText: colors.white.pure,
     },
     warning: {
-      main: colors.warning.main,
-      light: colors.warning.light,
-      dark: colors.warning.dark,
-      contrastText: '#FFFFFF',
+      main: colors.status.warning,
+      light: '#FBBF24',
+      dark: '#D97706',
+      contrastText: colors.white.pure,
     },
     error: {
-      main: colors.error.main,
-      light: colors.error.light,
-      dark: colors.error.dark,
-      contrastText: '#FFFFFF',
+      main: colors.status.error,
+      light: '#F87171',
+      dark: '#DC2626',
+      contrastText: colors.white.pure,
     },
     info: {
-      main: colors.info.main,
-      light: colors.info.light,
-      dark: colors.info.dark,
-      contrastText: '#FFFFFF',
+      main: colors.status.info,
+      light: '#60A5FA',
+      dark: '#2563EB',
+      contrastText: colors.white.pure,
     },
     background: {
-      default: colors.background.default,
-      paper: colors.background.paper,
+      default: colors.gray[50],     // #FAFAFA 极浅背景
+      paper: colors.white.pure,     // #FFFFFF 纯白
     },
     text: {
-      primary: colors.text.primary,
-      secondary: colors.text.secondary,
-      disabled: colors.text.disabled,
+      primary: colors.gray[900],    // #18181B 深灰黑
+      secondary: colors.gray[600],  // #52525B 中灰
+      disabled: colors.gray[400],   // #A1A1AA 浅灰
     },
-    divider: colors.border.main,
+    divider: colors.gray[200],      // #E4E4E7 更浅灰
   },
   
   // 排版系统
@@ -122,6 +110,7 @@ const theme = createTheme({
       'Inter',
       '-apple-system',
       'BlinkMacSystemFont',
+      '"SF Pro Display"',
       '"Segoe UI"',
       'Roboto',
       '"Helvetica Neue"',
@@ -129,69 +118,66 @@ const theme = createTheme({
       'sans-serif',
     ].join(','),
     h1: {
-      fontSize: '2rem',      // 32px
-      fontWeight: 700,
+      fontSize: '1.75rem',   // 28px
+      fontWeight: 600,
       lineHeight: 1.2,
       letterSpacing: '-0.02em',
+      color: colors.black.dark,
     },
     h2: {
-      fontSize: '1.5rem',    // 24px
+      fontSize: '1.25rem',   // 20px
       fontWeight: 600,
       lineHeight: 1.3,
       letterSpacing: '-0.01em',
+      color: colors.black.dark,
     },
     h3: {
-      fontSize: '1.25rem',   // 20px
-      fontWeight: 600,
-      lineHeight: 1.4,
-    },
-    h4: {
-      fontSize: '1.125rem',  // 18px
-      fontWeight: 600,
-      lineHeight: 1.5,
-    },
-    h5: {
       fontSize: '1rem',      // 16px
       fontWeight: 600,
-      lineHeight: 1.5,
+      lineHeight: 1.4,
+      color: colors.black.dark,
     },
-    h6: {
+    h4: {
       fontSize: '0.875rem',  // 14px
       fontWeight: 600,
       lineHeight: 1.5,
+      color: colors.black.dark,
     },
     body1: {
       fontSize: '0.875rem',  // 14px
       fontWeight: 400,
       lineHeight: 1.6,
+      color: colors.gray[900],
     },
     body2: {
       fontSize: '0.75rem',   // 12px
       fontWeight: 400,
       lineHeight: 1.5,
+      color: colors.gray[600],
     },
     button: {
       fontSize: '0.875rem',  // 14px
-      fontWeight: 600,
+      fontWeight: 500,
       textTransform: 'none',
-      letterSpacing: '0.01em',
+      letterSpacing: '0',
     },
     caption: {
       fontSize: '0.75rem',   // 12px
       fontWeight: 400,
       lineHeight: 1.4,
+      color: colors.gray[500],
     },
   },
   
-  // 圆角系统
+  // 圆角系统 - 小圆角
   shape: {
-    borderRadius: 8,         // 默认圆角
+    borderRadius: 6,
   },
   
-  // 阴影系统 - 扁平化，极浅阴影
+  // 阴影系统 - 极简，几乎无阴影
   shadows: [
     'none',
-    '0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+    '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
     '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
     '0 2px 4px 0 rgba(0, 0, 0, 0.05)',
     '0 2px 6px 0 rgba(0, 0, 0, 0.05)',
@@ -219,14 +205,14 @@ const theme = createTheme({
   
   // 组件样式覆盖
   components: {
-    // 按钮 - 无边框扁平设计
+    // 按钮 - 极简无彩色设计
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 6,
           padding: '10px 20px',
           fontSize: '0.875rem',
-          fontWeight: 600,
+          fontWeight: 500,
           textTransform: 'none',
           boxShadow: 'none !important',
           border: 'none !important',
@@ -246,29 +232,31 @@ const theme = createTheme({
           },
         },
         contained: {
-          background: colors.primary.gradient,
-          color: '#FFFFFF !important',
+          backgroundColor: colors.black.dark,
+          color: `${colors.white.pure} !important`,
           border: 'none !important',
           '&:hover': {
-            background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+            backgroundColor: colors.black.pure,
             border: 'none !important',
-            color: '#FFFFFF !important',
+            color: `${colors.white.pure} !important`,
           },
         },
         outlined: {
-          backgroundColor: 'rgba(99, 102, 241, 0.08)',
-          color: `${colors.primary.main} !important`,
+          backgroundColor: colors.gray[100],
+          color: `${colors.black.dark} !important`,
           border: 'none !important',
           '&:hover': {
-            backgroundColor: 'rgba(99, 102, 241, 0.15)',
+            backgroundColor: colors.gray[200],
             border: 'none !important',
           },
         },
         text: {
+          color: `${colors.gray[600]} !important`,
           border: 'none !important',
           '&:hover': {
             backgroundColor: 'rgba(0, 0, 0, 0.04)',
             border: 'none !important',
+            color: `${colors.black.dark} !important`,
           },
         },
         sizeSmall: {
@@ -282,17 +270,18 @@ const theme = createTheme({
       },
     },
     
-    // 卡片
+    // 卡片 - 极简边框
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 8,
           boxShadow: 'none',
-          border: 'none',
+          border: `1px solid ${colors.gray[100]}`,
           transition: 'all 0.25s ease-out',
           '&:hover': {
             transform: 'translateY(-2px)',
             boxShadow: '0 4px 12px 0 rgba(0, 0, 0, 0.08)',
+            borderColor: colors.gray[200],
           },
         },
       },
@@ -303,19 +292,19 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
-            backgroundColor: colors.background.paper,
+            borderRadius: 6,
+            backgroundColor: colors.white.pure,
             transition: 'all 0.15s ease-out',
             '& fieldset': {
               borderWidth: 2,
-              borderColor: colors.border.main,
+              borderColor: colors.gray[200],
             },
             '&:hover fieldset': {
-              borderColor: colors.border.dark,
+              borderColor: colors.gray[300],
             },
             '&.Mui-focused fieldset': {
-              borderColor: colors.primary.main,
-              boxShadow: `0 0 0 3px rgba(99, 102, 241, 0.1)`,
+              borderColor: colors.black.dark,
+              boxShadow: `0 0 0 3px rgba(24, 24, 27, 0.1)`,
             },
           },
         },
@@ -326,11 +315,11 @@ const theme = createTheme({
     MuiTableHead: {
       styleOverrides: {
         root: {
-          backgroundColor: colors.background.surface,
+          backgroundColor: colors.gray[50],
           '& .MuiTableCell-root': {
             fontWeight: 600,
-            color: colors.text.primary,
-            borderBottom: `2px solid ${colors.border.light}`,
+            color: colors.black.dark,
+            borderBottom: `2px solid ${colors.gray[100]}`,
           },
         },
       },
@@ -341,11 +330,11 @@ const theme = createTheme({
           '& .MuiTableRow-root': {
             transition: 'background-color 0.15s ease-out',
             '&:hover': {
-              backgroundColor: colors.background.surface,
+              backgroundColor: colors.gray[50],
             },
           },
           '& .MuiTableCell-root': {
-            borderBottom: `1px solid ${colors.border.light}`,
+            borderBottom: `1px solid ${colors.gray[100]}`,
           },
         },
       },
@@ -356,8 +345,9 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 6,
-          fontWeight: 600,
+          fontWeight: 500,
           fontSize: '0.75rem',
+          border: 'none',
         },
         filled: {
           border: 'none',
@@ -369,7 +359,7 @@ const theme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: {
-          borderRadius: 16,
+          borderRadius: 12,
           boxShadow: '0 20px 44px 0 rgba(0, 0, 0, 0.1)',
         },
       },
@@ -379,9 +369,9 @@ const theme = createTheme({
     MuiMenu: {
       styleOverrides: {
         paper: {
-          borderRadius: 12,
+          borderRadius: 8,
           boxShadow: '0 4px 12px 0 rgba(0, 0, 0, 0.08)',
-          border: `1px solid ${colors.border.main}`,
+          border: `1px solid ${colors.gray[200]}`,
         },
       },
     },
@@ -390,7 +380,7 @@ const theme = createTheme({
     MuiDivider: {
       styleOverrides: {
         root: {
-          borderColor: colors.border.light,
+          borderColor: colors.gray[200],
         },
       },
     },
