@@ -72,37 +72,29 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
     return checkedKeys.includes(node.key);
   };
 
-  // 检查节点是否半选中（部分子节点被选中）
+  // 主节点和子IP独立选择，不需要半选状态
   const isNodeIndeterminate = (node: TreeNode, checkedKeys: string[]): boolean => {
-    if (!node.children || node.children.length === 0) return false;
-    const childKeys = getAllChildKeys(node);
-    const checkedChildCount = childKeys.filter(key => checkedKeys.includes(key)).length;
-    return checkedChildCount > 0 && checkedChildCount < childKeys.length;
+    return false;
   };
 
-  // 处理节点选中
+  // 处理节点选中（主节点和子IP独立选择）
   const handleNodeCheck = (node: TreeNode, checked: boolean, side: 'left' | 'right') => {
     const setChecked = side === 'left' ? setLeftChecked : setRightChecked;
     const currentChecked = side === 'left' ? leftChecked : rightChecked;
 
     const newChecked = [...currentChecked];
-    const allKeys = [node.key, ...getAllChildKeys(node)];
 
     if (checked) {
-      // 添加节点和所有子节点
-      allKeys.forEach(key => {
-        if (!newChecked.includes(key)) {
-          newChecked.push(key);
-        }
-      });
+      // 只添加当前节点，不自动选中子节点
+      if (!newChecked.includes(node.key)) {
+        newChecked.push(node.key);
+      }
     } else {
-      // 移除节点和所有子节点
-      allKeys.forEach(key => {
-        const index = newChecked.indexOf(key);
-        if (index > -1) {
-          newChecked.splice(index, 1);
-        }
-      });
+      // 只移除当前节点
+      const index = newChecked.indexOf(node.key);
+      if (index > -1) {
+        newChecked.splice(index, 1);
+      }
     }
 
     setChecked(newChecked);
@@ -197,16 +189,87 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
     );
   };
 
-  // 渲染列表
-  const renderList = (
+  // 渲染扁平化的已选列表
+  const renderFlatList = (
     nodes: TreeNode[],
     checked: string[],
     onCheck: (node: TreeNode, checked: boolean) => void,
     title: string,
-    isTarget: boolean = false,
+  ) => {
+    // 扁平化所有节点和子节点
+    const flatItems: { key: string; title: string; node: TreeNode }[] = [];
+    const traverse = (node: TreeNode) => {
+      if (targetKeys.includes(node.key)) {
+        flatItems.push({ key: node.key, title: node.title, node });
+      }
+      if (node.children) {
+        node.children.forEach(child => {
+          if (targetKeys.includes(child.key)) {
+            flatItems.push({ key: child.key, title: child.title, node: child });
+          }
+        });
+      }
+    };
+    nodes.forEach(traverse);
+
+    const checkedCount = checked.length;
+    const totalCount = flatItems.length;
+
+    return (
+      <div className="flex flex-col border border-border rounded-lg bg-background">
+        {/* 标题栏 */}
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-secondary/5">
+          <span className="text-sm font-medium text-foreground">
+            {title} ({checkedCount}/{totalCount})
+          </span>
+        </div>
+
+        {/* 列表内容 - 扁平化显示 */}
+        <div 
+          className="overflow-y-auto p-2"
+          style={{ height: `${height}px` }}
+        >
+          {totalCount === 0 ? (
+            <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+              暂无数据
+            </div>
+          ) : (
+            flatItems.map(item => (
+              <div
+                key={item.key}
+                className={`flex items-center py-1 px-2 rounded hover:bg-secondary/30 transition-colors cursor-pointer ${
+                  checked.includes(item.key) ? 'bg-primary/10' : ''
+                }`}
+                onClick={() => onCheck(item.node, !checked.includes(item.key))}
+              >
+                <Checkbox
+                  checked={checked.includes(item.key)}
+                  disabled={item.node.disabled}
+                  size="small"
+                  sx={{ padding: '4px' }}
+                />
+                <span className={`text-sm ${
+                  item.node.disabled ? 'text-muted-foreground' : 'text-foreground'
+                }`}>
+                  {item.title}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染树形列表（左侧）
+  const renderTreeList = (
+    nodes: TreeNode[],
+    checked: string[],
+    onCheck: (node: TreeNode, checked: boolean) => void,
+    title: string,
   ) => {
     const allKeys = flattenTree(nodes);
-    const visibleKeys = isTarget ? allKeys.filter(key => targetKeys.includes(key)) : allKeys.filter(key => !targetKeys.includes(key));
+    const visibleKeys = allKeys.filter(key => !targetKeys.includes(key));
     const checkedCount = checked.length;
     const totalCount = visibleKeys.length;
 
@@ -219,7 +282,7 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
           </span>
         </div>
 
-        {/* 列表内容 */}
+        {/* 列表内容 - 树形显示 */}
         <div 
           className="overflow-y-auto p-2"
           style={{ height: `${height}px` }}
@@ -229,7 +292,7 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
               暂无数据
             </div>
           ) : (
-            nodes.map(node => renderTreeNode(node, checked, onCheck, 0, isTarget))
+            nodes.map(node => renderTreeNode(node, checked, onCheck, 0, false))
           )}
         </div>
       </div>
@@ -238,14 +301,13 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
 
   return (
     <div className="flex items-center gap-4">
-      {/* 左侧列表 */}
+      {/* 左侧列表 - 树形 */}
       <div className="flex-1">
-        {renderList(
+        {renderTreeList(
           dataSource,
           leftChecked,
           (node, checked) => handleNodeCheck(node, checked, 'left'),
-          titles[0],
-          false
+          titles[0]
         )}
       </div>
 
@@ -269,14 +331,13 @@ const TreeTransfer: React.FC<TreeTransferProps> = ({
         </button>
       </div>
 
-      {/* 右侧列表 */}
+      {/* 右侧列表 - 扁平化 */}
       <div className="flex-1">
-        {renderList(
+        {renderFlatList(
           dataSource,
           rightChecked,
           (node, checked) => handleNodeCheck(node, checked, 'right'),
-          titles[1],
-          true
+          titles[1]
         )}
       </div>
     </div>
