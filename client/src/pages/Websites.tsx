@@ -531,20 +531,40 @@ export default function Websites() {
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={formData.httpsForceRedirect}
-                          onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
+                          checked={formData.https}
+                          onChange={(e) => {
+                            const enabled = e.target.checked;
+                            setFormData({ 
+                              ...formData, 
+                              https: enabled,
+                              // 如果禁用HTTPS，同时禁用强制跳转和HSTS
+                              httpsForceRedirect: enabled ? formData.httpsForceRedirect : false,
+                              hstsEnabled: enabled ? formData.hstsEnabled : false
+                            });
+                          }}
                           className="w-4 h-4 rounded border-border"
                         />
-                        <span className="text-xs font-medium text-foreground">HTTPS强制跳转</span>
+                        <span className="text-xs font-medium text-foreground">启用HTTPS</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.httpsForceRedirect}
+                          onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
+                          disabled={!formData.https}
+                          className="w-4 h-4 rounded border-border disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <span className={`text-xs font-medium ${formData.https ? 'text-foreground' : 'text-muted-foreground'}`}>HTTPS强制跳转</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={formData.hstsEnabled}
                           onChange={(e) => setFormData({ ...formData, hstsEnabled: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
+                          disabled={!formData.https}
+                          className="w-4 h-4 rounded border-border disabled:opacity-50 disabled:cursor-not-allowed"
                         />
-                        <span className="text-xs font-medium text-foreground">HSTS</span>
+                        <span className={`text-xs font-medium ${formData.https ? 'text-foreground' : 'text-muted-foreground'}`}>HSTS</span>
                       </label>
                     </div>
                   </div>
@@ -794,20 +814,40 @@ export default function Websites() {
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={formData.httpsForceRedirect}
-                          onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
+                          checked={formData.https}
+                          onChange={(e) => {
+                            const enabled = e.target.checked;
+                            setFormData({ 
+                              ...formData, 
+                              https: enabled,
+                              // 如果禁用HTTPS，同时禁用强制跳转和HSTS
+                              httpsForceRedirect: enabled ? formData.httpsForceRedirect : false,
+                              hstsEnabled: enabled ? formData.hstsEnabled : false
+                            });
+                          }}
                           className="w-4 h-4 rounded border-border"
                         />
-                        <span className="text-xs font-medium text-foreground">HTTPS强制跳转</span>
+                        <span className="text-xs font-medium text-foreground">启用HTTPS</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.httpsForceRedirect}
+                          onChange={(e) => setFormData({ ...formData, httpsForceRedirect: e.target.checked })}
+                          disabled={!formData.https}
+                          className="w-4 h-4 rounded border-border disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <span className={`text-xs font-medium ${formData.https ? 'text-foreground' : 'text-muted-foreground'}`}>HTTPS强制跳转</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={formData.hstsEnabled}
                           onChange={(e) => setFormData({ ...formData, hstsEnabled: e.target.checked })}
-                          className="w-4 h-4 rounded border-border"
+                          disabled={!formData.https}
+                          className="w-4 h-4 rounded border-border disabled:opacity-50 disabled:cursor-not-allowed"
                         />
-                        <span className="text-xs font-medium text-foreground">HSTS</span>
+                        <span className={`text-xs font-medium ${formData.https ? 'text-foreground' : 'text-muted-foreground'}`}>HSTS</span>
                       </label>
                     </div>
                   </div>
