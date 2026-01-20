@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { Card } from '@/components/mui/Card';
+import { Pagination } from '@/components/Pagination';
 import { Button } from '@/components/mui';
 import { generateMockDomains, Domain } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -23,6 +24,8 @@ export default function Domains() {
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
@@ -38,10 +41,10 @@ export default function Domains() {
   };
 
   const handleSelectAll = () => {
-    if (selectedDomains.size === filteredDomains.length) {
+    if (selectedDomains.size === sortedDomains.length) {
       setSelectedDomains(new Set());
     } else {
-      setSelectedDomains(new Set(filteredDomains.map(d => d.id)));
+      setSelectedDomains(new Set(sortedDomains.map(d => d.id)));
     }
   };
 
@@ -60,7 +63,7 @@ export default function Domains() {
     return matchesSearch && matchesStatus;
   });
 
-  const filteredDomains = [...baseFilteredDomains].sort((a, b) => {
+  const sortedDomains = [...baseFilteredDomains].sort((a, b) => {
     let aValue: any = a[sortField];
     let bValue: any = b[sortField];
 
@@ -73,6 +76,11 @@ export default function Domains() {
     if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
     return 0;
   });
+
+  // 分页数据
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const filteredDomains = sortedDomains.slice(startIndex, endIndex);
 
   const dnsRecords = selectedDomain ? [
     { id: '1', type: 'A', name: selectedDomain.name, value: '192.168.1.1', ttl: 3600 },
@@ -160,7 +168,7 @@ export default function Domains() {
             <Card className="border border-border overflow-hidden">
               <div className="px-6 py-3 border-b border-border flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  {selectedDomains.size > 0 ? `已选择 ${selectedDomains.size} 个` : `共 ${filteredDomains.length} 个`}
+                  {selectedDomains.size > 0 ? `已选择 ${selectedDomains.size} 个` : `共 ${sortedDomains.length} 个`}
                 </span>
               </div>
               <div className="overflow-x-auto w-full">
@@ -170,7 +178,7 @@ export default function Domains() {
                       <th className="text-center py-3 px-4 font-semibold text-foreground w-12">
                         <input
                           type="checkbox"
-                          checked={selectedDomains.size === filteredDomains.length && filteredDomains.length > 0}
+                          checked={selectedDomains.size === sortedDomains.length && sortedDomains.length > 0}
                           onChange={handleSelectAll}
                           className="w-4 h-4 cursor-pointer"
                         />
@@ -259,6 +267,22 @@ export default function Domains() {
                   </tbody>
                 </table>
               </div>
+              
+              {/* 分页 */}
+              <Pagination
+                current={currentPage}
+                total={sortedDomains.length}
+                pageSize={pageSize}
+                showSizeChanger
+                onChange={(page, size) => {
+                  setCurrentPage(page);
+                  setPageSize(size);
+                }}
+                onShowSizeChange={(current, size) => {
+                  setCurrentPage(1);
+                  setPageSize(size);
+                }}
+              />
             </Card>
           </div>
 
