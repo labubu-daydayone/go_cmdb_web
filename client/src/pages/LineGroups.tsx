@@ -289,12 +289,18 @@ export default function LineGroups() {
             </table>
           </div>
           <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
+            current={currentPage}
+            total={totalItems}
             pageSize={pageSize}
-            totalItems={totalItems}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
+            showSizeChanger
+            onChange={(page, size) => {
+              handlePageChange(page);
+              handlePageSizeChange(size);
+            }}
+            onShowSizeChange={(current, size) => {
+              handlePageChange(1);
+              handlePageSizeChange(size);
+            }}
           />
         </Card>
 
