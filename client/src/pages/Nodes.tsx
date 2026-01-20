@@ -408,17 +408,22 @@ export default function Nodes() {
                             <span className="text-xs text-muted-foreground">({subip.createdDate})</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleToggleSubIPEnabled(node.id, subip.id)}
-                              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                                subip.enabled 
-                                  ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                              }`}
-                              title={subip.enabled ? '点击禁用' : '点击启用'}
+                            <Popconfirm
+                              title={subip.enabled ? "确认禁用子IP？" : "确认启用子IP？"}
+                              description={subip.enabled ? "禁用后该子IP将不可用，是否继续？" : "启用后该子IP将可以使用，是否继续？"}
+                              onConfirm={() => handleToggleSubIPEnabled(node.id, subip.id)}
                             >
-                              {subip.enabled ? '已启用' : '已禁用'}
-                            </button>
+                              <button
+                                className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                                  subip.enabled 
+                                    ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                                title={subip.enabled ? '点击禁用' : '点击启用'}
+                              >
+                                {subip.enabled ? '已启用' : '已禁用'}
+                              </button>
+                            </Popconfirm>
                             <Popconfirm
                               title="删除子IP？"
                               description="确认删除该子IP？"
