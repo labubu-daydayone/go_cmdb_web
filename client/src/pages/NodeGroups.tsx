@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
 import { Pagination } from '@/components/Pagination';
@@ -23,9 +23,10 @@ export default function NodeGroups() {
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDesc, setNewGroupDesc] = useState('');
   const [selectedNodeKeys, setSelectedNodeKeys] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
   
-  // 获取所有节点作为树形穿梭框数据源
-  const allNodes = generateMockNodes();
+  // 获取所有节点作为树形穿梭框数据源（使用useMemo避免每次渲染都重新生成）
+  const allNodes = useMemo(() => generateMockNodes(), []);
   const nodeTreeData: TreeNode[] = allNodes.map(node => ({
     key: node.id,
     title: `${node.name} (${node.ip})`,
@@ -65,18 +66,38 @@ export default function NodeGroups() {
     setExpandedGroups(newExpanded);
   };
 
+  const handleEdit = (group: NodeGroup) => {
+    setEditingId(group.id);
+    setNewGroupName(group.name);
+    setNewGroupDesc(group.description || '');
+    setSelectedNodeKeys(group.subIPs.map(ip => ip.id));
+    setShowAddGroupModal(true);
+  };
+
   const handleAddGroup = () => {
     if (newGroupName.trim()) {
-      const newGroup: NodeGroup = {
-        id: `group-${Date.now()}`,
-        name: newGroupName,
-        description: newGroupDesc,
-        subIPs: [],
-        createdDate: new Date().toISOString().split('T')[0],
-      };
-      setGroups([...groups, newGroup]);
+      if (editingId) {
+        // 编辑模式
+        setGroups(groups.map(g => 
+          g.id === editingId 
+            ? { ...g, name: newGroupName, description: newGroupDesc }
+            : g
+        ));
+        setEditingId(null);
+      } else {
+        // 新增模式
+        const newGroup: NodeGroup = {
+          id: `group-${Date.now()}`,
+          name: newGroupName,
+          description: newGroupDesc,
+          subIPs: [],
+          createdDate: new Date().toISOString().split('T')[0],
+        };
+        setGroups([...groups, newGroup]);
+      }
       setNewGroupName('');
       setNewGroupDesc('');
+      setSelectedNodeKeys([]);
       setShowAddGroupModal(false);
     }
   };
@@ -189,7 +210,11 @@ export default function NodeGroups() {
                     <div className="col-span-1 text-muted-foreground">{group.createdDate}</div>
                     <div className="col-span-2">
                       <div className="flex items-center gap-2">
-                        <button className="p-1 hover:bg-secondary rounded transition-colors" title="编辑">
+                        <button 
+                          className="p-1 hover:bg-secondary rounded transition-colors" 
+                          title="编辑"
+                          onClick={() => handleEdit(group)}
+                        >
                           <EditIcon fontSize="small" className="text-muted-foreground"/>
                         </button>
                         <Popconfirm
@@ -244,17 +269,18 @@ export default function NodeGroups() {
         </Card>
 
         {showAddGroupModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={() => { setShowAddGroupModal(false); setNewGroupName(''); setNewGroupDesc(''); setSelectedNodeKeys([]); }}>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-end z-50" onClick={() => { setShowAddGroupModal(false); setNewGroupName(''); setNewGroupDesc(''); setSelectedNodeKeys([]); setEditingId(null); }}>
             <Card className="w-[800px] h-full rounded-none flex flex-col border-0 p-0" onClick={(e) => e.stopPropagation()}>
               {/* 标题栏 */}
               <div className="flex items-center justify-between p-6 pb-4 border-b border-border">
-                <h2 className="text-lg font-bold text-foreground">添加分组</h2>
+                <h2 className="text-lg font-bold text-foreground">{editingId ? '编辑分组' : '添加分组'}</h2>
                 <button
                   onClick={() => {
                     setShowAddGroupModal(false);
                     setNewGroupName('');
                     setNewGroupDesc('');
                     setSelectedNodeKeys([]);
+                    setEditingId(null);
                   }}
                   className="text-muted-foreground hover:text-foreground"
                 >
@@ -305,11 +331,12 @@ export default function NodeGroups() {
                     setNewGroupName('');
                     setNewGroupDesc('');
                     setSelectedNodeKeys([]);
+                    setEditingId(null);
                   }}
                 >
                   取消
                 </Button>
-                <Button onClick={handleAddGroup}>添加</Button>
+                <Button onClick={handleAddGroup}>{editingId ? '保存' : '添加'}</Button>
               </div>
             </Card>
           </div>
