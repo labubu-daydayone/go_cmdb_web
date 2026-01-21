@@ -411,7 +411,7 @@ const OriginGroupsPage: React.FC = () => {
                         <Select
                           value={addr.type}
                           onChange={(value) => handleUpdateAddress(addr.id, 'type', value)}
-                          style={{ width: 100 }}
+                          style={{ width: 95 }}
                         >
                           <Select.Option value="主源">主源</Select.Option>
                           <Select.Option value="备源">备源</Select.Option>
@@ -419,7 +419,7 @@ const OriginGroupsPage: React.FC = () => {
                         <Select
                           value={addr.protocol}
                           onChange={(value) => handleUpdateAddress(addr.id, 'protocol', value)}
-                          style={{ width: 100 }}
+                          style={{ width: 95 }}
                         >
                           <Select.Option value="http">HTTP</Select.Option>
                           <Select.Option value="https">HTTPS</Select.Option>
@@ -444,7 +444,7 @@ const OriginGroupsPage: React.FC = () => {
                           max={100}
                           value={addr.weight}
                           onChange={(value) => handleUpdateAddress(addr.id, 'weight', value || 10)}
-                          style={{ width: 80 }}
+                          style={{ width: 75 }}
                           placeholder="权重"
                         />
                         {addresses.length > 1 && (

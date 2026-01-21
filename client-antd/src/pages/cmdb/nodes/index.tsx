@@ -243,7 +243,7 @@ const NodesPage: React.FC = () => {
             <Tag color={status.color}>{status.text}</Tag>
             <Popconfirm
               title={record.status === 'online' ? '禁用节点' : '启用节点'}
-              description={record.status === 'online' ? '禁用后所有子IP也将被禁用，是否继续？' : '确定要启用该节点吗？'}
+              description={record.status === 'online' ? '禁用后所有子IP也将被禁用，是否继续？' : '启用后所有子IP也将被启用，是否继续？'}
               onConfirm={() => {
                 const newStatus = record.status === 'online' ? 'offline' : 'online';
                 handleToggleNodeStatus(record.id, newStatus);
@@ -298,9 +298,12 @@ const NodesPage: React.FC = () => {
     setNodes((prev) =>
       prev.map((node) => {
         if (node.id === nodeId) {
-          // 如果节点被禁用，所有子 IP 也禁用
+          // 节点禁用时，所有子 IP 也禁用
+          // 节点启用时，所有子 IP 也启用
           const updatedSubIPs = newStatus === 'offline'
             ? (node.subIPs || []).map((subIP) => ({ ...subIP, enabled: false }))
+            : newStatus === 'online'
+            ? (node.subIPs || []).map((subIP) => ({ ...subIP, enabled: true }))
             : node.subIPs;
           return { ...node, status: newStatus, subIPs: updatedSubIPs };
         }
