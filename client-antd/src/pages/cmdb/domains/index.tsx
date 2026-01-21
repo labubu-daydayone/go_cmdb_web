@@ -268,10 +268,10 @@ const DomainsPage: React.FC = () => {
       actionRef={actionRef}
       rowKey="id"
       search={{
-        form={{
-          syncToUrl: true,
-        }}
         labelWidth: 'auto',
+      }}
+      form={{
+        syncToUrl: true,
       }}
       toolBarRender={() => [
         selectedRowKeys.length > 0 && (

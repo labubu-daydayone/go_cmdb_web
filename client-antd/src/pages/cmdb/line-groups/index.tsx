@@ -268,10 +268,10 @@ const LineGroupsPage: React.FC = () => {
         actionRef={actionRef}
         rowKey="id"
         search={{
+          labelWidth: 'auto',
+        }}
         form={{
           syncToUrl: true,
-        }}
-          labelWidth: 'auto',
         }}
         scroll={{ x: 'max-content' }}
         toolBarRender={() => [
