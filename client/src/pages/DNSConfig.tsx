@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
 import { Pagination } from '@/components/Pagination';
@@ -20,7 +20,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useListParams } from '@/hooks/useUrlParams';
 
 export default function DNSConfigPage() {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const [dnsConfigs, setDnsConfigs] = useState<DNSConfig[]>(generateMockDNSConfigs());
   const [selectedConfigs, setSelectedConfigs] = useState<Set<string>>(new Set());
   const [showAddModal, setShowAddModal] = useState(false);
@@ -185,7 +185,7 @@ export default function DNSConfigPage() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => navigate(`/dns-records/${config.id}`)}
+                          onClick={() => setLocation(`/dns-records/${config.id}`)}
                           className="p-1 hover:bg-secondary rounded transition-colors"
                           title="查看解析记录"
                         >

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useLocation } from 'wouter';
 import {
   Box,
   Card,
@@ -27,7 +27,7 @@ import type { DNSRecord } from '../lib/mockData';
 
 const DNSRecords: React.FC = () => {
   const { domainId } = useParams<{ domainId: string }>();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const [records, setRecords] = useState<DNSRecord[]>([]);
   const [domainName, setDomainName] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -54,7 +54,7 @@ const DNSRecords: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate('/dns-config');
+    setLocation('/dns-config');
   };
 
   const getStatusColor = (status: string) => {
