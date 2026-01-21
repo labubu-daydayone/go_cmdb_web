@@ -6,7 +6,7 @@
 
 import { ReactNode, useState } from 'react';
 import * as React from 'react';
-import { Link, useLocation } from 'wouter';
+import { Link, useLocation } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -88,7 +88,7 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { expandedMenu, setExpandedMenu } = useMenu();
-  const [location] = useLocation();
+  const location = useLocation();
 
   // 仅在初始加载时自动展开包含当前路由的父菜单，之后菜单状态由用户控制
   React.useEffect(() => {
@@ -184,7 +184,7 @@ export default function DashboardLayout({
           }}
         >
           {navigationItems.map((item) => {
-            const isActive = location === item.href;
+            const isActive = location.pathname === item.href;
             const isExpanded = expandedMenu === item.label;
             const hasChildren = item.children && item.children.length > 0;
 
@@ -236,9 +236,9 @@ export default function DashboardLayout({
                   {isExpanded && sidebarOpen && (
                     <div style={{ marginLeft: '16px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {item.children!.map((child) => {
-                        const isChildActive = location === child.href;
+                        const isChildActive = location.pathname === child.href;
                         return (
-                          <Link key={child.href} href={child.href!}>
+                          < Link key={child.href} to={child.href!}>
                             <a
                               style={{
                                 display: 'flex',
@@ -277,7 +277,7 @@ export default function DashboardLayout({
             }
 
             return (
-              <Link key={item.href} href={item.href!}>
+              < Link key={item.href} to={item.href!}>
                 <a
                   style={{
                     display: 'flex',
@@ -347,7 +347,7 @@ export default function DashboardLayout({
         {/* 顶部导航栏 */}
         <header className="h-16 bg-background border-b border-border flex items-center justify-between px-6">
           <div className="flex items-center gap-4">
-            <Link href="/">
+            <Link to="/">
               <a className="text-sm text-muted-foreground hover:text-foreground" style={{ textDecoration: 'none' }}>
                 首页
               </a>
@@ -359,7 +359,7 @@ export default function DashboardLayout({
                   {breadcrumbs.map((crumb, index) => (
                     <div key={index} className="flex items-center gap-2">
                       {crumb.href ? (
-                        <Link href={crumb.href}>
+                        < Link to={crumb.href}>
                           <a className="text-sm text-muted-foreground hover:text-foreground" style={{ textDecoration: 'none' }}>
                             {crumb.label}
                           </a>

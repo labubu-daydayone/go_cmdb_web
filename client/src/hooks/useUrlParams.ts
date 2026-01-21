@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useLocation, useSearch } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 /**
  * URL 参数同步 Hook
@@ -8,8 +8,9 @@ import { useLocation, useSearch } from 'wouter';
 export const useUrlParams = <T extends Record<string, any>>(
   defaultParams: T
 ): [T, (newParams: Partial<T>) => void] => {
-  const [location, setLocation] = useLocation();
-  const searchString = useSearch();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const searchString = location.search;
 
   // 从 URL 解析参数
   const parseUrlParams = useCallback((): T => {
@@ -60,10 +61,9 @@ export const useUrlParams = <T extends Record<string, any>>(
 
       // 更新 URL
       const newSearch = searchParams.toString();
-      const basePath = location.split('?')[0];
-      setLocation(newSearch ? `${basePath}?${newSearch}` : basePath);
+      navigate(newSearch ? `${location.pathname}?${newSearch}` : location.pathname, { replace: true });
     },
-    [params, defaultParams, location, setLocation]
+    [params, defaultParams, location.pathname, navigate]
   );
 
   return [params, updateParams];

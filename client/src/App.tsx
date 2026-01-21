@@ -1,6 +1,6 @@
 // Material UI 不需要全局 Toaster 和 TooltipProvider
 import NotFound from "@/pages/NotFound";
-import { Route, Switch, useLocation } from "wouter";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -22,64 +22,38 @@ import ApiKeys from "./pages/ApiKeys";
 import Certificates from "./pages/Certificates";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
 
   useEffect(() => {
     if (!isLoggedIn) {
-      setLocation('/login');
+      navigate('/login');
     }
-  }, [isLoggedIn, setLocation]);
+  }, [isLoggedIn, navigate]);
 
   return isLoggedIn ? <Component {...rest} /> : null;
 }
 
 function Router() {
   return (
-    <Switch>
-      <Route path={"/login"} component={Login} />
-      <Route path={"/"}>
-        <ProtectedRoute component={Dashboard} />
-      </Route>
-      <Route path={"/domains"}>
-        <ProtectedRoute component={Domains} />
-      </Route>
-      <Route path={"/websites"}>
-        <ProtectedRoute component={Websites} />
-      </Route>
-      <Route path={"/line-groups"}>
-        <ProtectedRoute component={LineGroups} />
-      </Route>
-      <Route path={"/dns-config"}>
-        <ProtectedRoute component={DNSConfig} />
-      </Route>
-      <Route path={"/dns-records/:domainId"}>
-        <ProtectedRoute component={DNSRecords} />
-      </Route>
-      <Route path={"/nodes"}>
-        <ProtectedRoute component={Nodes} />
-      </Route>
-      <Route path={"/node-groups"}>
-        <ProtectedRoute component={NodeGroups} />
-      </Route>
-      <Route path={"/origin-management"}>
-        <ProtectedRoute component={OriginManagement} />
-      </Route>
-      <Route path={"/origin-groups"}>
-        <ProtectedRoute component={OriginGroups} />
-      </Route>
-      <Route path={"/cache-settings"}>
-        <ProtectedRoute component={CacheSettings} />
-      </Route>
-      <Route path={"/api-keys"}>
-        <ProtectedRoute component={ApiKeys} />
-      </Route>
-      <Route path={"/certificates"}>
-        <ProtectedRoute component={Certificates} />
-      </Route>
-      <Route path={"/404"} component={NotFound} />
-      <Route component={NotFound} />
-    </Switch>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<ProtectedRoute component={Dashboard} />} />
+      <Route path="/domains" element={<ProtectedRoute component={Domains} />} />
+      <Route path="/websites" element={<ProtectedRoute component={Websites} />} />
+      <Route path="/line-groups" element={<ProtectedRoute component={LineGroups} />} />
+      <Route path="/dns-config" element={<ProtectedRoute component={DNSConfig} />} />
+      <Route path="/dns-records/:domainId" element={<ProtectedRoute component={DNSRecords} />} />
+      <Route path="/nodes" element={<ProtectedRoute component={Nodes} />} />
+      <Route path="/node-groups" element={<ProtectedRoute component={NodeGroups} />} />
+      <Route path="/origin-management" element={<ProtectedRoute component={OriginManagement} />} />
+      <Route path="/origin-groups" element={<ProtectedRoute component={OriginGroups} />} />
+      <Route path="/cache-settings" element={<ProtectedRoute component={CacheSettings} />} />
+      <Route path="/api-keys" element={<ProtectedRoute component={ApiKeys} />} />
+      <Route path="/certificates" element={<ProtectedRoute component={Certificates} />} />
+      <Route path="/404" element={<NotFound />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 
@@ -90,7 +64,9 @@ function App() {
         defaultTheme="light"
       >
         <MenuProvider>
-          <Router />
+          <BrowserRouter>
+            <Router />
+          </BrowserRouter>
         </MenuProvider>
       </ThemeProvider>
     </ErrorBoundary>

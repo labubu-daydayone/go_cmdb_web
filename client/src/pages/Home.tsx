@@ -4,14 +4,14 @@
  */
 
 import { useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 
 export default function Home() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    setLocation('/');
-  }, [setLocation]);
+    navigate('/');
+  }, [navigate]);
 
   return null;
 }

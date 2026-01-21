@@ -2,13 +2,13 @@ import { Button } from "@/components/mui";
 import { Card, CardContent } from "@/components/mui/Card";
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import HomeIcon from '@mui/icons-material/Home';
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 
 export default function NotFound() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   const handleGoHome = () => {
-    setLocation("/");
+    navigate("/");
   };
 
   return (

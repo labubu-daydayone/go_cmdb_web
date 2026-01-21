@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useLocation } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui/Button';
 
 export default function Login() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -24,7 +24,7 @@ export default function Login() {
         email: 'admin@cmdb.local'
       }));
       // 跳转到首页
-      setLocation('/');
+      navigate('/');
     } else {
       setError('用户名或密码错误');
     }
