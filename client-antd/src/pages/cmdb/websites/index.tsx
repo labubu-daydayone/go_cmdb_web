@@ -787,6 +787,22 @@ const WebsitesPage: React.FC = () => {
           labelWidth: 'auto',
         }}
         scroll={{ x: 'max-content' }}
+        options={{
+          reload: true,
+          density: true,
+          setting: true,
+        }}
+        pagination={{
+          defaultPageSize: 15,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          pageSizeOptions: ['10', '15', '20', '50', '100'],
+        }}
+        // 启用 URL 参数同步：分页、搜索、筛选状态都会同步到 URL
+        // 设置 form 的 syncToUrl 为 true 即可启用
+        form={{
+          syncToUrl: true,
+        }}
         toolBarRender={() => [
           selectedRowKeys.length > 0 && (
             <Button

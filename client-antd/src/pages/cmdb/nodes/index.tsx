@@ -410,6 +410,9 @@ const NodesPage: React.FC = () => {
         actionRef={actionRef}
         rowKey="id"
         search={{
+        form={{
+          syncToUrl: true,
+        }}
           labelWidth: 'auto',
         }}
         scroll={{ x: 'max-content' }}
