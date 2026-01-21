@@ -1,0 +1,29 @@
+.global-search {
+  display: inline-block;
+  margin-right: 16px;
+
+  :global {
+    .ant-input-affix-wrapper {
+      border-radius: 20px;
+      transition: all 0.3s;
+
+      &:hover,
+      &:focus-within {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+    }
+
+    .ant-select-dropdown {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .ant-select-item {
+      padding: 8px 12px;
+
+      &:hover {
+        background-color: #f5f5f5;
+      }
+    }
+  }
+}
