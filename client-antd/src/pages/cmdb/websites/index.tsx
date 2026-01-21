@@ -687,7 +687,19 @@ const WebsitesPage: React.FC = () => {
           <Form.Item label="HTTPS 配置">
             <Space size="large">
               <Form.Item name="https" valuePropName="checked" noStyle>
-                <Checkbox>启用 HTTPS</Checkbox>
+                <Checkbox
+                  onChange={(e) => {
+                    // 当取消 HTTPS 时，同时取消跳转和 HSTS
+                    if (!e.target.checked) {
+                      form.setFieldsValue({
+                        httpsForceRedirect: false,
+                        hstsEnabled: false,
+                      });
+                    }
+                  }}
+                >
+                  启用 HTTPS
+                </Checkbox>
               </Form.Item>
               <Form.Item
                 name="httpsForceRedirect"

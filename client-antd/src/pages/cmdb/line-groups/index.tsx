@@ -113,7 +113,7 @@ const LineGroupsPage: React.FC = () => {
     setEditingGroup(record);
     form.setFieldsValue({
       name: record.name,
-      nodeGroups: record.nodeGroups,
+      nodeGroup: record.nodeGroups[0], // 单选，取第一个
       cnamePrefix: record.cname.split('.')[0],
       domain: record.cname.split('.').slice(1).join('.'),
     });
@@ -151,7 +151,7 @@ const LineGroupsPage: React.FC = () => {
               ? {
                   ...g,
                   name: values.name,
-                  nodeGroups: values.nodeGroups,
+                  nodeGroups: [values.nodeGroup], // 单选，转为数组
                   cname,
                 }
               : g
@@ -163,7 +163,7 @@ const LineGroupsPage: React.FC = () => {
         const newGroup: LineGroupItem = {
           id: Date.now().toString(),
           name: values.name,
-          nodeGroups: values.nodeGroups,
+          nodeGroups: [values.nodeGroup], // 单选，转为数组
           cname,
           nodeCount: Math.floor(Math.random() * 20) + 1,
         };
@@ -374,15 +374,13 @@ const LineGroupsPage: React.FC = () => {
 
             {/* 添加节点分组 */}
             <Form.Item
-              name="nodeGroups"
+              name="nodeGroup"
               label="添加节点分组"
               rules={[{ required: true, message: '请选择节点分组' }]}
             >
               <Select
-                mode="multiple"
                 placeholder="请选择节点分组"
                 options={availableNodeGroups}
-                maxTagCount="responsive"
               />
             </Form.Item>
           </Form>

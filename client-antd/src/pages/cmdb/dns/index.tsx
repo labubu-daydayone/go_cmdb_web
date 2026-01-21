@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ProTable } from '@ant-design/pro-components';
 import { Button, Drawer, Form, Input, Switch, Space, message, Popconfirm, Tag, Typography } from 'antd';
-import { PlusOutlined, EyeOutlined, EyeInvisibleOutlined, CopyOutlined } from '@ant-design/icons';
+import { PlusOutlined, EyeOutlined, EyeInvisibleOutlined, CopyOutlined, FileTextOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
 
@@ -115,6 +115,21 @@ const DNSConfigPage = () => {
       dataIndex: 'domain',
       key: 'domain',
       width: 200,
+      render: (domain: string, record: DNSConfig) => (
+        <Space>
+          <span>{domain}</span>
+          <Button
+            type="link"
+            size="small"
+            icon={<FileTextOutlined />}
+            onClick={() => {
+              // TODO: 跳转到解析记录页面
+              message.info(`查看 ${domain} 的解析记录`);
+            }}
+            title="查看解析记录"
+          />
+        </Space>
+      ),
     },
     {
       title: 'Token',
