@@ -322,7 +322,7 @@ const LineGroupsPage: React.FC = () => {
         destroyOnClose
       >
         <div style={{ padding: '0 24px' }}>
-          <Form form={form} layout="vertical">
+          <Form form={form} layout="horizontal" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
             {/* 名称 */}
             <Form.Item
               name="name"

@@ -399,25 +399,15 @@ const OriginGroupsPage: React.FC = () => {
               <div>
                 <Button
                   type="dashed"
-                  icon={<PlusOutlined />}
                   onClick={handleAddAddress}
                   style={{ marginBottom: 16, width: '100%' }}
                 >
-                  添加回源地址
+                  + 添加回源
                 </Button>
                 {addresses.map((addr, index) => (
-                  <div
-                    key={addr.id}
-                    style={{
-                      marginBottom: 16,
-                      padding: 12,
-                      border: '1px solid #d9d9d9',
-                      borderRadius: 4,
-                    }}
-                  >
+                  <div key={addr.id} style={{ marginBottom: 12 }}>
                     <Space direction="vertical" style={{ width: '100%' }}>
-                      <Space wrap>
-                        <span>类型:</span>
+                      <Space wrap style={{ width: '100%' }}>
                         <Select
                           value={addr.type}
                           onChange={(value) => handleUpdateAddress(addr.id, 'type', value)}
@@ -426,7 +416,6 @@ const OriginGroupsPage: React.FC = () => {
                           <Select.Option value="主源">主源</Select.Option>
                           <Select.Option value="备源">备源</Select.Option>
                         </Select>
-                        <span>协议:</span>
                         <Select
                           value={addr.protocol}
                           onChange={(value) => handleUpdateAddress(addr.id, 'protocol', value)}
@@ -435,11 +424,8 @@ const OriginGroupsPage: React.FC = () => {
                           <Select.Option value="http">HTTP</Select.Option>
                           <Select.Option value="https">HTTPS</Select.Option>
                         </Select>
-                      </Space>
-                      <Space wrap style={{ width: '100%' }}>
-                        <span>地址:</span>
                         <Input
-                          placeholder="示例: 8.8.8.8:80"
+                          placeholder="IP 或域名"
                           value={addr.ip ? `${addr.ip}${addr.port && addr.port !== 80 ? ':' + addr.port : ''}` : ''}
                           onChange={(e) => {
                             const value = e.target.value;
@@ -453,16 +439,14 @@ const OriginGroupsPage: React.FC = () => {
                           }}
                           style={{ width: 200 }}
                         />
-                        <span>权重:</span>
                         <InputNumber
                           min={1}
                           max={100}
                           value={addr.weight}
                           onChange={(value) => handleUpdateAddress(addr.id, 'weight', value || 10)}
                           style={{ width: 80 }}
+                          placeholder="权重"
                         />
-                      </Space>
-                      <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
                         {addresses.length > 1 && (
                           <Button danger onClick={() => handleRemoveAddress(addr.id)}>
                             删除
