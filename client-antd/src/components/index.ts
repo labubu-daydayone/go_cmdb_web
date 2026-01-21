@@ -8,6 +8,5 @@
 import Footer from './Footer';
 import { Question, SelectLang } from './RightContent';
 import { AvatarDropdown, AvatarName } from './RightContent/AvatarDropdown';
-import GlobalSearch from './GlobalSearch';
 
-export { AvatarDropdown, AvatarName, Footer, GlobalSearch, Question, SelectLang };
+export { AvatarDropdown, AvatarName, Footer, Question, SelectLang };

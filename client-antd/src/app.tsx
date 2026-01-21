@@ -8,7 +8,6 @@ import {
   AvatarDropdown,
   AvatarName,
   Footer,
-  GlobalSearch,
   Question,
   SelectLang,
 } from '@/components';
@@ -67,7 +66,6 @@ export const layout: RunTimeLayoutConfig = ({
 }) => {
   return {
     actionsRender: () => [
-      <GlobalSearch key="GlobalSearch" />,
       <Question key="doc" />,
       <SelectLang key="SelectLang" />,
     ],
