@@ -116,6 +116,12 @@ export default [
         name: 'dns',
         component: './cmdb/dns',
       },
+      {
+        path: '/website/dns/records/:domainId',
+        name: 'dns-records',
+        component: './cmdb/dns/records',
+        hideInMenu: true,
+      },
     ],
   },
   {

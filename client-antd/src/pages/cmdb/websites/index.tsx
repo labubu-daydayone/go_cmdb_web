@@ -662,14 +662,14 @@ const WebsitesPage: React.FC = () => {
             </Form.Item>
           )}
 
-          {/* 线路配置 */}
+          {/* 线路配置（数据来自线路分组） */}
           <Form.Item
             name="lineGroup"
             label="线路配置"
-            initialValue="线路1"
             rules={[{ required: true, message: '请选择线路组' }]}
+            tooltip="数据来源：线路分组"
           >
-            <Select style={{ width: 200 }}>
+            <Select placeholder="请选择线路分组" style={{ width: 200 }}>
               <Select.Option value="线路1">线路1</Select.Option>
               <Select.Option value="线路2">线路2</Select.Option>
               <Select.Option value="线路3">线路3</Select.Option>

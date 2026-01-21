@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from '@umijs/max';
 import { ProTable } from '@ant-design/pro-components';
 import { Button, Drawer, Form, Input, Switch, Space, message, Popconfirm, Tag, Typography } from 'antd';
 import { PlusOutlined, EyeOutlined, EyeInvisibleOutlined, CopyOutlined, FileTextOutlined } from '@ant-design/icons';
@@ -32,6 +33,7 @@ const DNSConfigPage = () => {
   ]);
 
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const navigate = useNavigate();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [showTokens, setShowTokens] = useState<Set<string>>(new Set());
@@ -123,8 +125,8 @@ const DNSConfigPage = () => {
             size="small"
             icon={<FileTextOutlined />}
             onClick={() => {
-              // TODO: 跳转到解析记录页面
-              message.info(`查看 ${domain} 的解析记录`);
+              // 跳转到解析记录页面
+              navigate(`/website/dns/records/${record.id}`);
             }}
             title="查看解析记录"
           />
