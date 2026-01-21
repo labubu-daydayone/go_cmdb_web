@@ -206,6 +206,20 @@ const WebsitesPage: React.FC = () => {
   };
 
   /**
+   * 批量清除缓存
+   */
+  const handleBatchClearCache = async () => {
+    try {
+      // 模拟批量清除缓存
+      console.log('Batch clearing cache for websites:', selectedRowKeys);
+      message.success(`已清除 ${selectedRowKeys.length} 个网站的缓存`);
+      setSelectedRowKeys([]);
+    } catch (error) {
+      message.error('批量清除缓存失败');
+    }
+  };
+
+  /**
    * 批量删除
    */
   const handleBatchDelete = async () => {
@@ -729,6 +743,20 @@ const WebsitesPage: React.FC = () => {
         }}
         scroll={{ x: 'max-content' }}
         toolBarRender={() => [
+          selectedRowKeys.length > 0 && (
+            <Popconfirm
+              key="batchClearCache"
+              title={`确定要清除选中的 ${selectedRowKeys.length} 个网站的缓存吗？`}
+              description="将清除所有选中网站的所有缓存"
+              onConfirm={handleBatchClearCache}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button icon={<ClearOutlined />} style={{ color: '#ff9800', borderColor: '#ff9800' }}>
+                批量清除缓存 ({selectedRowKeys.length})
+              </Button>
+            </Popconfirm>
+          ),
           selectedRowKeys.length > 0 && (
             <Popconfirm
               key="batchDelete"

@@ -437,20 +437,21 @@ const OriginGroupsPage: React.FC = () => {
                         </Select>
                       </Space>
                       <Space wrap style={{ width: '100%' }}>
-                        <span>IP:</span>
+                        <span>地址:</span>
                         <Input
-                          placeholder="请输入 IP 地址"
-                          value={addr.ip}
-                          onChange={(e) => handleUpdateAddress(addr.id, 'ip', e.target.value)}
+                          placeholder="示例: 8.8.8.8:80"
+                          value={addr.ip ? `${addr.ip}${addr.port && addr.port !== 80 ? ':' + addr.port : ''}` : ''}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            const parts = value.split(':');
+                            handleUpdateAddress(addr.id, 'ip', parts[0]);
+                            if (parts[1]) {
+                              handleUpdateAddress(addr.id, 'port', Number(parts[1]));
+                            } else {
+                              handleUpdateAddress(addr.id, 'port', 80);
+                            }
+                          }}
                           style={{ width: 200 }}
-                        />
-                        <span>端口:</span>
-                        <InputNumber
-                          min={1}
-                          max={65535}
-                          value={addr.port}
-                          onChange={(value) => handleUpdateAddress(addr.id, 'port', value || 80)}
-                          style={{ width: 100 }}
                         />
                         <span>权重:</span>
                         <InputNumber
