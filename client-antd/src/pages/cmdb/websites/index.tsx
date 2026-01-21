@@ -1,7 +1,7 @@
 import { PlusOutlined, EditOutlined, DeleteOutlined, ClearOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, Tag, message, Popconfirm, Tabs, Space, Input, Select, InputNumber, Drawer, Form, Checkbox, Row, Col } from 'antd';
+import { Button, Tag, message, Popconfirm, Tabs, Space, Input, Select, InputNumber, Drawer, Form, Checkbox, Row, Col, Modal, Radio, Alert } from 'antd';
 import { useRef, useState, useEffect } from 'react';
 
 const { TabPane } = Tabs;
@@ -106,6 +106,14 @@ const WebsitesPage: React.FC = () => {
   const [editRedirectStatusCode, setEditRedirectStatusCode] = useState<301 | 302>(301);
   const [editSelectedTemplate, setEditSelectedTemplate] = useState('');
   
+  // 清除缓存相关状态
+  const [clearCacheModalVisible, setClearCacheModalVisible] = useState(false);
+  const [clearCacheWebsiteId, setClearCacheWebsiteId] = useState<string>('');
+  const [clearCacheWebsiteDomain, setClearCacheWebsiteDomain] = useState<string>('');
+  const [clearCacheType, setClearCacheType] = useState<'all' | 'url' | 'directory'>('all');
+  const [clearCacheUrl, setClearCacheUrl] = useState('');
+  const [clearCacheDirectory, setClearCacheDirectory] = useState('');
+  
   // 使用 mock 数据模拟 Socket.IO
   const [websites, setWebsites] = useState<WebsiteItem[]>(generateMockWebsites());
   const [wsConnected, setWsConnected] = useState(true); // mock 始终连接
@@ -143,12 +151,55 @@ const WebsitesPage: React.FC = () => {
   };
 
   /**
+   * 打开清除缓存对话框
+   */
+  const openClearCacheModal = (id: string, domain: string) => {
+    setClearCacheWebsiteId(id);
+    setClearCacheWebsiteDomain(domain);
+    setClearCacheType('all');
+    setClearCacheUrl('');
+    setClearCacheDirectory('');
+    setClearCacheModalVisible(true);
+  };
+
+  /**
    * 处理清除缓存
    */
-  const handleClearCache = async (id: string, domain: string) => {
+  const handleClearCache = async () => {
+    // 验证输入
+    if (clearCacheType === 'url' && !clearCacheUrl) {
+      message.error('请输入要清除的 URL 地址');
+      return;
+    }
+    if (clearCacheType === 'directory' && !clearCacheDirectory) {
+      message.error('请输入要清除的目录路径');
+      return;
+    }
+
     try {
-      // 模拟清除缓存
-      message.success(`已清除 ${domain} 的缓存`);
+      let successMessage = '';
+      switch (clearCacheType) {
+        case 'all':
+          successMessage = `已清除网站 ${clearCacheWebsiteDomain} 的所有缓存`;
+          break;
+        case 'url':
+          successMessage = `已清除 URL: ${clearCacheUrl} 的缓存`;
+          break;
+        case 'directory':
+          successMessage = `已清除目录: ${clearCacheDirectory} 的缓存`;
+          break;
+      }
+
+      // 模拟清除缓存 API 调用
+      console.log('Clearing cache:', {
+        websiteId: clearCacheWebsiteId,
+        type: clearCacheType,
+        url: clearCacheUrl,
+        directory: clearCacheDirectory,
+      });
+
+      message.success(successMessage);
+      setClearCacheModalVisible(false);
     } catch (error) {
       message.error('清除缓存失败');
     }
@@ -407,7 +458,7 @@ const WebsitesPage: React.FC = () => {
           type="link"
           size="small"
           icon={<ClearOutlined />}
-          onClick={() => handleClearCache(record.id, record.domain)}
+          onClick={() => openClearCacheModal(record.id, record.domain)}
           style={{ color: '#ff9800' }}
         >
           清除缓存
@@ -776,6 +827,78 @@ const WebsitesPage: React.FC = () => {
       >
         {renderFormContent(editForm, true)}
       </Drawer>
+
+      {/* 清除缓存对话框 */}
+      <Modal
+        title="清除缓存"
+        open={clearCacheModalVisible}
+        onOk={handleClearCache}
+        onCancel={() => setClearCacheModalVisible(false)}
+        okText="确认清除"
+        cancelText="取消"
+        okButtonProps={{
+          disabled:
+            (clearCacheType === 'url' && !clearCacheUrl) ||
+            (clearCacheType === 'directory' && !clearCacheDirectory),
+          danger: true,
+        }}
+        width={520}
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          {/* 清除类型选择 */}
+          <div>
+            <div style={{ marginBottom: 12, fontWeight: 500 }}>清除类型</div>
+            <Radio.Group
+              value={clearCacheType}
+              onChange={(e) => setClearCacheType(e.target.value)}
+              style={{ width: '100%' }}
+            >
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Radio value="all">清除所有缓存</Radio>
+                <Radio value="url">指定 URL 清除</Radio>
+                <Radio value="directory">清除目录</Radio>
+              </Space>
+            </Radio.Group>
+          </div>
+
+          {/* URL 输入框 */}
+          {clearCacheType === 'url' && (
+            <div>
+              <div style={{ marginBottom: 8, fontWeight: 500 }}>URL 地址</div>
+              <Input
+                value={clearCacheUrl}
+                onChange={(e) => setClearCacheUrl(e.target.value)}
+                placeholder="例如: https://example.com/path/to/file.html"
+              />
+            </div>
+          )}
+
+          {/* 目录输入框 */}
+          {clearCacheType === 'directory' && (
+            <div>
+              <div style={{ marginBottom: 8, fontWeight: 500 }}>目录路径</div>
+              <Input
+                value={clearCacheDirectory}
+                onChange={(e) => setClearCacheDirectory(e.target.value)}
+                placeholder="例如: /images/ 或 /static/"
+              />
+            </div>
+          )}
+
+          {/* 提示信息 */}
+          <Alert
+            message={
+              clearCacheType === 'all'
+                ? '将清除该网站的所有缓存，需要重新生成。'
+                : clearCacheType === 'url'
+                ? '将清除指定 URL 的缓存。'
+                : '将清除指定目录下的所有缓存。'
+            }
+            type="warning"
+            showIcon
+          />
+        </Space>
+      </Modal>
     </>
   );
 };
