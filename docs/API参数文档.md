@@ -12,6 +12,19 @@
 
 ## 统一响应格式
 
+### HTTP状态码与响应code同步规范
+
+**重要**: HTTP状态码与响应体中的`code`字段保持一致，确保客户端可以通过任一方式判断请求结果。
+
+| 场景 | HTTP状态码 | body.code | body.message 示例 |
+|------|-----------|-----------|------------------|
+| 成功 | 200 | 200 | "success" |
+| 参数错误 | 400 | 400 | "参数错误" |
+| 未认证 | 401 | 401 | "未认证" |
+| 无权限 | 403 | 403 | "无权限" |
+| 资源不存在 | 404 | 404 | "资源不存在" |
+| 服务器错误 | 500 | 500 | "服务器内部错误" |
+
 ### 成功响应
 ```json
 {
@@ -48,13 +61,34 @@
 
 ## WebSocket 实时更新
 
-### 连接地址
-```
-ws://your-domain/
+### 技术栈
+- **协议**: Socket.IO
+- **连接路径**: `ws://your-domain/ws`
+- **认证方式**: Cookie Session认证
+
+### 认证机制
+
+1. **登录后获取Session Cookie**:
+   - 用户通过 `POST /api/v1/auth/login` 登录成功后，服务端会下发HttpOnly session cookie
+   - Cookie会自动存储在浏览器中
+
+2. **WebSocket自动带上Cookie**:
+   - WebSocket连接时，同域请求会自动带上session cookie
+   - 无需在WS握手时手动传递token
+
+3. **客户端连接示例**:
+```javascript
+import io from 'socket.io-client';
+
+const socket = io('ws://your-domain/ws', {
+  withCredentials: true  // 自动带cookie
+});
 ```
 
-### 认证
-WebSocket连接会自动使用HTTP会话进行认证，无需额外传递token。
+### 连接地址
+```
+ws://your-domain/ws
+```
 
 ### 网站列表实时更新
 
@@ -68,16 +102,35 @@ WebSocket连接会自动使用HTTP会话进行认证，无需额外传递token�
 socket.emit('request:websites');
 ```
 
-#### 监听更新事件
+服务端响应:
+```javascript
+socket.on('websites:initial', (data) => {
+  // data 结构:
+  {
+    items: Website[],      // 网站列表
+    total: number,         // 总数
+    version: number        // 数据版本号（用于断线重连后对比）
+  }
+});
+```
+
+#### 监听增量更新事件
 ```javascript
 socket.on('websites:update', (update) => {
   // update 结构:
   {
+    eventId: number,       // 事件ID（递增，用于断线重连后对比）
     type: 'add' | 'update' | 'delete',
-    data: {
-      // Website对象或更新数据
-    }
+    data: Website | { id: number }  // 删除时只返回id
   }
+});
+```
+
+#### 断线重连机制
+```javascript
+socket.on('reconnect', () => {
+  // 重连后重新请求全量数据
+  socket.emit('request:websites');
 });
 ```
 
@@ -126,7 +179,7 @@ socket.on('websites:update', (update) => {
 ## 1. 认证接口
 
 ### 1.1 用户登录
-**接口**: `POST /auth/login`
+**接口**: `POST /api/v1/auth/login`
 
 **请求体**:
 ```json
@@ -146,9 +199,30 @@ socket.on('websites:update', (update) => {
     "user": {
       "id": 1,
       "username": "admin",
-      "role": "admin"
+      "email": "admin@example.com",
+      "role": "admin"  // 用户角色: admin=管理员 | readonly=只读用户
     }
   }
+}
+```
+
+**字段说明**:
+- `token`: JWT令牌，用于后续请求认证
+- `user.id`: 用户ID（int类型）
+- `user.username`: 用户名
+- `user.email`: 用户邮箱
+- `user.role`: 用户角色
+  - `admin`: 管理员，拥有所有权限
+  - `readonly`: 只读用户，仅可查看数据
+
+**JWT Claims 结构**:
+```json
+{
+  "uid": 1,                    // 用户ID
+  "sub": "admin",              // 用户名
+  "role": "admin",             // 用户角色
+  "exp": 1737532800,           // 过期时间（Unix时间戳）
+  "iat": 1737446400            // 签发时间（Unix时间戳）
 }
 ```
 
@@ -233,8 +307,8 @@ socket.on('websites:update', (update) => {
     "status": "active",
     "createdDate": "2024-01-15",
     "originConfig": {
-      "id": "origin-config-1",
-      "websiteId": "website-1",
+      "id": 1,
+      "websiteId": 1,
       "originIPs": [
         {
           "id": "origin-1-0",
@@ -364,9 +438,9 @@ socket.on('websites:update', (update) => {
 
 | 字段 | 数据来源 | 接口 | 说明 |
 |------|---------|------|------|
-| `lineGroup` | 线路分组 | `GET /line-groups` | 从线路分组列表中选择 |
-| `originConfig.template` | 回源分组 | `GET /origin-groups` | 从回源分组列表中选择 |
-| `cacheRules` | 缓存设置 | `GET /cache-settings` | 从缓存设置列表中选择 |
+| `lineGroup` | 线路分组 | `GET /api/v1/line-groups` | 从线路分组列表中选择 |
+| `originConfig.template` | 回源分组 | `GET /api/v1/origin-groups` | 从回源分组列表中选择 |
+| `cacheRules` | 缓存设置 | `GET /api/v1/cache-settings` | 从缓存设置列表中选择 |
 
 **默认值**:
 - 默认回源配置类型: `template` (使用分组)
@@ -376,7 +450,7 @@ socket.on('websites:update', (update) => {
 - 默认证书类型: `auto`
 
 ### 2.4 更新网站
-**接口**: `POST /websites/update`
+**接口**: `POST /api/v1/websites/update`
 
 **请求体**:
 ```json
@@ -387,16 +461,22 @@ socket.on('websites:update', (update) => {
   "https": boolean,
   "status": "active | inactive",
   "originConfig": {
-    "type": "origin | redirect | template",
+    "type": "origin | redirect | template",  // 回源类型（三选一）
+    // 当 type = "origin" (手动回源) 时，只需要 originIPs
     "originIPs": [
       {
-        "ip": "string",
-        "remark": "string"
+        "type": "primary | backup",  // 主源 | 备源
+        "protocol": "http | https",  // 协议
+        "address": "string",          // 地址 (如: 8.8.8.8:80)
+        "weight": number,             // 权重
+        "enabled": boolean            // 是否启用
       }
     ],
+    // 当 type = "redirect" (重定向) 时，只需要 redirectUrl 和 redirectStatusCode
     "redirectUrl": "string",
-    "redirectStatusCode": 301 | 302,
-    "template": "string"
+    "redirectStatusCode": 301 | 302,  // 301=永久重定向, 302=临时重定向
+    // 当 type = "template" (使用分组) 时，只需要 template
+    "template": "string"  // 回源分组名称
   },
   "httpsConfig": {
     "forceRedirect": boolean,
@@ -409,8 +489,16 @@ socket.on('websites:update', (update) => {
 }
 ```
 
+**字段说明**:
+- `originConfig`: 回源配置对象（三种模式三选一）
+  - `type="origin"`: 手动回源，必须有originIPs，禁止redirect/template字段
+  - `type="redirect"`: 重定向，必须有redirectUrl/redirectStatusCode
+  - `type="template"`: 使用分组，必须有template
+- `httpsConfig`: HTTPS配置对象（可选，仅当https=true时有效）
+- `cacheRules`: 缓存规则名称（可选）
+
 ### 2.5 删除网站
-**接口**: `POST /websites/delete`
+**接口**: `POST /api/v1/websites/delete`
 
 **请求体**:
 ```json
@@ -420,7 +508,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 2.6 清除缓存
-**接口**: `POST /websites/clear-cache`
+**接口**: `POST /api/v1/websites/clear-cache`
 
 **请求体**:
 ```json
@@ -433,7 +521,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 2.7 批量清除缓存
-**接口**: `POST /websites/batch-clear-cache`
+**接口**: `POST /api/v1/websites/batch-clear-cache`
 
 **请求体**:
 ```json
@@ -447,7 +535,7 @@ socket.on('websites:update', (update) => {
 ## 3. 域名管理
 
 ### 3.1 获取域名列表
-**接口**: `GET /domains`
+**接口**: `GET /api/v1/domains`
 
 **查询参数**:
 | 参数名 | 类型 | 必填 | 说明 |
@@ -482,7 +570,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 3.2 添加域名
-**接口**: `POST /domains`
+**接口**: `POST /api/v1/domains`
 
 **请求体**:
 ```json
@@ -494,7 +582,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 3.3 更新域名
-**接口**: `POST /domains/update`
+**接口**: `POST /api/v1/domains/update`
 
 **请求体**:
 ```json
@@ -508,7 +596,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 3.4 删除域名
-**接口**: `POST /domains/delete`
+**接口**: `POST /api/v1/domains/delete`
 
 **请求体**:
 ```json
@@ -522,7 +610,7 @@ socket.on('websites:update', (update) => {
 ## 4. 证书管理
 
 ### 4.1 获取证书列表
-**接口**: `GET /certificates`
+**接口**: `GET /api/v1/certificates`
 
 **查询参数**:
 | 参数名 | 类型 | 必填 | 说明 |
@@ -544,9 +632,9 @@ socket.on('websites:update', (update) => {
         "domain": "example.com",
         "provider": "letsencrypt",
         "status": "valid",
-        "issueDate": "2024-01-15 10:30:00",
-        "expiryDate": "2025-01-15 10:30:00",
-        "updatedAt": "2024-01-20 15:20:15",
+        "issueDate": "2024-01-15T10:30:00+08:00",
+        "expiryDate": "2025-01-15T10:30:00+08:00",
+        "updatedAt": "2024-01-20T15:20:15+08:00",
         "certificate": "-----BEGIN CERTIFICATE-----\n...",
         "privateKey": "-----BEGIN RSA PRIVATE KEY-----\n..."
       }
@@ -559,7 +647,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 4.2 更新证书
-**接口**: `POST /certificates/update`
+**接口**: `POST /api/v1/certificates/update`
 
 **请求体**:
 ```json
@@ -571,7 +659,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 4.3 删除证书
-**接口**: `POST /certificates/delete`
+**接口**: `POST /api/v1/certificates/delete`
 
 **请求体**:
 ```json
@@ -585,7 +673,7 @@ socket.on('websites:update', (update) => {
 ## 5. API密钥管理
 
 ### 5.1 获取API密钥列表
-**接口**: `GET /api-keys`
+**接口**: `GET /api/v1/api-keys`
 
 **查询参数**:
 | 参数名 | 类型 | 必填 | 说明 |
@@ -607,7 +695,7 @@ socket.on('websites:update', (update) => {
         "account": "admin@example.com",
         "accountType": "管理员",
         "apiKey": "sk_live_xxxxxxxxxxxxx",
-        "createdAt": "2024-01-15"
+        "createdDate": "2024-01-15"
       }
     ],
     "total": 10,
@@ -618,7 +706,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 5.2 添加API密钥
-**接口**: `POST /api-keys`
+**接口**: `POST /api/v1/api-keys`
 
 **请求体**:
 ```json
@@ -642,7 +730,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 5.3 删除API密钥
-**接口**: `POST /api-keys/delete`
+**接口**: `POST /api/v1/api-keys/delete`
 
 **请求体**:
 ```json
@@ -656,7 +744,7 @@ socket.on('websites:update', (update) => {
 ## 6. 节点管理
 
 ### 6.1 获取节点列表
-**接口**: `GET /nodes`
+**接口**: `GET /api/v1/nodes`
 
 **查询参数**:
 | 参数名 | 类型 | 必填 | 说明 |
@@ -701,7 +789,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 6.2 添加节点
-**接口**: `POST /nodes`
+**接口**: `POST /api/v1/nodes`
 
 **请求体**:
 ```json
@@ -719,7 +807,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 6.3 更新节点
-**接口**: `POST /nodes/update`
+**接口**: `POST /api/v1/nodes/update`
 
 **请求体**:
 ```json
@@ -734,7 +822,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 6.4 删除节点
-**接口**: `POST /nodes/delete`
+**接口**: `POST /api/v1/nodes/delete`
 
 **请求体**:
 ```json
@@ -744,7 +832,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 6.5 添加子IP
-**接口**: `POST /nodes/add-subip`
+**接口**: `POST /api/v1/nodes/add-subip`
 
 **请求体**:
 ```json
@@ -759,7 +847,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 6.6 删除子IP
-**接口**: `POST /nodes/delete-subip`
+**接口**: `POST /api/v1/nodes/delete-subip`
 
 **请求体**:
 ```json
@@ -770,7 +858,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 6.7 切换子IP状态
-**接口**: `POST /nodes/toggle-subip`
+**接口**: `POST /api/v1/nodes/toggle-subip`
 
 **请求体**:
 ```json
@@ -786,7 +874,7 @@ socket.on('websites:update', (update) => {
 ## 7. 线路分组
 
 ### 7.1 获取线路分组列表
-**接口**: `GET /line-groups`
+**接口**: `GET /api/v1/line-groups`
 
 **查询参数**:
 | 参数名 | 类型 | 必填 | 说明 |
@@ -819,7 +907,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 7.2 添加线路分组
-**接口**: `POST /line-groups`
+**接口**: `POST /api/v1/line-groups`
 
 **请求体**:
 ```json
@@ -831,7 +919,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 7.3 更新线路分组
-**接口**: `POST /line-groups/update`
+**接口**: `POST /api/v1/line-groups/update`
 
 **请求体**:
 ```json
@@ -844,7 +932,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 7.4 删除线路分组
-**接口**: `POST /line-groups/delete`
+**接口**: `POST /api/v1/line-groups/delete`
 
 **请求体**:
 ```json
@@ -858,7 +946,7 @@ socket.on('websites:update', (update) => {
 ## 8. 节点分组
 
 ### 8.1 获取节点分组列表
-**接口**: `GET /node-groups`
+**接口**: `GET /api/v1/node-groups`
 
 **查询参数**:
 | 参数名 | 类型 | 必填 | 说明 |
@@ -897,7 +985,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 8.2 添加节点分组
-**接口**: `POST /node-groups`
+**接口**: `POST /api/v1/node-groups`
 
 **请求体**:
 ```json
@@ -913,7 +1001,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 8.3 更新节点分组
-**接口**: `POST /node-groups/update`
+**接口**: `POST /api/v1/node-groups/update`
 
 **请求体**:
 ```json
@@ -925,7 +1013,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 8.4 删除节点分组
-**接口**: `POST /node-groups/delete`
+**接口**: `POST /api/v1/node-groups/delete`
 
 **请求体**:
 ```json
@@ -939,7 +1027,7 @@ socket.on('websites:update', (update) => {
 ## 9. 回源分组
 
 ### 9.1 获取回源分组列表
-**接口**: `GET /origin-groups`
+**接口**: `GET /api/v1/origin-groups`
 
 **查询参数**:
 | 参数名 | 类型 | 必填 | 说明 |
@@ -983,7 +1071,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 9.2 添加回源分组
-**接口**: `POST /origin-groups`
+**接口**: `POST /api/v1/origin-groups`
 
 **请求体**:
 ```json
@@ -1005,7 +1093,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 9.3 更新回源分组
-**接口**: `POST /origin-groups/update`
+**接口**: `POST /api/v1/origin-groups/update`
 
 **请求体**:
 ```json
@@ -1030,7 +1118,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 9.4 删除回源分组
-**接口**: `POST /origin-groups/delete`
+**接口**: `POST /api/v1/origin-groups/delete`
 
 **请求体**:
 ```json
@@ -1044,7 +1132,7 @@ socket.on('websites:update', (update) => {
 ## 10. DNS配置
 
 ### 10.1 获取DNS配置列表
-**接口**: `GET /dns-config`
+**接口**: `GET /api/v1/dns-config`
 
 **查询参数**:
 | 参数名 | 类型 | 必填 | 说明 |
@@ -1077,7 +1165,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 10.2 添加DNS配置
-**接口**: `POST /dns-config`
+**接口**: `POST /api/v1/dns-config`
 
 **请求体**:
 ```json
@@ -1088,7 +1176,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 10.3 删除DNS配置
-**接口**: `POST /dns-config/delete`
+**接口**: `POST /api/v1/dns-config/delete`
 
 **请求体**:
 ```json
@@ -1098,7 +1186,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 10.4 获取DNS解析记录
-**接口**: `GET /dns-records/:domainId`
+**接口**: `GET /api/v1/dns-records/:domainId`
 
 **路径参数**:
 | 参数名 | 类型 | 必填 | 说明 |
@@ -1121,8 +1209,8 @@ socket.on('websites:update', (update) => {
         "value": "cdn-node-1.example.com",
         "ttl": 600,
         "status": "active",
-        "createdAt": "2024-01-15 10:30:00",
-        "updatedAt": "2024-01-15 10:30:00"
+        "createdAt": "2024-01-15T10:30:00+08:00",
+        "updatedAt": "2024-01-15T10:30:00+08:00"
       },
       {
         "id": 2,
@@ -1132,8 +1220,8 @@ socket.on('websites:update', (update) => {
         "value": "cdn-node-2.example.com",
         "ttl": 600,
         "status": "active",
-        "createdAt": "2024-01-15 11:00:00",
-        "updatedAt": "2024-01-15 11:00:00"
+        "createdAt": "2024-01-15T11:00:00+08:00",
+        "updatedAt": "2024-01-15T11:00:00+08:00"
       }
     ]
   }
@@ -1160,7 +1248,7 @@ socket.on('websites:update', (update) => {
 ## 11. 缓存设置
 
 ### 11.1 获取缓存设置列表
-**接口**: `GET /cache-settings`
+**接口**: `GET /api/v1/cache-settings`
 
 **查询参数**:
 | 参数名 | 类型 | 必填 | 说明 |
@@ -1199,7 +1287,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 11.2 添加缓存设置
-**接口**: `POST /cache-settings`
+**接口**: `POST /api/v1/cache-settings`
 
 **请求体**:
 ```json
@@ -1217,7 +1305,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 11.3 更新缓存设置
-**接口**: `POST /cache-settings/update`
+**接口**: `POST /api/v1/cache-settings/update`
 
 **请求体**:
 ```json
@@ -1237,7 +1325,7 @@ socket.on('websites:update', (update) => {
 ```
 
 ### 11.4 删除缓存设置
-**接口**: `POST /cache-settings/delete`
+**接口**: `POST /api/v1/cache-settings/delete`
 
 **请求体**:
 ```json
@@ -1270,7 +1358,15 @@ socket.on('websites:update', (update) => {
 ### 注意事项
 1. **查询操作使用GET方法**，其他操作使用POST方法
 2. **所有ID字段都是int类型**
-3. 时间格式统一使用ISO 8601格式（YYYY-MM-DD 或 YYYY-MM-DD HH:mm:ss）
+3. **时间格式规范**:
+   - **日期时间**: 统一使用 **RFC3339** 格式（带时区）
+     - 格式: `YYYY-MM-DDTHH:mm:ss+08:00`
+     - 示例: `2024-01-15T10:30:00+08:00`
+     - 适用字段: `createdAt`, `updatedAt`, `issueDate`
+   - **纯日期**: 使用 `YYYY-MM-DD` 格式
+     - 示例: `2024-01-15`
+     - 适用字段: `createdDate`, `expiryDate`
+   - **默认时区**: `Asia/Shanghai` (UTC+8)
 4. 所有请求需要在Header中携带Token: `Authorization: Bearer <token>`
 5. 响应数据中的code为200表示成功，其他值表示失败
 6. **网站列表支持WebSocket实时更新**，详见WebSocket章节
