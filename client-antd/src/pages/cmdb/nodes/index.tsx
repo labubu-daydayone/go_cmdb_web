@@ -377,11 +377,38 @@ const NodesPage: React.FC = () => {
    * 请求数据
    */
   const request = async (params: any, sort: any, filter: any) => {
-    // 使用 mock 数据
+    // 使用 mock 数据，并处理搜索和筛选
+    let filteredData = [...nodes];
+
+    // 搜索功能：根据节点名称搜索
+    if (params.name) {
+      filteredData = filteredData.filter((item) =>
+        item.name.toLowerCase().includes(params.name.toLowerCase())
+      );
+    }
+
+    // 搜索功能：根据 IP 地址搜索
+    if (params.ip) {
+      filteredData = filteredData.filter((item) =>
+        item.ip.includes(params.ip)
+      );
+    }
+
+    // 筛选功能：根据状态筛选
+    if (params.status) {
+      filteredData = filteredData.filter((item) => item.status === params.status);
+    }
+
+    // 分页功能
+    const { current = 1, pageSize = 15 } = params;
+    const startIndex = (current - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedData = filteredData.slice(startIndex, endIndex);
+
     return {
-      data: nodes,
+      data: paginatedData,
       success: true,
-      total: nodes.length,
+      total: filteredData.length,
     };
   };
 

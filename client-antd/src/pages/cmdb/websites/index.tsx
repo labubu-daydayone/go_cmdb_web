@@ -528,11 +528,48 @@ const WebsitesPage: React.FC = () => {
    * 请求数据
    */
   const request = async (params: any, sort: any, filter: any) => {
-    // 使用 mock 数据
+    // 使用 mock 数据，并处理搜索和筛选
+    let filteredData = [...websites];
+
+    // 搜索功能：根据域名搜索
+    if (params.domain) {
+      filteredData = filteredData.filter((item) =>
+        item.domain.toLowerCase().includes(params.domain.toLowerCase())
+      );
+    }
+
+    // 筛选功能：根据 CNAME 搜索
+    if (params.cname) {
+      filteredData = filteredData.filter((item) =>
+        item.cname.toLowerCase().includes(params.cname.toLowerCase())
+      );
+    }
+
+    // 筛选功能：根据线路分组筛选
+    if (params.lineGroup) {
+      filteredData = filteredData.filter((item) => item.lineGroup === params.lineGroup);
+    }
+
+    // 筛选功能：根据状态筛选
+    if (params.status) {
+      filteredData = filteredData.filter((item) => item.status === params.status);
+    }
+
+    // 筛选功能：根据 HTTPS 筛选
+    if (params.https !== undefined) {
+      filteredData = filteredData.filter((item) => item.https === params.https);
+    }
+
+    // 分页功能
+    const { current = 1, pageSize = 15 } = params;
+    const startIndex = (current - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedData = filteredData.slice(startIndex, endIndex);
+
     return {
-      data: websites,
+      data: paginatedData,
       success: true,
-      total: websites.length,
+      total: filteredData.length,
     };
   };
 
