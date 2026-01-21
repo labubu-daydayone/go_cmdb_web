@@ -28,7 +28,12 @@ interface FormData {
   domain: string;
   lineGroup: string;
   https: boolean;
-  originIPs: { ip: string; remark: string }[];
+  originIPs: {
+    type: 'primary' | 'backup';
+    protocol: 'http' | 'https';
+    address: string;
+    weight: number;
+  }[];
   redirectUrl: string;
   redirectStatusCode: 301 | 302;
   template: string;
@@ -112,7 +117,7 @@ export default function Websites() {
     domain: '',
     lineGroup: '线路1',
     https: false,
-    originIPs: [{ ip: '', remark: '' }],
+    originIPs: [{ type: 'primary', protocol: 'http', address: '', weight: 10 }],
     redirectUrl: '',
     redirectStatusCode: 301,
     template: '',
@@ -154,7 +159,7 @@ export default function Websites() {
   const handleAddOriginIP = () => {
     setFormData({
       ...formData,
-      originIPs: [...formData.originIPs, { ip: '', remark: '' }],
+      originIPs: [...formData.originIPs, { type: 'primary', protocol: 'http', address: '', weight: 10 }],
     });
   };
 
@@ -165,9 +170,13 @@ export default function Websites() {
     });
   };
 
-  const handleOriginIPChange = (index: number, field: 'ip' | 'remark', value: string) => {
+  const handleOriginIPChange = (index: number, field: 'type' | 'protocol' | 'address' | 'weight', value: string | number) => {
     const newIPs = [...formData.originIPs];
-    newIPs[index][field] = value;
+    if (field === 'weight') {
+      newIPs[index][field] = typeof value === 'number' ? value : parseInt(value) || 1;
+    } else {
+      newIPs[index][field] = value as any;
+    }
     setFormData({ ...formData, originIPs: newIPs });
   };
 
@@ -180,7 +189,7 @@ export default function Websites() {
       domain: '',
       lineGroup: '线路1',
       https: false,
-      originIPs: [{ ip: '', remark: '' }],
+      originIPs: [{ type: 'primary', protocol: 'http', address: '', weight: 10 }],
       redirectUrl: '',
       redirectStatusCode: 301,
       template: '',
@@ -218,7 +227,7 @@ export default function Websites() {
   const handleEditWebsite = (website: Website) => {
     // 读取回源配置，如果没有则使用默认值
     const originConfig = website.originConfig || {
-      originIPs: [{ ip: '', remark: '', enabled: true }],
+      originIPs: [],
       redirectEnabled: false,
       redirectUrl: '',
       redirectStatusCode: 301 as 301 | 302,
@@ -239,8 +248,13 @@ export default function Websites() {
       https: website.https,
       // 从 originConfig 中读取回源IP，如果为空则提供一个默认项
       originIPs: originConfig.originIPs.length > 0 
-        ? originConfig.originIPs.map(ip => ({ ip: ip.ip, remark: ip.remark }))
-        : [{ ip: '', remark: '' }],
+        ? originConfig.originIPs.map(ip => ({ 
+            type: ip.type, 
+            protocol: ip.protocol, 
+            address: ip.address, 
+            weight: ip.weight 
+          }))
+        : [{ type: 'primary', protocol: 'http', address: '', weight: 10 }],
       redirectUrl: originConfig.redirectUrl || '',
       redirectStatusCode: originConfig.redirectStatusCode || 301,
       template: '',
@@ -755,19 +769,36 @@ export default function Websites() {
                       </div>
                       {formData.originIPs.map((ip, index) => (
                         <div key={index} className="flex gap-2 items-end">
+                          <select
+                            value={ip.type}
+                            onChange={(e) => handleOriginIPChange(index, 'type', e.target.value)}
+                            className="w-24 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                          >
+                            <option value="primary">主源</option>
+                            <option value="backup">备源</option>
+                          </select>
+                          <select
+                            value={ip.protocol}
+                            onChange={(e) => handleOriginIPChange(index, 'protocol', e.target.value)}
+                            className="w-24 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                          >
+                            <option value="http">HTTP</option>
+                            <option value="https">HTTPS</option>
+                          </select>
                           <input
                             type="text"
-                            value={ip.ip}
-                            onChange={(e) => handleOriginIPChange(index, 'ip', e.target.value)}
-                            placeholder="输入 IP 地址"
+                            value={ip.address}
+                            onChange={(e) => handleOriginIPChange(index, 'address', e.target.value)}
+                            placeholder="地址 (如: 8.8.8.8:80)"
                             className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                           <input
-                            type="text"
-                            value={ip.remark}
-                            onChange={(e) => handleOriginIPChange(index, 'remark', e.target.value)}
-                            placeholder="备注（如：主源站）"
-                            className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            type="number"
+                            value={ip.weight}
+                            onChange={(e) => handleOriginIPChange(index, 'weight', e.target.value)}
+                            placeholder="权重"
+                            min="1"
+                            className="w-20 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                           <button
                             onClick={() => handleRemoveOriginIP(index)}
@@ -1041,19 +1072,36 @@ export default function Websites() {
                       </div>
                       {formData.originIPs.map((ip, index) => (
                         <div key={index} className="flex gap-2 items-end">
+                          <select
+                            value={ip.type}
+                            onChange={(e) => handleOriginIPChange(index, 'type', e.target.value)}
+                            className="w-24 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                          >
+                            <option value="primary">主源</option>
+                            <option value="backup">备源</option>
+                          </select>
+                          <select
+                            value={ip.protocol}
+                            onChange={(e) => handleOriginIPChange(index, 'protocol', e.target.value)}
+                            className="w-24 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                          >
+                            <option value="http">HTTP</option>
+                            <option value="https">HTTPS</option>
+                          </select>
                           <input
                             type="text"
-                            value={ip.ip}
-                            onChange={(e) => handleOriginIPChange(index, 'ip', e.target.value)}
-                            placeholder="输入 IP 地址"
+                            value={ip.address}
+                            onChange={(e) => handleOriginIPChange(index, 'address', e.target.value)}
+                            placeholder="地址 (如: 8.8.8.8:80)"
                             className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                           <input
-                            type="text"
-                            value={ip.remark}
-                            onChange={(e) => handleOriginIPChange(index, 'remark', e.target.value)}
-                            placeholder="备注（如：主源站）"
-                            className="flex-1 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            type="number"
+                            value={ip.weight}
+                            onChange={(e) => handleOriginIPChange(index, 'weight', e.target.value)}
+                            placeholder="权重"
+                            min="1"
+                            className="w-20 px-2 py-1 border border-border rounded-lg bg-background text-foreground text-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                           <button
                             onClick={() => handleRemoveOriginIP(index)}

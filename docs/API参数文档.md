@@ -238,14 +238,18 @@ socket.on('websites:update', (update) => {
       "originIPs": [
         {
           "id": "origin-1-0",
-          "ip": "192.168.1.100",
-          "remark": "主源站",
+          "type": "primary",
+          "protocol": "https",
+          "address": "192.168.1.100:443",
+          "weight": 10,
           "enabled": true
         },
         {
           "id": "origin-1-1",
-          "ip": "192.168.1.101",
-          "remark": "备源站",
+          "type": "backup",
+          "protocol": "http",
+          "address": "192.168.1.101:80",
+          "weight": 5,
           "enabled": true
         }
       ],
@@ -269,6 +273,11 @@ socket.on('websites:update', (update) => {
 **字段说明**:
 - `originConfig`: 回源配置对象
   - `originIPs`: 回源IP列表（手动回源时使用）
+    - `type`: 类型 (primary=主源 | backup=备源)
+    - `protocol`: 协议 (http | https)
+    - `address`: 地址 (如: 8.8.8.8:80)
+    - `weight`: 权重 (整数，默认值为10)
+    - `enabled`: 是否启用
   - `redirectEnabled`: 是否启用重定向
   - `redirectUrl`: 重定向URL
   - `redirectStatusCode`: 重定向状态码 (301 | 302)

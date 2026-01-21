@@ -14,9 +14,11 @@ export interface Domain {
 
 export interface OriginIP {
   id: string;
-  ip: string;
-  remark: string;
-  enabled: boolean;
+  type: 'primary' | 'backup';  // 主源 | 备源
+  protocol: 'http' | 'https';  // 协议
+  address: string;              // 地址 (如: 8.8.8.8:80)
+  weight: number;               // 权重
+  enabled: boolean;             // 是否启用
 }
 
 export interface OriginConfig {
@@ -133,8 +135,10 @@ export const generateMockWebsites = (): Website[] => {
     for (let i = 0; i < 2; i++) {
       originIPs.push({
         id: `origin-${index}-${i}`,
-        ip: `192.168.${index}.${100 + i}`,
-        remark: i === 0 ? '主源站' : '备源站',
+        type: i === 0 ? 'primary' : 'backup',
+        protocol: index % 2 === 0 ? 'https' : 'http',
+        address: `192.168.${index}.${100 + i}:${index % 2 === 0 ? 443 : 80}`,
+        weight: i === 0 ? 10 : 5,
         enabled: true,
       });
     }
