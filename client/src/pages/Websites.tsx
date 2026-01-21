@@ -22,7 +22,7 @@ import { useListParams } from '@/hooks/useUrlParams';
 type SortField = 'domain' | 'cname' | 'lineGroup' | 'https' | 'status';
 type SortOrder = 'asc' | 'desc';
 type ConfigTab = 'https' | 'cache';
-type AddFormTab = 'origin' | 'redirect' | 'template';
+type AddFormTab = 'group' | 'redirect' | 'manual';
 
 interface FormData {
   domain: string;
@@ -104,8 +104,8 @@ export default function Websites() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [configTab, setConfigTab] = useState<ConfigTab>('https');
-  const [addFormTab, setAddFormTab] = useState<AddFormTab>('template');
-  const [editFormTab, setEditFormTab] = useState<AddFormTab>('template');
+  const [addFormTab, setAddFormTab] = useState<AddFormTab>('group');
+  const [editFormTab, setEditFormTab] = useState<AddFormTab>('group');
   const [templatePage, setTemplatePage] = useState(1);
   
   const [formData, setFormData] = useState<FormData>({
@@ -174,7 +174,7 @@ export default function Websites() {
   const resetForm = () => {
     setShowAddForm(false);
     setEditingId(null);
-    setAddFormTab('origin');
+    setAddFormTab('manual');
     setTemplatePage(1);
     setFormData({
       domain: '',
@@ -216,21 +216,53 @@ export default function Websites() {
   };
 
   const handleEditWebsite = (website: Website) => {
+    // 读取回源配置，如果没有则使用默认值
+    const originConfig = website.originConfig || {
+      originIPs: [{ ip: '', remark: '', enabled: true }],
+      redirectEnabled: false,
+      redirectUrl: '',
+      redirectStatusCode: 301 as 301 | 302,
+    };
+
+    // 读取HTTPS配置，如果没有则使用默认值
+    const httpsConfig = website.httpsConfig || {
+      forceRedirect: false,
+      hstsEnabled: false,
+      certificateType: 'auto' as 'manual' | 'auto',
+      certificateData: '',
+      privateKeyData: '',
+    };
+
     setFormData({
       domain: website.domain,
       lineGroup: website.lineGroup,
       https: website.https,
-      originIPs: [{ ip: '', remark: '' }],
-      redirectUrl: '',
-      redirectStatusCode: 301,
+      // 从 originConfig 中读取回源IP，如果为空则提供一个默认项
+      originIPs: originConfig.originIPs.length > 0 
+        ? originConfig.originIPs.map(ip => ({ ip: ip.ip, remark: ip.remark }))
+        : [{ ip: '', remark: '' }],
+      redirectUrl: originConfig.redirectUrl || '',
+      redirectStatusCode: originConfig.redirectStatusCode || 301,
       template: '',
-      httpsForceRedirect: false,
-      hstsEnabled: false,
-      certificateType: 'auto',
-      certificateData: '',
-      privateKeyData: '',
-      cacheRules: '',
+      // 从 httpsConfig 中读取HTTPS配置
+      httpsForceRedirect: httpsConfig.forceRedirect,
+      hstsEnabled: httpsConfig.hstsEnabled,
+      certificateType: httpsConfig.certificateType,
+      certificateData: httpsConfig.certificateData || '',
+      privateKeyData: httpsConfig.privateKeyData || '',
+      // 读取缓存规则
+      cacheRules: website.cacheRules || '',
     });
+    
+    // 根据回源配置设置默认tab
+    if (originConfig.redirectEnabled) {
+      setEditFormTab('redirect');
+    } else if (originConfig.originIPs.length > 0) {
+      setEditFormTab('manual');
+    } else {
+      setEditFormTab('group');
+    }
+    
     setEditingId(website.id);
     setShowAddForm(true);
   };
@@ -602,12 +634,16 @@ export default function Websites() {
                     </div>
                   </div>
 
+                   {/* 回源配置标题 */}
+                  <div className="mb-3">
+                    <h3 className="text-sm font-medium text-foreground">回源配置</h3>
+                  </div>
                   {/* 配置切换按钮 */}
                   <div className="flex gap-2 border-b border-border overflow-x-auto">
                     <button
-                      onClick={() => setEditFormTab('template')}
+                      onClick={() => setEditFormTab('group')}
                       className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
-                        editFormTab === 'template'
+                        editFormTab === 'group'
                           ? 'text-primary border-primary'
                           : 'text-muted-foreground border-transparent hover:text-foreground'
                       }`}
@@ -625,19 +661,18 @@ export default function Websites() {
                       重定向
                     </button>
                     <button
-                      onClick={() => setEditFormTab('origin')}
+                      onClick={() => setEditFormTab('manual')}
                       className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
-                        editFormTab === 'origin'
+                        editFormTab === 'manual'
                           ? 'text-primary border-primary'
                           : 'text-muted-foreground border-transparent hover:text-foreground'
                       }`}
                     >
-                      回源配置
+                      手动回源
                     </button>
                   </div>
-
                   {/* 使用分组内容 */}
-                  {editFormTab === 'template' && (
+                  {editFormTab === 'group' && (
                     <div className="space-y-3">
                       <table className="w-full text-xs border-collapse">
                         <thead>
@@ -711,7 +746,7 @@ export default function Websites() {
                   )}
 
                   {/* 回源配置内容 */}
-                  {editFormTab === 'origin' && (
+                  {editFormTab === 'manual' && (
                     <div className="space-y-3">
                       <div>
                         <button onClick={handleAddOriginIP} className="text-primary text-xs hover:text-primary/80 font-medium">
@@ -885,12 +920,16 @@ export default function Websites() {
                     </div>
                   </div>
 
+                   {/* 回源配置标题 */}
+                  <div className="mb-3">
+                    <h3 className="text-sm font-medium text-foreground">回源配置</h3>
+                  </div>
                   {/* 配置切换按钮 */}
                   <div className="flex gap-2 border-b border-border overflow-x-auto">
                     <button
-                      onClick={() => setAddFormTab('template')}
+                      onClick={() => setAddFormTab('group')}
                       className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
-                        addFormTab === 'template'
+                        addFormTab === 'group'
                           ? 'text-primary border-primary'
                           : 'text-muted-foreground border-transparent hover:text-foreground'
                       }`}
@@ -908,19 +947,18 @@ export default function Websites() {
                       重定向
                     </button>
                     <button
-                      onClick={() => setAddFormTab('origin')}
+                      onClick={() => setAddFormTab('manual')}
                       className={`flex-1 px-4 py-2 font-medium text-center text-xs transition-colors border-b-2 whitespace-nowrap ${
-                        addFormTab === 'origin'
+                        addFormTab === 'manual'
                           ? 'text-primary border-primary'
                           : 'text-muted-foreground border-transparent hover:text-foreground'
                       }`}
                     >
-                      回源配置
+                      手动回源
                     </button>
                   </div>
-
                   {/* 使用分组内容 */}
-                  {addFormTab === 'template' && (
+                  {addFormTab === 'group' && (
                     <div className="space-y-3">
                       <table className="w-full text-xs border-collapse">
                         <thead>
@@ -994,7 +1032,7 @@ export default function Websites() {
                   )}
 
                   {/* 回源配置内容 */}
-                  {addFormTab === 'origin' && (
+                  {addFormTab === 'manual' && (
                     <div className="space-y-3">
                       <div>
                         <button onClick={handleAddOriginIP} className="text-primary text-xs hover:text-primary/80 font-medium">

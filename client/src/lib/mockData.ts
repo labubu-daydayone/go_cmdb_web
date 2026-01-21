@@ -29,6 +29,14 @@ export interface OriginConfig {
   createdDate: string;
 }
 
+export interface HTTPSConfig {
+  forceRedirect: boolean;
+  hstsEnabled: boolean;
+  certificateType: 'manual' | 'auto';
+  certificateData?: string;
+  privateKeyData?: string;
+}
+
 export interface Website {
   id: string;
   domain: string;
@@ -38,6 +46,8 @@ export interface Website {
   status: 'active' | 'inactive';
   createdDate: string;
   originConfig?: OriginConfig;
+  cacheRules?: string;  // 缓存规则名称
+  httpsConfig?: HTTPSConfig;  // HTTPS配置
 }
 
 export interface Server {
@@ -116,6 +126,7 @@ export const generateMockDomains = (): Domain[] => {
 export const generateMockWebsites = (): Website[] => {
   const domains = ['example.com', 'myapp.io', 'company.cn', 'service.net', 'platform.org', 'cloud.dev', 'api.tech', 'data.ai', 'web.store', 'mobile.app'];
   const lineGroups = ['线路1', '线路2', '线路3', '线路4'];
+  const cacheRulesOptions = ['首页缓存', '图片缓存', 'API缓存', undefined];
 
   return domains.map((domain, index) => {
     const originIPs: OriginIP[] = [];
@@ -145,6 +156,14 @@ export const generateMockWebsites = (): Website[] => {
         redirectStatusCode: index % 3 === 0 ? (index % 2 === 0 ? 301 : 302) : undefined,
         createdDate: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       },
+      cacheRules: cacheRulesOptions[index % cacheRulesOptions.length],
+      httpsConfig: index % 2 === 0 ? {
+        forceRedirect: index % 4 === 0,
+        hstsEnabled: index % 3 === 0,
+        certificateType: index % 5 === 0 ? 'manual' : 'auto',
+        certificateData: index % 5 === 0 ? '-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJAKZ...' : undefined,
+        privateKeyData: index % 5 === 0 ? '-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA...' : undefined,
+      } : undefined,
     };
   });
 };

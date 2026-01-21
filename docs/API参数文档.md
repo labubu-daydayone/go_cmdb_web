@@ -233,22 +233,26 @@ socket.on('websites:update', (update) => {
     "status": "active",
     "createdDate": "2024-01-15",
     "originConfig": {
-      "type": "origin",
+      "id": "origin-config-1",
+      "websiteId": "website-1",
       "originIPs": [
         {
+          "id": "origin-1-0",
           "ip": "192.168.1.100",
-          "remark": "主服务器"
+          "remark": "主源站",
+          "enabled": true
         },
         {
+          "id": "origin-1-1",
           "ip": "192.168.1.101",
-          "remark": "备用服务器"
+          "remark": "备源站",
+          "enabled": true
         }
-      ]
-    },
-    "redirectConfig": {
-      "enabled": false,
-      "url": "",
-      "statusCode": 301
+      ],
+      "redirectEnabled": false,
+      "redirectUrl": "",
+      "redirectStatusCode": 301,
+      "createdDate": "2024-01-15"
     },
     "httpsConfig": {
       "forceRedirect": true,
@@ -257,10 +261,24 @@ socket.on('websites:update', (update) => {
       "certificateData": "",
       "privateKeyData": ""
     },
-    "cacheRules": "静态资源缓存"
+    "cacheRules": "首页缓存"
   }
 }
 ```
+
+**字段说明**:
+- `originConfig`: 回源配置对象
+  - `originIPs`: 回源IP列表（手动回源时使用）
+  - `redirectEnabled`: 是否启用重定向
+  - `redirectUrl`: 重定向URL
+  - `redirectStatusCode`: 重定向状态码 (301 | 302)
+- `httpsConfig`: HTTPS配置对象（可选，仅当https=true时有效）
+  - `forceRedirect`: 强制HTTPS跳转
+  - `hstsEnabled`: 启用HSTS
+  - `certificateType`: 证书类型 (manual=手动 | auto=自动)
+  - `certificateData`: 证书内容（仅manual时需要）
+  - `privateKeyData`: 私钥内容（仅manual时需要）
+- `cacheRules`: 缓存规则名称（可选）
 
 ### 2.3 添加网站
 **接口**: `POST /websites`
