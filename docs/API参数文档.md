@@ -1,10 +1,13 @@
 # CMDB系统 API接口文档
 
 ## 说明
-- **所有接口统一使用 POST 方法**（包括查询、创建、更新、删除操作）
+- **HTTP方法规范**：
+  - 查询操作（列表）：使用 **GET** 方法
+  - 创建/更新/删除：使用 **POST** 方法（不使用PUT/DELETE）
 - **所有ID字段类型为 int**（整数）
 - 基础URL: `/api/v1`
 - 认证方式: Bearer Token (在请求头中携带: `Authorization: Bearer <token>`)
+- **实时更新**: 部分列表页面使用WebSocket实现实时数据更新（详见WebSocket章节）
 
 ## 统一响应格式
 
@@ -36,6 +39,83 @@
     "total": 100,
     "page": 1,
     "pageSize": 15
+  }
+}
+```
+
+---
+
+## WebSocket 实时更新
+
+### 连接地址
+```
+ws://your-domain/
+```
+
+### 认证
+WebSocket连接会自动使用HTTP会话进行认证，无需额外传递token。
+
+### 网站列表实时更新
+
+#### 连接后自动事件
+- `connected`: 连接成功确认
+- `websites:initial`: 初始数据加载
+
+#### 请求初始数据
+客户端发送:
+```javascript
+socket.emit('request:websites');
+```
+
+#### 监听更新事件
+```javascript
+socket.on('websites:update', (update) => {
+  // update 结构:
+  {
+    type: 'add' | 'update' | 'delete',
+    data: {
+      // Website对象或更新数据
+    }
+  }
+});
+```
+
+#### 更新类型说明
+
+**添加网站** (`type: 'add'`):
+```json
+{
+  "type": "add",
+  "data": {
+    "id": 1,
+    "domain": "example.com",
+    "cname": "cdn.example.com",
+    "lineGroup": "线路1",
+    "https": true,
+    "status": "active",
+    "createdDate": "2024-01-15"
+  }
+}
+```
+
+**更新网站** (`type: 'update'`):
+```json
+{
+  "type": "update",
+  "data": {
+    "id": 1,
+    "domain": "new-example.com",
+    "https": false
+  }
+}
+```
+
+**删除网站** (`type: 'delete'`):
+```json
+{
+  "type": "delete",
+  "data": {
+    "id": 1
   }
 }
 ```
@@ -75,18 +155,18 @@
 
 ## 2. 网站管理
 
-### 2.1 获取网站列表
-**接口**: `POST /websites/list`
+> **注意**: 网站列表支持WebSocket实时更新，详见WebSocket章节
 
-**请求体**:
-```json
-{
-  "page": 1,
-  "pageSize": 15,
-  "search": "string",
-  "status": "all | active | inactive"
-}
-```
+### 2.1 获取网站列表
+**接口**: `GET /websites`
+
+**查询参数**:
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| page | int | 否 | 页码，默认1 |
+| pageSize | int | 否 | 每页数量，默认15 |
+| search | string | 否 | 搜索关键词（域名） |
+| status | string | 否 | 状态筛选：all, active, inactive |
 
 **响应示例**:
 ```json
@@ -102,7 +182,22 @@
         "lineGroup": "线路1",
         "https": true,
         "status": "active",
-        "createdDate": "2024-01-15"
+        "createdDate": "2024-01-15",
+        "originConfig": {
+          "type": "origin",
+          "originIPs": [
+            {
+              "ip": "192.168.1.100",
+              "remark": "主服务器"
+            }
+          ]
+        },
+        "httpsConfig": {
+          "forceRedirect": true,
+          "hstsEnabled": true,
+          "certificateType": "auto"
+        },
+        "cacheRules": "静态资源缓存"
       }
     ],
     "total": 50,
@@ -112,19 +207,85 @@
 }
 ```
 
-### 2.2 添加网站
-**接口**: `POST /websites/add`
+### 2.2 获取单个网站详情
+**接口**: `GET /websites/:id`
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "id": 1,
+    "domain": "example.com",
+    "cname": "example.cdn.com",
+    "lineGroup": "线路1",
+    "https": true,
+    "status": "active",
+    "createdDate": "2024-01-15",
+    "originConfig": {
+      "type": "origin",
+      "originIPs": [
+        {
+          "ip": "192.168.1.100",
+          "remark": "主服务器"
+        },
+        {
+          "ip": "192.168.1.101",
+          "remark": "备用服务器"
+        }
+      ]
+    },
+    "redirectConfig": {
+      "enabled": false,
+      "url": "",
+      "statusCode": 301
+    },
+    "httpsConfig": {
+      "forceRedirect": true,
+      "hstsEnabled": true,
+      "certificateType": "auto",
+      "certificateData": "",
+      "privateKeyData": ""
+    },
+    "cacheRules": "静态资源缓存"
+  }
+}
+```
+
+### 2.3 添加网站
+**接口**: `POST /websites`
 
 **请求体**:
 ```json
 {
   "domain": "string",
   "lineGroup": "string",
-  "https": boolean
+  "https": boolean,
+  "originConfig": {
+    "type": "origin | redirect | template",
+    "originIPs": [
+      {
+        "ip": "string",
+        "remark": "string"
+      }
+    ],
+    "redirectUrl": "string",
+    "redirectStatusCode": 301 | 302,
+    "template": "string"
+  },
+  "httpsConfig": {
+    "forceRedirect": boolean,
+    "hstsEnabled": boolean,
+    "certificateType": "manual | auto",
+    "certificateData": "string",
+    "privateKeyData": "string"
+  },
+  "cacheRules": "string"
 }
 ```
 
-### 2.3 更新网站
+### 2.4 更新网站
 **接口**: `POST /websites/update`
 
 **请求体**:
@@ -134,11 +295,31 @@
   "domain": "string",
   "lineGroup": "string",
   "https": boolean,
-  "status": "active | inactive"
+  "status": "active | inactive",
+  "originConfig": {
+    "type": "origin | redirect | template",
+    "originIPs": [
+      {
+        "ip": "string",
+        "remark": "string"
+      }
+    ],
+    "redirectUrl": "string",
+    "redirectStatusCode": 301 | 302,
+    "template": "string"
+  },
+  "httpsConfig": {
+    "forceRedirect": boolean,
+    "hstsEnabled": boolean,
+    "certificateType": "manual | auto",
+    "certificateData": "string",
+    "privateKeyData": "string"
+  },
+  "cacheRules": "string"
 }
 ```
 
-### 2.4 删除网站
+### 2.5 删除网站
 **接口**: `POST /websites/delete`
 
 **请求体**:
@@ -148,13 +329,26 @@
 }
 ```
 
-### 2.5 批量清除缓存
+### 2.6 清除缓存
 **接口**: `POST /websites/clear-cache`
 
 **请求体**:
 ```json
 {
-  "ids": [1, 2, 3]
+  "websiteId": 1,
+  "type": "all | url | directory",
+  "url": "string",
+  "directory": "string"
+}
+```
+
+### 2.7 批量清除缓存
+**接口**: `POST /websites/batch-clear-cache`
+
+**请求体**:
+```json
+{
+  "websiteIds": [1, 2, 3]
 }
 ```
 
@@ -163,17 +357,15 @@
 ## 3. 域名管理
 
 ### 3.1 获取域名列表
-**接口**: `POST /domains/list`
+**接口**: `GET /domains`
 
-**请求体**:
-```json
-{
-  "page": 1,
-  "pageSize": 15,
-  "search": "string",
-  "status": "all | active | inactive | expired"
-}
-```
+**查询参数**:
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| page | int | 否 | 页码 |
+| pageSize | int | 否 | 每页数量 |
+| search | string | 否 | 搜索域名 |
+| status | string | 否 | 状态筛选：all, active, inactive, expired |
 
 **响应示例**:
 ```json
@@ -200,7 +392,7 @@
 ```
 
 ### 3.2 添加域名
-**接口**: `POST /domains/add`
+**接口**: `POST /domains`
 
 **请求体**:
 ```json
@@ -240,17 +432,15 @@
 ## 4. 证书管理
 
 ### 4.1 获取证书列表
-**接口**: `POST /certificates/list`
+**接口**: `GET /certificates`
 
-**请求体**:
-```json
-{
-  "page": 1,
-  "pageSize": 15,
-  "search": "string",
-  "status": "all | valid | expiring | expired"
-}
-```
+**查询参数**:
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| page | int | 否 | 页码 |
+| pageSize | int | 否 | 每页数量 |
+| search | string | 否 | 搜索域名 |
+| status | string | 否 | 状态筛选：all, valid, expiring, expired |
 
 **响应示例**:
 ```json
@@ -305,16 +495,14 @@
 ## 5. API密钥管理
 
 ### 5.1 获取API密钥列表
-**接口**: `POST /api-keys/list`
+**接口**: `GET /api-keys`
 
-**请求体**:
-```json
-{
-  "page": 1,
-  "pageSize": 15,
-  "search": "string"
-}
-```
+**查询参数**:
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| page | int | 否 | 页码 |
+| pageSize | int | 否 | 每页数量 |
+| search | string | 否 | 搜索关键词 |
 
 **响应示例**:
 ```json
@@ -340,7 +528,7 @@
 ```
 
 ### 5.2 添加API密钥
-**接口**: `POST /api-keys/add`
+**接口**: `POST /api-keys`
 
 **请求体**:
 ```json
@@ -378,18 +566,16 @@
 ## 6. 节点管理
 
 ### 6.1 获取节点列表
-**接口**: `POST /nodes/list`
+**接口**: `GET /nodes`
 
-**请求体**:
-```json
-{
-  "page": 1,
-  "pageSize": 15,
-  "search": "string",
-  "status": "all | online | offline | maintenance",
-  "enabled": "all | true | false"
-}
-```
+**查询参数**:
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| page | int | 否 | 页码 |
+| pageSize | int | 否 | 每页数量 |
+| search | string | 否 | 搜索关键词 |
+| status | string | 否 | 状态筛选：all, online, offline, maintenance |
+| enabled | string | 否 | 启用状态：all, true, false |
 
 **响应示例**:
 ```json
@@ -425,7 +611,7 @@
 ```
 
 ### 6.2 添加节点
-**接口**: `POST /nodes/add`
+**接口**: `POST /nodes`
 
 **请求体**:
 ```json
@@ -510,16 +696,14 @@
 ## 7. 线路分组
 
 ### 7.1 获取线路分组列表
-**接口**: `POST /line-groups/list`
+**接口**: `GET /line-groups`
 
-**请求体**:
-```json
-{
-  "page": 1,
-  "pageSize": 15,
-  "search": "string"
-}
-```
+**查询参数**:
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| page | int | 否 | 页码 |
+| pageSize | int | 否 | 每页数量 |
+| search | string | 否 | 搜索关键词 |
 
 **响应示例**:
 ```json
@@ -545,7 +729,7 @@
 ```
 
 ### 7.2 添加线路分组
-**接口**: `POST /line-groups/add`
+**接口**: `POST /line-groups`
 
 **请求体**:
 ```json
@@ -584,16 +768,14 @@
 ## 8. 节点分组
 
 ### 8.1 获取节点分组列表
-**接口**: `POST /node-groups/list`
+**接口**: `GET /node-groups`
 
-**请求体**:
-```json
-{
-  "page": 1,
-  "pageSize": 15,
-  "search": "string"
-}
-```
+**查询参数**:
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| page | int | 否 | 页码 |
+| pageSize | int | 否 | 每页数量 |
+| search | string | 否 | 搜索关键词 |
 
 **响应示例**:
 ```json
@@ -625,7 +807,7 @@
 ```
 
 ### 8.2 添加节点分组
-**接口**: `POST /node-groups/add`
+**接口**: `POST /node-groups`
 
 **请求体**:
 ```json
@@ -667,17 +849,15 @@
 ## 9. 回源分组
 
 ### 9.1 获取回源分组列表
-**接口**: `POST /origin-groups/list`
+**接口**: `GET /origin-groups`
 
-**请求体**:
-```json
-{
-  "page": 1,
-  "pageSize": 15,
-  "search": "string",
-  "status": "all | active | inactive"
-}
-```
+**查询参数**:
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| page | int | 否 | 页码 |
+| pageSize | int | 否 | 每页数量 |
+| search | string | 否 | 搜索关键词 |
+| status | string | 否 | 状态筛选：all, active, inactive |
 
 **响应示例**:
 ```json
@@ -713,7 +893,7 @@
 ```
 
 ### 9.2 添加回源分组
-**接口**: `POST /origin-groups/add`
+**接口**: `POST /origin-groups`
 
 **请求体**:
 ```json
@@ -774,17 +954,15 @@
 ## 10. DNS配置
 
 ### 10.1 获取DNS配置列表
-**接口**: `POST /dns-config/list`
+**接口**: `GET /dns-config`
 
-**请求体**:
-```json
-{
-  "page": 1,
-  "pageSize": 15,
-  "search": "string",
-  "status": "all | active | inactive"
-}
-```
+**查询参数**:
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| page | int | 否 | 页码 |
+| pageSize | int | 否 | 每页数量 |
+| search | string | 否 | 搜索域名 |
+| status | string | 否 | 状态筛选：all, active, inactive |
 
 **响应示例**:
 ```json
@@ -809,7 +987,7 @@
 ```
 
 ### 10.2 添加DNS配置
-**接口**: `POST /dns-config/add`
+**接口**: `POST /dns-config`
 
 **请求体**:
 ```json
@@ -834,16 +1012,14 @@
 ## 11. 缓存设置
 
 ### 11.1 获取缓存设置列表
-**接口**: `POST /cache-settings/list`
+**接口**: `GET /cache-settings`
 
-**请求体**:
-```json
-{
-  "page": 1,
-  "pageSize": 15,
-  "search": "string"
-}
-```
+**查询参数**:
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| page | int | 否 | 页码 |
+| pageSize | int | 否 | 每页数量 |
+| search | string | 否 | 搜索关键词 |
 
 **响应示例**:
 ```json
@@ -875,7 +1051,7 @@
 ```
 
 ### 11.2 添加缓存设置
-**接口**: `POST /cache-settings/add`
+**接口**: `POST /cache-settings`
 
 **请求体**:
 ```json
@@ -944,8 +1120,9 @@
 | search | string | 否 | "" | 搜索关键词 |
 
 ### 注意事项
-1. **所有接口都使用POST方法**
+1. **查询操作使用GET方法**，其他操作使用POST方法
 2. **所有ID字段都是int类型**
 3. 时间格式统一使用ISO 8601格式（YYYY-MM-DD 或 YYYY-MM-DD HH:mm:ss）
 4. 所有请求需要在Header中携带Token: `Authorization: Bearer <token>`
 5. 响应数据中的code为200表示成功，其他值表示失败
+6. **网站列表支持WebSocket实时更新**，详见WebSocket章节
