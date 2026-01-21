@@ -650,10 +650,7 @@ const WebsitesPage: React.FC = () => {
               label="域名"
               rules={[{ required: true, message: '请输入域名' }]}
             >
-              <Input.TextArea
-                rows={4}
-                placeholder="请输入域名，每行一个，例如：&#10;example.com&#10;www.example.com&#10;api.example.com"
-              />
+              <Input placeholder="请输入域名，例如：example.com" />
             </Form.Item>
           ) : (
             <Form.Item
