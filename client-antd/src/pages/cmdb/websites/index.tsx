@@ -653,8 +653,12 @@ const WebsitesPage: React.FC = () => {
               name="domain"
               label="域名"
               rules={[{ required: true, message: '请输入域名' }]}
+              extra="每行一个域名，支持批量添加"
             >
-              <Input placeholder="请输入域名，例如：example.com" />
+              <Input.TextArea
+                rows={4}
+                placeholder="请输入域名，每行一个，例如：&#10;example.com&#10;www.example.com&#10;api.example.com"
+              />
             </Form.Item>
           )}
 
@@ -696,6 +700,8 @@ const WebsitesPage: React.FC = () => {
                         hstsEnabled: false,
                       });
                     }
+                    // 强制重新渲染
+                    setTimeout(() => form.validateFields(['httpsForceRedirect', 'hstsEnabled']), 0);
                   }}
                 >
                   启用 HTTPS
@@ -705,25 +711,25 @@ const WebsitesPage: React.FC = () => {
                 name="httpsForceRedirect"
                 valuePropName="checked"
                 noStyle
-                dependencies={['https']}
+                shouldUpdate={(prevValues, currentValues) => prevValues.https !== currentValues.https}
               >
-                <Checkbox
-                  disabled={!form.getFieldValue('https')}
-                >
-                  HTTPS 跳转
-                </Checkbox>
+                {({ getFieldValue }) => (
+                  <Checkbox disabled={!getFieldValue('https')}>
+                    HTTPS 跳转
+                  </Checkbox>
+                )}
               </Form.Item>
               <Form.Item
                 name="hstsEnabled"
                 valuePropName="checked"
                 noStyle
-                dependencies={['https']}
+                shouldUpdate={(prevValues, currentValues) => prevValues.https !== currentValues.https}
               >
-                <Checkbox
-                  disabled={!form.getFieldValue('https')}
-                >
-                  HSTS
-                </Checkbox>
+                {({ getFieldValue }) => (
+                  <Checkbox disabled={!getFieldValue('https')}>
+                    HSTS
+                  </Checkbox>
+                )}
               </Form.Item>
             </Space>
           </Form.Item>
