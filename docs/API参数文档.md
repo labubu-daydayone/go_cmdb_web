@@ -1097,6 +1097,64 @@ socket.on('websites:update', (update) => {
 }
 ```
 
+### 10.4 获取DNS解析记录
+**接口**: `GET /dns-records/:domainId`
+
+**路径参数**:
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| domainId | int | 是 | DNS配置ID |
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "domain": "example.com",
+    "records": [
+      {
+        "id": 1,
+        "domainId": 1,
+        "type": "CNAME",
+        "host": "www",
+        "value": "cdn-node-1.example.com",
+        "ttl": 600,
+        "status": "active",
+        "createdAt": "2024-01-15 10:30:00",
+        "updatedAt": "2024-01-15 10:30:00"
+      },
+      {
+        "id": 2,
+        "domainId": 1,
+        "type": "CNAME",
+        "host": "@",
+        "value": "cdn-node-2.example.com",
+        "ttl": 600,
+        "status": "active",
+        "createdAt": "2024-01-15 11:00:00",
+        "updatedAt": "2024-01-15 11:00:00"
+      }
+    ]
+  }
+}
+```
+
+**字段说明**:
+- `type`: 记录类型 (CNAME | A | AAAA | TXT)
+- `host`: 主机记录 (@表示根域名, www表示子域名)
+- `value`: 记录值 (对于CNAME记录，这里是CDN节点域名)
+- `ttl`: 生存时间(秒)
+- `status`: 状态
+  - `active`: 正常
+  - `pending`: 待生效
+  - `error`: 错误
+
+**功能说明**:
+- 这些CNAME记录由系统自动管理，用于CDN加速服务
+- 当添加新网站时，系统会自动创建CNAME解析记录
+- 记录状态“待生效”表示DNS解析正在传播中，通常需要几分钟到几小时
+
 ---
 
 ## 11. 缓存设置

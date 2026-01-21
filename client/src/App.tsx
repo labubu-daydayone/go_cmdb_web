@@ -11,6 +11,7 @@ import Domains from "./pages/Domains";
 import Websites from "./pages/Websites";
 import LineGroups from "./pages/LineGroups";
 import DNSConfig from "./pages/DNSConfig";
+import DNSRecords from "./pages/DNSRecords";
 import Nodes from "./pages/Nodes";
 import NodeGroups from "./pages/NodeGroups";
 import OriginManagement from "./pages/OriginManagement";
@@ -51,6 +52,9 @@ function Router() {
       </Route>
       <Route path={"/dns-config"}>
         <ProtectedRoute component={DNSConfig} />
+      </Route>
+      <Route path={"/dns-records/:domainId"}>
+        <ProtectedRoute component={DNSRecords} />
       </Route>
       <Route path={"/nodes"}>
         <ProtectedRoute component={Nodes} />

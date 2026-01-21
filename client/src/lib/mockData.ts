@@ -80,6 +80,18 @@ export interface DNSConfig {
   status: 'active' | 'inactive';
 }
 
+export interface DNSRecord {
+  id: string;
+  domainId: string;  // 所属DNS配置ID
+  type: 'CNAME' | 'A' | 'AAAA' | 'TXT';  // 记录类型
+  host: string;  // 主机记录 (如: www, @, *)
+  value: string;  // 记录值
+  ttl: number;  // TTL值(秒)
+  status: 'active' | 'pending' | 'error';  // 状态
+  createdAt: string;  // 创建时间
+  updatedAt: string;  // 更新时间
+}
+
 export interface SubIP {
   id: string;
   ip: string;
@@ -291,4 +303,50 @@ export const generateTimeSeriesData = (days: number = 30) => {
     });
   }
   return data;
+};
+
+// 生成DNS解析记录mock数据
+export const generateDNSRecords = (domainId: string, domainName: string, count: number = 5): DNSRecord[] => {
+  const records: DNSRecord[] = [];
+  const hosts = ['www', '@', 'cdn', 'api', 'static', 'img', 'video', 'download'];
+  const statuses: Array<'active' | 'pending' | 'error'> = ['active', 'active', 'active', 'pending'];
+  
+  for (let i = 0; i < count; i++) {
+    const host = hosts[i % hosts.length];
+    const status = statuses[Math.floor(Math.random() * statuses.length)];
+    const createdDate = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000);
+    const updatedDate = new Date(createdDate.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000);
+    
+    records.push({
+      id: `dns-record-${domainId}-${i}`,
+      domainId,
+      type: 'CNAME',
+      host: host === '@' ? '@' : host,
+      value: `cdn-node-${i + 1}.example.com`,
+      ttl: [600, 1800, 3600][Math.floor(Math.random() * 3)],
+      status,
+      createdAt: createdDate.toISOString().replace('T', ' ').substring(0, 19),
+      updatedAt: updatedDate.toISOString().replace('T', ' ').substring(0, 19),
+    });
+  }
+  
+  return records;
+};
+
+// 根据域名ID获取DNS解析记录
+export const getDNSRecordsByDomain = (domainId: string) => {
+  // 模拟从DNS配置中获取域名信息
+  const dnsConfigs = [
+    { id: '1', domain: 'example.com' },
+    { id: '2', domain: 'test.com' },
+    { id: '3', domain: 'demo.com' },
+  ];
+  
+  const config = dnsConfigs.find(c => c.id === domainId);
+  const domainName = config?.domain || 'unknown.com';
+  
+  return {
+    domain: domainName,
+    records: generateDNSRecords(domainId, domainName, 8),
+  };
 };
