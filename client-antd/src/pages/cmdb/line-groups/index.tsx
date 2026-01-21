@@ -1,7 +1,7 @@
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, Tag, message, Popconfirm, Space, Drawer, Form, Input, Select } from 'antd';
+import { Button, Tag, message, Popconfirm, Space, Drawer, Form, Input, Select, Row, Col } from 'antd';
 import { useRef, useState } from 'react';
 
 /**
@@ -64,6 +64,20 @@ const LineGroupsPage: React.FC = () => {
     { label: '节点分组5', value: '节点分组5' },
     { label: '节点分组6', value: '节点分组6' },
   ];
+
+  // 可用的域名列表（来自 DNS 设置）
+  const availableDomains = [
+    { label: 'example.com', value: 'example.com' },
+    { label: 'test.com', value: 'test.com' },
+    { label: 'api.example.com', value: 'api.example.com' },
+    { label: 'cdn.example.com', value: 'cdn.example.com' },
+  ];
+
+  // 生成随机 CNAME 前缀
+  const generateCNAMEPrefix = () => {
+    const randomStr = Math.random().toString(36).substring(2, 8);
+    return randomStr;
+  };
 
   /**
    * 处理删除操作
@@ -308,46 +322,68 @@ const LineGroupsPage: React.FC = () => {
         destroyOnClose
       >
         <div style={{ padding: '0 24px' }}>
-          <Form form={form} layout="horizontal" labelCol={{ span: 4 }} wrapperCol={{ span: 20 }}>
-            {/* 线路名称 */}
+          <Form form={form} layout="vertical">
+            {/* 名称 */}
             <Form.Item
               name="name"
-              label="线路名称"
-              rules={[{ required: true, message: '请输入线路名称' }]}
+              label="名称"
+              rules={[{ required: true, message: '请输入线路分组名称' }]}
             >
-              <Input placeholder="例如：线路1" />
+              <Input placeholder="输入线路分组名称" style={{ width: 240 }} />
             </Form.Item>
 
-            {/* 节点组 */}
+            {/* 解析记录 */}
+            <Form.Item label="解析记录" required>
+              <Row gutter={8} align="middle">
+                <Col>
+                  <Form.Item
+                    name="cnamePrefix"
+                    noStyle
+                    rules={[{ required: true, message: '请输入前缀' }]}
+                  >
+                    <Input placeholder="前缀" style={{ width: 140 }} />
+                  </Form.Item>
+                </Col>
+                <Col>
+                  <span style={{ color: '#999' }}>.</span>
+                </Col>
+                <Col>
+                  <Form.Item
+                    name="domain"
+                    noStyle
+                    rules={[{ required: true, message: '请选择域名' }]}
+                  >
+                    <Select
+                      placeholder="-- 请选择域名 --"
+                      options={availableDomains}
+                      style={{ width: 180 }}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col>
+                  <Button
+                    onClick={() => {
+                      form.setFieldsValue({ cnamePrefix: generateCNAMEPrefix() });
+                    }}
+                  >
+                    生成
+                  </Button>
+                </Col>
+              </Row>
+            </Form.Item>
+
+            {/* 添加节点分组 */}
             <Form.Item
               name="nodeGroups"
-              label="节点组"
-              rules={[{ required: true, message: '请选择节点组' }]}
+              label="添加节点分组"
+              rules={[{ required: true, message: '请选择节点分组' }]}
             >
               <Select
                 mode="multiple"
-                placeholder="请选择节点组"
+                placeholder="请选择节点分组"
                 options={availableNodeGroups}
                 maxTagCount="responsive"
               />
-            </Form.Item>
-
-            {/* CNAME 前缀 */}
-            <Form.Item
-              name="cnamePrefix"
-              label="CNAME前缀"
-              rules={[{ required: true, message: '请输入 CNAME 前缀' }]}
-            >
-              <Input placeholder="例如：cdn1" />
-            </Form.Item>
-
-            {/* 域名 */}
-            <Form.Item
-              name="domain"
-              label="域名"
-              rules={[{ required: true, message: '请输入域名' }]}
-            >
-              <Input placeholder="例如：example.com" />
             </Form.Item>
           </Form>
         </div>
