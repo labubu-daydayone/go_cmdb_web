@@ -183,7 +183,7 @@ export default function Websites() {
   const resetForm = () => {
     setShowAddForm(false);
     setEditingId(null);
-    setAddFormTab('manual');
+    setAddFormTab('group');
     setTemplatePage(1);
     setFormData({
       domain: '',

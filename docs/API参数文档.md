@@ -360,6 +360,21 @@ socket.on('websites:update', (update) => {
    }
    ```
 
+**字段数据来源说明**:
+
+| 字段 | 数据来源 | 接口 | 说明 |
+|------|---------|------|------|
+| `lineGroup` | 线路分组 | `GET /line-groups` | 从线路分组列表中选择 |
+| `originConfig.template` | 回源分组 | `GET /origin-groups` | 从回源分组列表中选择 |
+| `cacheRules` | 缓存设置 | `GET /cache-settings` | 从缓存设置列表中选择 |
+
+**默认值**:
+- 默认回源配置类型: `template` (使用分组)
+- 默认HTTPS: `false`
+- 默认强制HTTPS重定向: `false`
+- 默认HSTS: `false`
+- 默认证书类型: `auto`
+
 ### 2.4 更新网站
 **接口**: `POST /websites/update`
 
