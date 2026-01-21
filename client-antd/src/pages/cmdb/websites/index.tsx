@@ -700,35 +700,27 @@ const WebsitesPage: React.FC = () => {
                         hstsEnabled: false,
                       });
                     }
-                    // 强制重新渲染
-                    setTimeout(() => form.validateFields(['httpsForceRedirect', 'hstsEnabled']), 0);
                   }}
                 >
                   启用 HTTPS
                 </Checkbox>
               </Form.Item>
-              <Form.Item
-                name="httpsForceRedirect"
-                valuePropName="checked"
-                noStyle
-                shouldUpdate={(prevValues, currentValues) => prevValues.https !== currentValues.https}
-              >
+              <Form.Item noStyle shouldUpdate={(prev, curr) => prev.https !== curr.https}>
                 {({ getFieldValue }) => (
-                  <Checkbox disabled={!getFieldValue('https')}>
-                    HTTPS 跳转
-                  </Checkbox>
+                  <Form.Item name="httpsForceRedirect" valuePropName="checked" noStyle>
+                    <Checkbox disabled={!getFieldValue('https')}>
+                      HTTPS 跳转
+                    </Checkbox>
+                  </Form.Item>
                 )}
               </Form.Item>
-              <Form.Item
-                name="hstsEnabled"
-                valuePropName="checked"
-                noStyle
-                shouldUpdate={(prevValues, currentValues) => prevValues.https !== currentValues.https}
-              >
+              <Form.Item noStyle shouldUpdate={(prev, curr) => prev.https !== curr.https}>
                 {({ getFieldValue }) => (
-                  <Checkbox disabled={!getFieldValue('https')}>
-                    HSTS
-                  </Checkbox>
+                  <Form.Item name="hstsEnabled" valuePropName="checked" noStyle>
+                    <Checkbox disabled={!getFieldValue('https')}>
+                      HSTS
+                    </Checkbox>
+                  </Form.Item>
                 )}
               </Form.Item>
             </Space>
