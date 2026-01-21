@@ -92,6 +92,11 @@ export default [
         component: './cmdb/origin-groups',
       },
       {
+        path: '/website/line-groups',
+        name: 'line-groups',
+        component: './cmdb/line-groups',
+      },
+      {
         path: '/website/nodes',
         name: 'nodes',
         component: './cmdb/nodes',
@@ -100,11 +105,6 @@ export default [
         path: '/website/node-groups',
         name: 'node-groups',
         component: './cmdb/node-groups',
-      },
-      {
-        path: '/website/line-groups',
-        name: 'line-groups',
-        component: './cmdb/line-groups',
       },
       {
         path: '/website/cache',
