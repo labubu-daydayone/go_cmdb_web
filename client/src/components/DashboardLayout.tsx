@@ -90,20 +90,22 @@ export default function DashboardLayout({
   const { expandedMenu, setExpandedMenu } = useMenu();
   const location = useLocation();
 
-  // 仅在初始加载时自动展开包含当前路由的父菜单，之后菜单状态由用户控制
+  // 自动展开包含当前路由的父菜单，并在页面刷新后恢复状态
   React.useEffect(() => {
-    if (expandedMenu === null) {
-      for (const item of navigationItems) {
-        if (item.children) {
-          const hasActiveChild = item.children.some(child => child.href === location);
-          if (hasActiveChild) {
+    // 检查当前路由是否在某个父菜单下
+    for (const item of navigationItems) {
+      if (item.children) {
+        const hasActiveChild = item.children.some(child => child.href === location.pathname);
+        if (hasActiveChild) {
+          // 如果当前菜单未展开，则展开它
+          if (expandedMenu !== item.label) {
             setExpandedMenu(item.label);
-            return;
           }
+          return;
         }
       }
     }
-  }, []);
+  }, [location.pathname, expandedMenu, setExpandedMenu]);
 
   return (
     <div className="flex h-screen bg-background">
@@ -238,12 +240,9 @@ export default function DashboardLayout({
                       {item.children!.map((child) => {
                         const isChildActive = location.pathname === child.href;
                         return (
-                          <div
+                          <Link
                             key={child.href}
-                            onClick={() => {
-                              // 使用window.location强制刷新页面
-                              window.location.href = child.href!;
-                            }}
+                            to={child.href!}
                             style={{
                               display: 'flex',
                               alignItems: 'center',
@@ -252,10 +251,10 @@ export default function DashboardLayout({
                               borderRadius: '8px',
                               fontSize: '14px',
                               textDecoration: 'none',
-                              color: isChildActive ? colors.sidebar.activeText : colors.sidebar.text,
-                              backgroundColor: isChildActive ? colors.sidebar.active : 'transparent',
-                              transition: 'background-color 0.2s',
-                              cursor: 'pointer',
+                              color: isChildActive ? colors.sidebar.active : colors.sidebar.text,
+                              backgroundColor: isChildActive ? colors.sidebar.activeBg : 'transparent',
+                              fontWeight: isChildActive ? 500 : 400,
+                              transition: 'all 0.2s',
                             }}
                             onMouseEnter={(e) => {
                               if (!isChildActive) {
@@ -270,7 +269,7 @@ export default function DashboardLayout({
                           >
                             {child.icon}
                             <span>{child.label}</span>
-                          </div>
+                          </Link>
                         );
                       })}
                     </div>

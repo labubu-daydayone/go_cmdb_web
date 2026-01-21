@@ -52,8 +52,9 @@ export const colors = {
     text: '#6B7280',              // 中浅灰文字
     icon: '#9CA3AF',              // 浅灰图标
     hover: '#F3F4F6',             // 浅灰悬停背景
-    active: '#6366F1',            // 紫蓝选中文字
+    active: '#6366F1',            // 紫蓝选中文字/边框
     activeBg: '#EEF2FF',          // 极浅紫蓝选中背景
+    activeText: '#4F46E5',        // 深紫蓝选中文字（更深，对比度更好）
   },
 };
 

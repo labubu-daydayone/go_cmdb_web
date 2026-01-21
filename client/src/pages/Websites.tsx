@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
 import { Pagination } from '@/components/Pagination';
@@ -46,8 +47,14 @@ interface FormData {
 }
 
 export default function Websites() {
+  const location = useLocation();
   const [websites, setWebsites] = useState<Website[]>(generateMockWebsites());
   const [wsConnected, setWsConnected] = useState(false);
+
+  // 监听路由变化，重新生成数据
+  useEffect(() => {
+    setWebsites(generateMockWebsites());
+  }, [location.pathname]);
   const [updateCount, setUpdateCount] = useState(0);
 
   // WebSocket 回调函数

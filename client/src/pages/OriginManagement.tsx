@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
 import { generateMockWebsites, Website, OriginIP } from '@/lib/mockData';
@@ -9,8 +10,16 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 
 export default function OriginManagement() {
+  const location = useLocation();
   const [websites, setWebsites] = useState<Website[]>(generateMockWebsites());
   const [selectedWebsite, setSelectedWebsite] = useState<Website | null>(websites[0] || null);
+
+  // 监听路由变化，重新生成数据
+  useEffect(() => {
+    const newWebsites = generateMockWebsites();
+    setWebsites(newWebsites);
+    setSelectedWebsite(newWebsites[0] || null);
+  }, [location.pathname]);
   const [showAddIPForm, setShowAddIPForm] = useState(false);
   const [newIP, setNewIP] = useState({ ip: '', remark: '' });
 
