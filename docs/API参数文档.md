@@ -2,12 +2,13 @@
 
 ## 说明
 - **HTTP方法规范**：
-  - 查询操作（列表）：使用 **GET** 方法
-  - 创建/更新/删除：使用 **POST** 方法（不使用PUT/DELETE）
+  - **网站列表查询**：使用 **WebSocket** 实时推送（不使用HTTP GET）
+  - **其他列表查询**：使用 **GET** 方法
+  - **创建/更新/删除**：使用 **POST** 方法（不使用PUT/DELETE）
 - **所有ID字段类型为 int**（整数）
 - 基础URL: `/api/v1`
 - 认证方式: Bearer Token (在请求头中携带: `Authorization: Bearer <token>`)
-- **实时更新**: 部分列表页面使用WebSocket实现实时数据更新（详见WebSocket章节）
+- **实时更新**: 网站列表使用WebSocket实现实时数据推送和更新（详见WebSocket章节）
 
 ## 统一响应格式
 
@@ -155,56 +156,64 @@ socket.on('websites:update', (update) => {
 
 ## 2. 网站管理
 
-> **注意**: 网站列表支持WebSocket实时更新，详见WebSocket章节
+> **重要**: 网站列表使用 **WebSocket** 实时推送，不使用HTTP GET接口。详见WebSocket章节。
 
 ### 2.1 获取网站列表
-**接口**: `GET /websites`
+**方式**: **WebSocket**
 
-**查询参数**:
-| 参数名 | 类型 | 必填 | 说明 |
-|--------|------|------|------|
-| page | int | 否 | 页码，默认1 |
-| pageSize | int | 否 | 每页数量，默认15 |
-| search | string | 否 | 搜索关键词（域名） |
-| status | string | 否 | 状态筛选：all, active, inactive |
+**说明**: 
+- 网站列表通过WebSocket实时推送，不提供HTTP GET接口
+- 客户端连接WebSocket后，发送 `request:websites` 事件请求初始数据
+- 服务端通过 `websites:initial` 事件返回完整列表
+- 后续更新通过 `websites:update` 事件实时推送
 
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "items": [
+**请求初始数据**:
+```javascript
+socket.emit('request:websites');
+```
+
+**接收初始数据**:
+```javascript
+socket.on('websites:initial', (data) => {
+  // data 结构:
+  {
+    items: [
       {
-        "id": 1,
-        "domain": "example.com",
-        "cname": "example.cdn.com",
-        "lineGroup": "线路1",
-        "https": true,
-        "status": "active",
-        "createdDate": "2024-01-15",
-        "originConfig": {
-          "type": "origin",
-          "originIPs": [
+        id: 1,
+        domain: "example.com",
+        cname: "example.cdn.com",
+        lineGroup: "线路1",
+        https: true,
+        status: "active",
+        createdDate: "2024-01-15",
+        originConfig: {
+          type: "origin",
+          originIPs: [
             {
-              "ip": "192.168.1.100",
-              "remark": "主服务器"
+              ip: "192.168.1.100",
+              remark: "主服务器"
             }
           ]
         },
-        "httpsConfig": {
-          "forceRedirect": true,
-          "hstsEnabled": true,
-          "certificateType": "auto"
+        httpsConfig: {
+          forceRedirect: true,
+          hstsEnabled: true,
+          certificateType: "auto"
         },
-        "cacheRules": "静态资源缓存"
+        cacheRules: "静态资源缓存"
       }
     ],
-    "total": 50,
-    "page": 1,
-    "pageSize": 15
+    total: 50
   }
-}
+});
+```
+
+**实时更新**:
+```javascript
+socket.on('websites:update', (update) => {
+  // update.type: 'add' | 'update' | 'delete'
+  // update.data: Website对象或更新数据
+});
 ```
 
 ### 2.2 获取单个网站详情
