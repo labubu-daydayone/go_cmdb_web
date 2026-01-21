@@ -286,33 +286,30 @@ const CacheSettingsPage = () => {
                     position: 'relative',
                   }}
                 >
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <Space style={{ width: '100%' }}>
-                      <Select
-                        style={{ width: 120 }}
-                        value={rule.ruleType}
-                        onChange={(value) => handleUpdateRule(rule.id, 'ruleType', value)}
-                      >
-                        <Select.Option value="directory">目录</Select.Option>
-                        <Select.Option value="suffix">后缀</Select.Option>
-                        <Select.Option value="file">文件</Select.Option>
-                      </Select>
-                      <Input
-                        style={{ flex: 1 }}
-                        placeholder={getPlaceholder(rule.ruleType)}
-                        value={rule.pattern}
-                        onChange={(e) => handleUpdateRule(rule.id, 'pattern', e.target.value)}
-                      />
-                    </Space>
-                    <Space>
-                      <span>TTL:</span>
-                      <InputNumber
-                        min={0}
-                        value={rule.ttl}
-                        onChange={(value) => handleUpdateRule(rule.id, 'ttl', value || 3600)}
-                        addonAfter="秒"
-                      />
-                    </Space>
+                  <Space style={{ width: '100%' }}>
+                    <Select
+                      style={{ width: 80 }}
+                      value={rule.ruleType}
+                      onChange={(value) => handleUpdateRule(rule.id, 'ruleType', value)}
+                    >
+                      <Select.Option value="directory">目录</Select.Option>
+                      <Select.Option value="suffix">后缀</Select.Option>
+                      <Select.Option value="file">文件</Select.Option>
+                    </Select>
+                    <Input
+                      style={{ flex: 1 }}
+                      placeholder={getPlaceholder(rule.ruleType)}
+                      value={rule.pattern}
+                      onChange={(e) => handleUpdateRule(rule.id, 'pattern', e.target.value)}
+                    />
+                    <span style={{ whiteSpace: 'nowrap' }}>TTL:</span>
+                    <InputNumber
+                      min={0}
+                      style={{ width: 100 }}
+                      value={rule.ttl}
+                      onChange={(value) => handleUpdateRule(rule.id, 'ttl', value || 3600)}
+                      addonAfter="秒"
+                    />
                   </Space>
                   {rules.length > 1 && (
                     <Button
