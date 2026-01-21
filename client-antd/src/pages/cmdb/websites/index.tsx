@@ -113,6 +113,12 @@ const WebsitesPage: React.FC = () => {
   const [clearCacheType, setClearCacheType] = useState<'all' | 'url' | 'directory'>('all');
   const [clearCacheUrl, setClearCacheUrl] = useState('');
   const [clearCacheDirectory, setClearCacheDirectory] = useState('');
+
+  // 批量清除缓存 Modal 状态
+  const [batchClearCacheModalVisible, setBatchClearCacheModalVisible] = useState(false);
+  const [batchClearCacheType, setBatchClearCacheType] = useState<'all' | 'url' | 'directory'>('all');
+  const [batchClearCacheUrl, setBatchClearCacheUrl] = useState('');
+  const [batchClearCacheDirectory, setBatchClearCacheDirectory] = useState('');
   
   // 使用 mock 数据模拟 Socket.IO
   const [websites, setWebsites] = useState<WebsiteItem[]>(generateMockWebsites());
@@ -206,13 +212,38 @@ const WebsitesPage: React.FC = () => {
   };
 
   /**
-   * 批量清除缓存
+   * 批量清除缓存 - 打开 Modal
    */
-  const handleBatchClearCache = async () => {
+  const handleBatchClearCacheClick = () => {
+    setBatchClearCacheModalVisible(true);
+    setBatchClearCacheType('all');
+    setBatchClearCacheUrl('');
+    setBatchClearCacheDirectory('');
+  };
+
+  /**
+   * 批量清除缓存 - 确认
+   */
+  const handleBatchClearCacheConfirm = async () => {
     try {
-      // 模拟批量清除缓存
-      console.log('Batch clearing cache for websites:', selectedRowKeys);
-      message.success(`已清除 ${selectedRowKeys.length} 个网站的缓存`);
+      console.log('Batch clearing cache:', {
+        websites: selectedRowKeys,
+        type: batchClearCacheType,
+        url: batchClearCacheUrl,
+        directory: batchClearCacheDirectory,
+      });
+      
+      let successMessage = '';
+      if (batchClearCacheType === 'all') {
+        successMessage = `已清除 ${selectedRowKeys.length} 个网站的所有缓存`;
+      } else if (batchClearCacheType === 'url') {
+        successMessage = `已清除 ${selectedRowKeys.length} 个网站的 URL: ${batchClearCacheUrl}`;
+      } else if (batchClearCacheType === 'directory') {
+        successMessage = `已清除 ${selectedRowKeys.length} 个网站的目录: ${batchClearCacheDirectory}`;
+      }
+      
+      message.success(successMessage);
+      setBatchClearCacheModalVisible(false);
       setSelectedRowKeys([]);
     } catch (error) {
       message.error('批量清除缓存失败');
@@ -758,18 +789,14 @@ const WebsitesPage: React.FC = () => {
         scroll={{ x: 'max-content' }}
         toolBarRender={() => [
           selectedRowKeys.length > 0 && (
-            <Popconfirm
+            <Button
               key="batchClearCache"
-              title={`确定要清除选中的 ${selectedRowKeys.length} 个网站的缓存吗？`}
-              description="将清除所有选中网站的所有缓存"
-              onConfirm={handleBatchClearCache}
-              okText="确定"
-              cancelText="取消"
+              icon={<ClearOutlined />}
+              style={{ color: '#ff9800', borderColor: '#ff9800' }}
+              onClick={handleBatchClearCacheClick}
             >
-              <Button icon={<ClearOutlined />} style={{ color: '#ff9800', borderColor: '#ff9800' }}>
-                批量清除缓存 ({selectedRowKeys.length})
-              </Button>
-            </Popconfirm>
+              批量清除缓存 ({selectedRowKeys.length})
+            </Button>
           ),
           selectedRowKeys.length > 0 && (
             <Popconfirm
@@ -935,6 +962,78 @@ const WebsitesPage: React.FC = () => {
                 : clearCacheType === 'url'
                 ? '将清除指定 URL 的缓存。'
                 : '将清除指定目录下的所有缓存。'
+            }
+            type="warning"
+            showIcon
+          />
+        </Space>
+      </Modal>
+
+      {/* 批量清除缓存 Modal */}
+      <Modal
+        title={`批量清除缓存 (${selectedRowKeys.length} 个网站)`}
+        open={batchClearCacheModalVisible}
+        onOk={handleBatchClearCacheConfirm}
+        onCancel={() => setBatchClearCacheModalVisible(false)}
+        okText="确认清除"
+        cancelText="取消"
+        okButtonProps={{
+          disabled:
+            (batchClearCacheType === 'url' && !batchClearCacheUrl) ||
+            (batchClearCacheType === 'directory' && !batchClearCacheDirectory),
+          danger: true,
+        }}
+        width={520}
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          {/* 清除类型选择 */}
+          <div>
+            <div style={{ marginBottom: 12, fontWeight: 500 }}>清除类型</div>
+            <Radio.Group
+              value={batchClearCacheType}
+              onChange={(e) => setBatchClearCacheType(e.target.value)}
+              style={{ width: '100%' }}
+            >
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Radio value="all">清除所有缓存</Radio>
+                <Radio value="url">指定 URL 清除</Radio>
+                <Radio value="directory">清除目录</Radio>
+              </Space>
+            </Radio.Group>
+          </div>
+
+          {/* URL 输入框 */}
+          {batchClearCacheType === 'url' && (
+            <div>
+              <div style={{ marginBottom: 8, fontWeight: 500 }}>URL 地址</div>
+              <Input
+                value={batchClearCacheUrl}
+                onChange={(e) => setBatchClearCacheUrl(e.target.value)}
+                placeholder="例如: https://example.com/path/to/file.html"
+              />
+            </div>
+          )}
+
+          {/* 目录输入框 */}
+          {batchClearCacheType === 'directory' && (
+            <div>
+              <div style={{ marginBottom: 8, fontWeight: 500 }}>目录路径</div>
+              <Input
+                value={batchClearCacheDirectory}
+                onChange={(e) => setBatchClearCacheDirectory(e.target.value)}
+                placeholder="例如: /images/ 或 /static/"
+              />
+            </div>
+          )}
+
+          {/* 提示信息 */}
+          <Alert
+            message={
+              batchClearCacheType === 'all'
+                ? `将清除 ${selectedRowKeys.length} 个网站的所有缓存，需要重新生成。`
+                : batchClearCacheType === 'url'
+                ? `将清除 ${selectedRowKeys.length} 个网站的指定 URL 缓存。`
+                : `将清除 ${selectedRowKeys.length} 个网站的指定目录缓存。`
             }
             type="warning"
             showIcon
