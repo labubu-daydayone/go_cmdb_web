@@ -102,8 +102,6 @@ const NodeGroupsPage = () => {
       name: record.name,
       description: record.description,
     });
-    // 这里应该根据实际的节点数据设置 targetKeys
-    // 简化处理：假设 subIPs 的 IP 地址可以匹配到 transferDataSource 中的 key
     setTargetKeys([]);
     setDrawerVisible(true);
   };
@@ -169,6 +167,40 @@ const NodeGroupsPage = () => {
     }
   };
 
+  // 展开行渲染 - 使用表格样式
+  const expandedRowRender = (record: NodeGroupItem) => {
+    const subIPColumns = [
+      {
+        title: 'IP 地址',
+        dataIndex: 'ip',
+        key: 'ip',
+        width: 200,
+      },
+      {
+        title: '创建日期',
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+        width: 150,
+      },
+    ];
+
+    return (
+      <div style={{ padding: '8px 48px', backgroundColor: '#fafafa' }}>
+        <ProTable
+          columns={subIPColumns}
+          dataSource={record.subIPs}
+          rowKey="id"
+          search={false}
+          pagination={false}
+          toolBarRender={false}
+          options={false}
+          showHeader={true}
+          size="small"
+        />
+      </div>
+    );
+  };
+
   const columns = [
     {
       title: '分组名称',
@@ -226,18 +258,7 @@ const NodeGroupsPage = () => {
         rowKey="id"
         search={false}
         expandable={{
-          expandedRowRender: (record) => (
-            <div style={{ padding: '16px 0' }}>
-              <strong>子 IP 列表：</strong>
-              <div style={{ marginTop: 8 }}>
-                {record.subIPs.map((subIP) => (
-                  <div key={subIP.id} style={{ padding: '4px 0' }}>
-                    {subIP.ip} - {subIP.createdAt}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ),
+          expandedRowRender,
         }}
         pagination={{
           defaultPageSize: 15,

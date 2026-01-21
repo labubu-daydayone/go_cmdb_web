@@ -1,322 +1,272 @@
-import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
-import type { ActionType, ProColumns } from '@ant-design/pro-components';
+import { useState } from 'react';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, Tag, message, Popconfirm, Typography } from 'antd';
-import { useRef, useState } from 'react';
+import { Button, Tag, Space, message, Popconfirm } from 'antd';
+import { PlusOutlined, CopyOutlined } from '@ant-design/icons';
 
-const { Paragraph } = Typography;
-
-/**
- * 证书数据类型
- */
-export type CertificateItem = {
+interface CertificateItem {
   id: string;
-  name: string;
   domain: string;
-  type: 'self-signed' | 'ca-signed' | 'lets-encrypt';
+  provider: string;
   status: 'valid' | 'expiring' | 'expired';
-  issuer: string;
-  validFrom: string;
-  validTo: string;
-  createdAt: string;
+  issueDate: string;
+  expiryDate: string;
   updatedAt: string;
-};
+  certificate: string;
+  privateKey: string;
+}
 
-/**
- * 证书管理页面
- */
-const CertificatesPage: React.FC = () => {
-  const actionRef = useRef<ActionType>();
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-
-  /**
-   * 处理删除操作
-   */
-  const handleDelete = async (id: string) => {
-    try {
-      // TODO: 调用删除 API
-      message.success('删除成功');
-      actionRef.current?.reload();
-    } catch (error) {
-      message.error('删除失败');
-    }
-  };
-
-  /**
-   * 批量删除
-   */
-  const handleBatchDelete = async () => {
-    try {
-      // TODO: 调用批量删除 API
-      message.success(`成功删除 ${selectedRowKeys.length} 个证书`);
-      setSelectedRowKeys([]);
-      actionRef.current?.reload();
-    } catch (error) {
-      message.error('批量删除失败');
-    }
-  };
-
-  /**
-   * 表格列配置
-   */
-  const columns: ProColumns<CertificateItem>[] = [
+const CertificatesPage = () => {
+  const [dataSource, setDataSource] = useState<CertificateItem[]>([
     {
-      title: '证书名称',
-      dataIndex: 'name',
-      key: 'name',
-      width: 180,
-      ellipsis: true,
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '请输入证书名称',
-          },
-        ],
-      },
+      id: '1',
+      domain: 'example.com',
+      provider: 'DigiCert Inc',
+      status: 'valid',
+      issueDate: '2024-01-01',
+      expiryDate: '2025-01-01',
+      updatedAt: '2024-01-01 10:00:00',
+      certificate: `-----BEGIN CERTIFICATE-----
+MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKSzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
+aWRnaXRzIFB0eSBMdGQwHhcNMjQwMTAxMDAwMDAwWhcNMjUwMTAxMDAwMDAwWjBF
+MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50
+ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
+CgKCAQEA1234567890...
+-----END CERTIFICATE-----`,
+      privateKey: `-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDVNGBje+6Jivwt
+H8FPQj3+Wq+vVfZqCQJxK8X7gFqZQXvPLZqzVfZqCQJxK8X7gFqZQXvPLZqzVfZq
+CQJxK8X7gFqZQXvPLZqzVfZqCQJxK8X7gFqZQXvPLZqzVfZqCQJxK8X7gFqZQXvP
+LZqzVfZqCQJxK8X7gFqZQXvPLZqzVfZqCQJxK8X7gFqZQXvPLZqzVfZqCQJxK8X7
+1234567890...
+-----END PRIVATE KEY-----`,
     },
+    {
+      id: '2',
+      domain: 'test.com',
+      provider: "Let's Encrypt",
+      status: 'expiring',
+      issueDate: '2024-11-01',
+      expiryDate: '2024-12-31',
+      updatedAt: '2024-11-01 14:30:00',
+      certificate: `-----BEGIN CERTIFICATE-----
+MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKSzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
+aWRnaXRzIFB0eSBMdGQwHhcNMjQxMTAxMDAwMDAwWhcNMjQxMjMxMDAwMDAwWjBF
+-----END CERTIFICATE-----`,
+      privateKey: `-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDVNGBje+6Jivwt
+-----END PRIVATE KEY-----`,
+    },
+    {
+      id: '3',
+      domain: 'demo.net',
+      provider: 'Self-Signed',
+      status: 'expired',
+      issueDate: '2023-01-01',
+      expiryDate: '2024-01-01',
+      updatedAt: '2023-01-01 09:00:00',
+      certificate: `-----BEGIN CERTIFICATE-----
+MIIDXTCCAkWgAwIBAgIJAKL0UG+mRKSzMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+-----END CERTIFICATE-----`,
+      privateKey: `-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDVNGBje+6Jivwt
+-----END PRIVATE KEY-----`,
+    },
+  ]);
+
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
+
+  const handleUpdate = (id: string) => {
+    message.success(`证书 ${id} 更新成功`);
+  };
+
+  const handleDelete = (id: string) => {
+    setDataSource(dataSource.filter((item) => item.id !== id));
+    message.success('删除成功');
+  };
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    message.success(`${label}已复制到剪贴板`);
+  };
+
+  const getStatusTag = (status: string) => {
+    const statusMap = {
+      valid: { color: 'success', text: '有效' },
+      expiring: { color: 'warning', text: '即将过期' },
+      expired: { color: 'error', text: '已过期' },
+    };
+    const config = statusMap[status as keyof typeof statusMap];
+    return <Tag color={config.color}>{config.text}</Tag>;
+  };
+
+  const columns = [
     {
       title: '域名',
       dataIndex: 'domain',
       key: 'domain',
       width: 200,
-      copyable: true,
-      ellipsis: true,
     },
     {
-      title: '类型',
-      dataIndex: 'type',
-      key: 'type',
-      width: 120,
-      valueType: 'select',
-      valueEnum: {
-        'self-signed': {
-          text: '自签名',
-          status: 'Default',
-        },
-        'ca-signed': {
-          text: 'CA签名',
-          status: 'Success',
-        },
-        'lets-encrypt': {
-          text: "Let's Encrypt",
-          status: 'Processing',
-        },
-      },
-      render: (_, record) => {
-        const typeMap = {
-          'self-signed': { color: 'default', text: '自签名' },
-          'ca-signed': { color: 'success', text: 'CA签名' },
-          'lets-encrypt': { color: 'processing', text: "Let's Encrypt" },
-        };
-        const type = typeMap[record.type];
-        return <Tag color={type.color}>{type.text}</Tag>;
-      },
+      title: '提供商',
+      dataIndex: 'provider',
+      key: 'provider',
+      width: 150,
     },
     {
-      title: '状态',
+      title: '证书状态',
       dataIndex: 'status',
       key: 'status',
-      width: 100,
-      valueType: 'select',
-      valueEnum: {
-        valid: {
-          text: '有效',
-          status: 'Success',
-        },
-        expiring: {
-          text: '即将过期',
-          status: 'Warning',
-        },
-        expired: {
-          text: '已过期',
-          status: 'Error',
-        },
-      },
-      render: (_, record) => {
-        const statusMap = {
-          valid: { color: 'success', text: '有效' },
-          expiring: { color: 'warning', text: '即将过期' },
-          expired: { color: 'error', text: '已过期' },
-        };
-        const status = statusMap[record.status];
-        return <Tag color={status.color}>{status.text}</Tag>;
-      },
-    },
-    {
-      title: '签发机构',
-      dataIndex: 'issuer',
-      key: 'issuer',
-      width: 150,
-      ellipsis: true,
-      hideInSearch: true,
-    },
-    {
-      title: '生效日期',
-      dataIndex: 'validFrom',
-      key: 'validFrom',
       width: 120,
-      valueType: 'date',
-      hideInSearch: true,
+      render: (_: any, record: CertificateItem) => getStatusTag(record.status),
     },
     {
-      title: '到期日期',
-      dataIndex: 'validTo',
-      key: 'validTo',
+      title: '签发时间',
+      dataIndex: 'issueDate',
+      key: 'issueDate',
       width: 120,
-      valueType: 'date',
-      sorter: true,
     },
     {
-      title: '创建时间',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
+      title: '过期时间',
+      dataIndex: 'expiryDate',
+      key: 'expiryDate',
+      width: 120,
+    },
+    {
+      title: '更新时间',
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
       width: 180,
-      valueType: 'dateTime',
-      sorter: true,
-      hideInSearch: true,
     },
     {
       title: '操作',
       key: 'action',
-      width: 200,
-      valueType: 'option',
-      render: (_, record) => [
-        <Button
-          key="view"
-          type="link"
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => {
-            message.info(`查看证书: ${record.name}`);
-          }}
-        >
-          查看
-        </Button>,
-        <Button
-          key="edit"
-          type="link"
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => {
-            message.info(`编辑证书: ${record.name}`);
-          }}
-        >
-          编辑
-        </Button>,
-        <Popconfirm
-          key="delete"
-          title="确定要删除这个证书吗？"
-          onConfirm={() => handleDelete(record.id)}
-          okText="确定"
-          cancelText="取消"
-        >
-          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-            删除
+      width: 150,
+      render: (_: any, record: CertificateItem) => (
+        <Space>
+          <Button type="link" size="small" onClick={() => handleUpdate(record.id)}>
+            更新
           </Button>
-        </Popconfirm>,
-      ],
-    },
-  ];
-
-  /**
-   * 请求数据
-   */
-  const request = async (params: any, sort: any, filter: any) => {
-    // TODO: 调用实际的 API
-    // 模拟数据
-    const mockData: CertificateItem[] = [
-      {
-        id: '1',
-        name: 'example.com SSL',
-        domain: 'example.com',
-        type: 'ca-signed',
-        status: 'valid',
-        issuer: 'DigiCert Inc',
-        validFrom: '2024-01-01',
-        validTo: '2025-12-31',
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '2',
-        name: 'test.com SSL',
-        domain: 'test.com',
-        type: 'lets-encrypt',
-        status: 'expiring',
-        issuer: "Let's Encrypt",
-        validFrom: '2024-11-01',
-        validTo: '2025-02-01',
-        createdAt: '2024-11-01 12:00:00',
-        updatedAt: '2024-11-01 12:00:00',
-      },
-      {
-        id: '3',
-        name: 'demo.net SSL',
-        domain: 'demo.net',
-        type: 'self-signed',
-        status: 'expired',
-        issuer: 'Self-Signed',
-        validFrom: '2023-01-01',
-        validTo: '2024-12-31',
-        createdAt: '2023-01-01 09:00:00',
-        updatedAt: '2023-01-01 09:00:00',
-      },
-    ];
-
-    return {
-      data: mockData,
-      success: true,
-      total: mockData.length,
-    };
-  };
-
-  return (
-    <ProTable<CertificateItem>
-      headerTitle="证书管理"
-      actionRef={actionRef}
-      rowKey="id"
-      search={{
-        labelWidth: 'auto',
-      }}
-      scroll={{ x: 'max-content' }}
-      toolBarRender={() => [
-        selectedRowKeys.length > 0 && (
           <Popconfirm
-            key="batchDelete"
-            title={`确定要删除选中的 ${selectedRowKeys.length} 个证书吗？`}
-            onConfirm={handleBatchDelete}
+            title="确定要删除这个证书吗？"
+            description="删除后无法恢复，是否继续？"
+            onConfirm={() => handleDelete(record.id)}
             okText="确定"
             cancelText="取消"
           >
-            <Button type="primary" danger>
-              批量删除 ({selectedRowKeys.length})
+            <Button type="link" danger size="small">
+              删除
             </Button>
           </Popconfirm>
-        ),
-        <Button
-          key="add"
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            message.info('打开添加证书对话框');
-          }}
-        >
-          添加证书
-        </Button>,
-      ]}
-      request={request}
+        </Space>
+      ),
+    },
+  ];
+
+  const expandedRowRender = (record: CertificateItem) => {
+    return (
+      <div style={{ padding: '16px 0', backgroundColor: '#fafafa' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          {/* 证书内容 */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+              <strong style={{ marginRight: 8 }}>证书内容</strong>
+              <Button
+                type="text"
+                size="small"
+                icon={<CopyOutlined />}
+                onClick={() => handleCopy(record.certificate, '证书内容')}
+              >
+                复制
+              </Button>
+            </div>
+            <div
+              style={{
+                backgroundColor: '#fff',
+                border: '1px solid #d9d9d9',
+                borderRadius: 4,
+                padding: 16,
+                maxHeight: 400,
+                overflow: 'auto',
+              }}
+            >
+              <pre
+                style={{
+                  margin: 0,
+                  fontSize: 12,
+                  fontFamily: 'monospace',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-all',
+                }}
+              >
+                {record.certificate}
+              </pre>
+            </div>
+          </div>
+
+          {/* 证书私钥 */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+              <strong style={{ marginRight: 8 }}>证书私钥</strong>
+              <Button
+                type="text"
+                size="small"
+                icon={<CopyOutlined />}
+                onClick={() => handleCopy(record.privateKey, '证书私钥')}
+              >
+                复制
+              </Button>
+            </div>
+            <div
+              style={{
+                backgroundColor: '#fff',
+                border: '1px solid #d9d9d9',
+                borderRadius: 4,
+                padding: 16,
+                maxHeight: 400,
+                overflow: 'auto',
+              }}
+            >
+              <pre
+                style={{
+                  margin: 0,
+                  fontSize: 12,
+                  fontFamily: 'monospace',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-all',
+                }}
+              >
+                {record.privateKey}
+              </pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <ProTable
       columns={columns}
-      rowSelection={{
-        selectedRowKeys,
-        onChange: setSelectedRowKeys,
+      dataSource={dataSource}
+      rowKey="id"
+      search={false}
+      expandable={{
+        expandedRowRender,
+        expandedRowKeys,
+        onExpandedRowsChange: (keys) => setExpandedRowKeys(keys),
       }}
       pagination={{
         defaultPageSize: 15,
         showSizeChanger: true,
-        showQuickJumper: true,
         showTotal: (total) => `共 ${total} 条记录`,
       }}
+      toolBarRender={() => [
+        <Button key="add" type="primary" icon={<PlusOutlined />}>
+          添加证书
+        </Button>,
+      ]}
     />
   );
 };
