@@ -238,35 +238,35 @@ export default function DashboardLayout({
                       {item.children!.map((child) => {
                         const isChildActive = location.pathname === child.href;
                         return (
-                          < Link key={child.href} to={child.href!}>
-                            <a
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                padding: '8px 12px',
-                                borderRadius: '8px',
-                                fontSize: '14px',
-                                textDecoration: 'none',
-                                backgroundColor: isChildActive ? colors.sidebar.activeBg : 'transparent',
-                                color: isChildActive ? colors.sidebar.active : colors.sidebar.text,
-                                borderLeft: isChildActive ? `3px solid ${colors.sidebar.active}` : '3px solid transparent',
-                                transition: 'background-color 0.2s',
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!isChildActive) {
-                                  e.currentTarget.style.backgroundColor = colors.sidebar.hover;
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!isChildActive) {
-                                  e.currentTarget.style.backgroundColor = 'transparent';
-                                }
-                              }}
-                            >
-                              {child.icon}
-                              {child.label}
-                            </a>
+                          <Link
+                            key={child.href}
+                            to={child.href!}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '8px 12px',
+                              borderRadius: '8px',
+                              fontSize: '14px',
+                              textDecoration: 'none',
+                              backgroundColor: isChildActive ? colors.sidebar.activeBg : 'transparent',
+                              color: isChildActive ? colors.sidebar.active : colors.sidebar.text,
+                              borderLeft: isChildActive ? `3px solid ${colors.sidebar.active}` : '3px solid transparent',
+                              transition: 'background-color 0.2s',
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isChildActive) {
+                                e.currentTarget.style.backgroundColor = colors.sidebar.hover;
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isChildActive) {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }
+                            }}
+                          >
+                            {child.icon}
+                            {child.label}
                           </Link>
                         );
                       })}
@@ -277,34 +277,34 @@ export default function DashboardLayout({
             }
 
             return (
-              < Link key={item.href} to={item.href!}>
-                <a
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    textDecoration: 'none',
-                    backgroundColor: isActive ? colors.sidebar.activeBg : 'transparent',
-                    color: isActive ? colors.sidebar.active : colors.sidebar.text,
-                    borderLeft: isActive ? `3px solid ${colors.sidebar.active}` : '3px solid transparent',
-                    transition: 'background-color 0.2s',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.backgroundColor = colors.sidebar.hover;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                >
-                  {item.icon}
-                  {sidebarOpen && <span style={{ fontSize: '14px', fontWeight: 500 }}>{item.label}</span>}
-                </a>
+              <Link
+                key={item.href}
+                to={item.href!}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  backgroundColor: isActive ? colors.sidebar.activeBg : 'transparent',
+                  color: isActive ? colors.sidebar.active : colors.sidebar.text,
+                  borderLeft: isActive ? `3px solid ${colors.sidebar.active}` : '3px solid transparent',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = colors.sidebar.hover;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                {item.icon}
+                {sidebarOpen && <span style={{ fontSize: '14px', fontWeight: 500 }}>{item.label}</span>}
               </Link>
             );
           })}
