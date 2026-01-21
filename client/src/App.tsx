@@ -1,7 +1,7 @@
 // Material UI 不需要全局 Toaster 和 TooltipProvider
+import React, { useEffect } from "react";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import NotFound from "@/pages/NotFound";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { MenuProvider } from "./contexts/MenuContext";
@@ -21,6 +21,7 @@ import Login from "./pages/Login";
 import ApiKeys from "./pages/ApiKeys";
 import Certificates from "./pages/Certificates";
 
+
 function ProtectedRoute({ component: Component, ...rest }: any) {
   const navigate = useNavigate();
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
@@ -35,22 +36,24 @@ function ProtectedRoute({ component: Component, ...rest }: any) {
 }
 
 function Router() {
+  const location = useLocation();
+  
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/" element={<ProtectedRoute component={Dashboard} />} />
-      <Route path="/domains" element={<ProtectedRoute component={Domains} />} />
-      <Route path="/websites" element={<ProtectedRoute component={Websites} />} />
-      <Route path="/line-groups" element={<ProtectedRoute component={LineGroups} />} />
-      <Route path="/dns-config" element={<ProtectedRoute component={DNSConfig} />} />
-      <Route path="/dns-records/:domainId" element={<ProtectedRoute component={DNSRecords} />} />
-      <Route path="/nodes" element={<ProtectedRoute component={Nodes} />} />
-      <Route path="/node-groups" element={<ProtectedRoute component={NodeGroups} />} />
-      <Route path="/origin-management" element={<ProtectedRoute component={OriginManagement} />} />
-      <Route path="/origin-groups" element={<ProtectedRoute component={OriginGroups} />} />
-      <Route path="/cache-settings" element={<ProtectedRoute component={CacheSettings} />} />
-      <Route path="/api-keys" element={<ProtectedRoute component={ApiKeys} />} />
-      <Route path="/certificates" element={<ProtectedRoute component={Certificates} />} />
+      <Route path="/" element={<ProtectedRoute key={location.pathname} component={Dashboard} />} />
+      <Route path="/domains" element={<ProtectedRoute key={location.pathname} component={Domains} />} />
+      <Route path="/websites" element={<ProtectedRoute key={location.pathname} component={Websites} />} />
+      <Route path="/line-groups" element={<ProtectedRoute key={location.pathname} component={LineGroups} />} />
+      <Route path="/dns-config" element={<ProtectedRoute key={location.pathname} component={DNSConfig} />} />
+      <Route path="/dns-records/:domainId" element={<ProtectedRoute key={location.pathname} component={DNSRecords} />} />
+      <Route path="/nodes" element={<ProtectedRoute key={location.pathname} component={Nodes} />} />
+      <Route path="/node-groups" element={<ProtectedRoute key={location.pathname} component={NodeGroups} />} />
+      <Route path="/origin-management" element={<ProtectedRoute key={location.pathname} component={OriginManagement} />} />
+      <Route path="/origin-groups" element={<ProtectedRoute key={location.pathname} component={OriginGroups} />} />
+      <Route path="/cache-settings" element={<ProtectedRoute key={location.pathname} component={CacheSettings} />} />
+      <Route path="/api-keys" element={<ProtectedRoute key={location.pathname} component={ApiKeys} />} />
+      <Route path="/certificates" element={<ProtectedRoute key={location.pathname} component={Certificates} />} />
       <Route path="/404" element={<NotFound />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

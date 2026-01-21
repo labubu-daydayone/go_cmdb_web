@@ -6,7 +6,7 @@
 
 import { ReactNode, useState } from 'react';
 import * as React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -238,9 +238,12 @@ export default function DashboardLayout({
                       {item.children!.map((child) => {
                         const isChildActive = location.pathname === child.href;
                         return (
-                          <Link
+                          <div
                             key={child.href}
-                            to={child.href!}
+                            onClick={() => {
+                              // 使用window.location强制刷新页面
+                              window.location.href = child.href!;
+                            }}
                             style={{
                               display: 'flex',
                               alignItems: 'center',
@@ -249,10 +252,10 @@ export default function DashboardLayout({
                               borderRadius: '8px',
                               fontSize: '14px',
                               textDecoration: 'none',
-                              backgroundColor: isChildActive ? colors.sidebar.activeBg : 'transparent',
-                              color: isChildActive ? colors.sidebar.active : colors.sidebar.text,
-                              borderLeft: isChildActive ? `3px solid ${colors.sidebar.active}` : '3px solid transparent',
+                              color: isChildActive ? colors.sidebar.activeText : colors.sidebar.text,
+                              backgroundColor: isChildActive ? colors.sidebar.active : 'transparent',
                               transition: 'background-color 0.2s',
+                              cursor: 'pointer',
                             }}
                             onMouseEnter={(e) => {
                               if (!isChildActive) {
@@ -266,8 +269,8 @@ export default function DashboardLayout({
                             }}
                           >
                             {child.icon}
-                            {child.label}
-                          </Link>
+                            <span>{child.label}</span>
+                          </div>
                         );
                       })}
                     </div>
