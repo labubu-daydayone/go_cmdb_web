@@ -299,16 +299,21 @@ socket.on('websites:update', (update) => {
   "lineGroup": "string",
   "https": boolean,
   "originConfig": {
-    "type": "origin | redirect | template",
+    "type": "origin | redirect | template",  // 回源类型（三选一）
+    // 当 type = "origin" (手动回源) 时，只需要 originIPs
     "originIPs": [
       {
-        "ip": "string",
-        "remark": "string"
+        "type": "primary | backup",  // 主源 | 备源
+        "protocol": "http | https",  // 协议
+        "address": "string",          // 地址 (如: 8.8.8.8:80)
+        "weight": number              // 权重
       }
     ],
+    // 当 type = "redirect" (重定向) 时，只需要 redirectUrl 和 redirectStatusCode
     "redirectUrl": "string",
-    "redirectStatusCode": 301 | 302,
-    "template": "string"
+    "redirectStatusCode": 301 | 302,  // 301=永久重定向, 302=临时重定向
+    // 当 type = "template" (使用分组) 时，只需要 template
+    "template": "string"  // 回源分组名称
   },
   "httpsConfig": {
     "forceRedirect": boolean,
@@ -320,6 +325,40 @@ socket.on('websites:update', (update) => {
   "cacheRules": "string"
 }
 ```
+
+**originConfig 字段说明** (三选一):
+
+1. **手动回源** (`type: "origin"`):
+   ```json
+   {
+     "type": "origin",
+     "originIPs": [
+       {
+         "type": "primary",
+         "protocol": "https",
+         "address": "192.168.1.100:443",
+         "weight": 10
+       }
+     ]
+   }
+   ```
+
+2. **重定向** (`type: "redirect"`):
+   ```json
+   {
+     "type": "redirect",
+     "redirectUrl": "https://new-site.com",
+     "redirectStatusCode": 301
+   }
+   ```
+
+3. **使用分组** (`type: "template"`):
+   ```json
+   {
+     "type": "template",
+     "template": "回源分组1"
+   }
+   ```
 
 ### 2.4 更新网站
 **接口**: `POST /websites/update`

@@ -204,9 +204,64 @@ export default function Websites() {
 
   const handleAddWebsite = () => {
     if (formData.domain.trim()) {
+      // 构建 originConfig，根据 tab 类型决定发送哪些字段
+      const originConfig: any = {
+        id: `origin-config-${Date.now()}`,
+        websiteId: editingId || `website-${Date.now()}`,
+        redirectEnabled: false,
+        redirectUrl: '',
+        redirectStatusCode: 301 as 301 | 302,
+        createdDate: new Date().toLocaleDateString('zh-CN'),
+      };
+
+      // 根据当前tab设置对应的字段
+      const currentTab = editingId ? editFormTab : addFormTab;
+      
+      if (currentTab === 'group') {
+        // 使用分组
+        originConfig.type = 'template';
+        originConfig.template = formData.template;
+        originConfig.originIPs = [];
+      } else if (currentTab === 'redirect') {
+        // 重定向
+        originConfig.type = 'redirect';
+        originConfig.redirectEnabled = true;
+        originConfig.redirectUrl = formData.redirectUrl;
+        originConfig.redirectStatusCode = formData.redirectStatusCode;
+        originConfig.originIPs = [];
+      } else if (currentTab === 'manual') {
+        // 手动回源
+        originConfig.type = 'origin';
+        originConfig.originIPs = formData.originIPs.map((ip, index) => ({
+          id: `origin-${Date.now()}-${index}`,
+          type: ip.type,
+          protocol: ip.protocol,
+          address: ip.address,
+          weight: ip.weight,
+          enabled: true,
+        }));
+      }
+
+      // 构建 httpsConfig
+      const httpsConfig = formData.https ? {
+        forceRedirect: formData.httpsForceRedirect,
+        hstsEnabled: formData.hstsEnabled,
+        certificateType: formData.certificateType,
+        certificateData: formData.certificateType === 'manual' ? formData.certificateData : '',
+        privateKeyData: formData.certificateType === 'manual' ? formData.privateKeyData : '',
+      } : undefined;
+
       if (editingId) {
         // 编辑模式
-        setWebsites(websites.map(w => w.id === editingId ? { ...w, domain: formData.domain, lineGroup: formData.lineGroup, https: formData.https } : w));
+        setWebsites(websites.map(w => w.id === editingId ? {
+          ...w,
+          domain: formData.domain,
+          lineGroup: formData.lineGroup,
+          https: formData.https,
+          originConfig,
+          httpsConfig,
+          cacheRules: formData.cacheRules || undefined,
+        } : w));
       } else {
         // 添加模式
         const newWebsite: Website = {
@@ -217,6 +272,9 @@ export default function Websites() {
           https: formData.https,
           status: 'active',
           createdDate: new Date().toLocaleDateString('zh-CN'),
+          originConfig,
+          httpsConfig,
+          cacheRules: formData.cacheRules || undefined,
         };
         setWebsites([newWebsite, ...websites]);
       }
@@ -268,13 +326,22 @@ export default function Websites() {
       cacheRules: website.cacheRules || '',
     });
     
-    // 根据回源配置设置默认tab
-    if (originConfig.redirectEnabled) {
+    // 根据originConfig.type字段设置tab
+    if (originConfig.type === 'redirect') {
       setEditFormTab('redirect');
-    } else if (originConfig.originIPs.length > 0) {
+    } else if (originConfig.type === 'origin') {
       setEditFormTab('manual');
-    } else {
+    } else if (originConfig.type === 'template') {
       setEditFormTab('group');
+    } else {
+      // 如果没有type字段，使用旧逻辑兼容
+      if (originConfig.redirectEnabled) {
+        setEditFormTab('redirect');
+      } else if (originConfig.originIPs && originConfig.originIPs.length > 0) {
+        setEditFormTab('manual');
+      } else {
+        setEditFormTab('group');
+      }
     }
     
     setEditingId(website.id);
