@@ -176,7 +176,7 @@ const DomainsPage: React.FC = () => {
       title: '操作',
       key: 'action',
       fixed: 'right',
-      width: 180,
+      width: 220,
       valueType: 'option',
       render: (_, record) => [
         <Button
