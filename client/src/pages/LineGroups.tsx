@@ -3,7 +3,8 @@
  * 显示所有线路分组信息和管理功能
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card } from '@/components/mui/Card';
 import { Button, MultiSelect } from '@/components/mui';
 import { Pagination } from '@/components/Pagination';
@@ -35,7 +36,13 @@ interface FormData {
 }
 
 export default function LineGroups() {
-  const [lineGroups] = useState<LineGroup[]>(generateMockLineGroups());
+  const location = useLocation();
+  const [lineGroups, setLineGroups] = useState<LineGroup[]>(generateMockLineGroups());
+
+  // 监听路由变化，重新生成数据
+  useEffect(() => {
+    setLineGroups(generateMockLineGroups());
+  }, [location.pathname]);
   const [selectedLineGroups, setSelectedLineGroups] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<SortField>('name');

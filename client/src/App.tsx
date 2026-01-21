@@ -24,6 +24,7 @@ import Certificates from "./pages/Certificates";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
   const navigate = useNavigate();
+  const location = useLocation();
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
 
   useEffect(() => {
@@ -32,7 +33,7 @@ function ProtectedRoute({ component: Component, ...rest }: any) {
     }
   }, [isLoggedIn, navigate]);
 
-  return isLoggedIn ? <Component {...rest} /> : null;
+  return isLoggedIn ? React.createElement(Component, { key: location.pathname, ...rest }) : null;
 }
 
 function Router() {

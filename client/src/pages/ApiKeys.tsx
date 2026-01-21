@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
 import { Pagination } from '@/components/Pagination';

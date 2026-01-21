@@ -3,7 +3,8 @@
  * 显示关键指标、统计信息和系统状态
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card } from '@/components/mui/Card';
 import { generateMockServers, generateTimeSeriesData } from '@/lib/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -14,14 +15,21 @@ import ScheduleIcon from '@mui/icons-material/Schedule';
 import StorageIcon from '@mui/icons-material/Storage';
 
 export default function Dashboard() {
-  const stats = {
+  const location = useLocation();
+  const [stats] = useState({
     totalDomains: 10,
     activeDomains: 8,
     expiringDomains: 2,
     sslWarnings: 1,
-  };
-  const servers = generateMockServers();
-  const timeSeriesData = generateTimeSeriesData(30);
+  });
+  const [servers, setServers] = useState(generateMockServers());
+  const [timeSeriesData, setTimeSeriesData] = useState(generateTimeSeriesData(30));
+
+  // 监听路由变化，重新生成数据
+  useEffect(() => {
+    setServers(generateMockServers());
+    setTimeSeriesData(generateTimeSeriesData(30));
+  }, [location.pathname]);
   const [selectedServers, setSelectedServers] = useState<Set<string>>(new Set());
 
   const handleSelectServer = (serverId: string) => {

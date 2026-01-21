@@ -3,7 +3,8 @@
  * 显示所有域名信息和管理功能
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card } from '@/components/mui/Card';
 import { Pagination } from '@/components/Pagination';
 import { Button } from '@/components/mui';
@@ -30,7 +31,13 @@ export default function Domains() {
     defaultFilters: { status: 'all' },
   });
   
-  const [domains] = useState<Domain[]>(generateMockDomains());
+  const location = useLocation();
+  const [domains, setDomains] = useState<Domain[]>(generateMockDomains());
+
+  // 监听路由变化，重新生成数据
+  useEffect(() => {
+    setDomains(generateMockDomains());
+  }, [location.pathname]);
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>('name');

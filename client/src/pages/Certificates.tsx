@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card } from '@/components/mui/Card';
 import { Button } from '@/components/mui';
 import { Pagination } from '@/components/Pagination';
@@ -174,7 +175,13 @@ export default function Certificates() {
     defaultFilters: { status: 'all' },
   });
 
-  const [certificates] = useState<Certificate[]>(generateMockCertificates());
+  const location = useLocation();
+  const [certificates, setCertificates] = useState<Certificate[]>(generateMockCertificates());
+
+  // 监听路由变化，重新生成数据
+  useEffect(() => {
+    setCertificates(generateMockCertificates());
+  }, [location.pathname]);
   const [selectedCertificates, setSelectedCertificates] = useState<Set<string>>(new Set());
   const [expandedCerts, setExpandedCerts] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
