@@ -645,8 +645,15 @@ const WebsitesPage: React.FC = () => {
         <Form form={form} layout="horizontal" labelCol={{ span: 4 }} wrapperCol={{ span: 20 }}>
           {/* 域名 */}
           {isEdit ? (
-            <Form.Item label="域名">
-              <span style={{ fontWeight: 500 }}>{form.getFieldValue('domain')}</span>
+            <Form.Item
+              name="domain"
+              label="域名"
+              rules={[{ required: true, message: '请输入域名' }]}
+            >
+              <Input.TextArea
+                rows={4}
+                placeholder="请输入域名，每行一个，例如：&#10;example.com&#10;www.example.com&#10;api.example.com"
+              />
             </Form.Item>
           ) : (
             <Form.Item
