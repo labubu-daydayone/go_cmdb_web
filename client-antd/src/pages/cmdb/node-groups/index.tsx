@@ -102,7 +102,21 @@ const NodeGroupsPage = () => {
       name: record.name,
       description: record.description,
     });
-    setTargetKeys([]);
+    
+    // 根据 subIPs 恢复已选择的节点
+    // 这里需要将 subIPs 映射回 transferDataSource 的 key
+    const selectedKeys: string[] = [];
+    record.subIPs.forEach((subIP) => {
+      // 在 transferDataSource 中查找匹配的 key
+      const matchedItem = transferDataSource.find(
+        (item) => item.title === subIP.ip || item.title.includes(subIP.ip)
+      );
+      if (matchedItem) {
+        selectedKeys.push(matchedItem.key);
+      }
+    });
+    
+    setTargetKeys(selectedKeys);
     setDrawerVisible(true);
   };
 
@@ -137,6 +151,11 @@ const NodeGroupsPage = () => {
                   name: values.name,
                   description: values.description,
                   subIPCount: targetKeys.length,
+                  subIPs: targetKeys.map((key, index) => ({
+                    id: `${Date.now()}-${index}`,
+                    ip: transferDataSource.find((item) => item.key === key)?.title || key,
+                    createdAt: new Date().toISOString().split('T')[0],
+                  })),
                 }
               : item
           )
