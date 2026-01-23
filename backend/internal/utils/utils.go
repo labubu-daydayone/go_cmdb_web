@@ -85,29 +85,7 @@ func ExtractSANFromCertificate(certPEM string) ([]string, error) {
 	return result, nil
 }
 
-// CalculateRelativeName calculates relative DNS name from FQDN and zone
-// R24: FQDN calculation rules
-// - zone => @
-// - www.zone => www
-// - a.b.zone => a.b
-func CalculateRelativeName(fqdn, zone string) (string, error) {
-	// Ensure both are lowercase for comparison
-	fqdn = strings.ToLower(strings.TrimSuffix(fqdn, "."))
-	zone = strings.ToLower(strings.TrimSuffix(zone, "."))
 
-	// R23: FQDN must belong to zone
-	if fqdn == zone {
-		return "@", nil
-	}
-
-	if !strings.HasSuffix(fqdn, "."+zone) {
-		return "", fmt.Errorf("FQDN %s does not belong to zone %s", fqdn, zone)
-	}
-
-	// Remove zone suffix to get relative name
-	relativeName := strings.TrimSuffix(fqdn, "."+zone)
-	return relativeName, nil
-}
 
 // ValidateDomainCoverage validates if all domains are covered by certificate domains
 // Supports wildcard matching (*.example.com covers a.example.com)

@@ -133,12 +133,12 @@ func (w *DNSSyncWorker) syncSingleRecord(record models.DomainDNSRecord) {
 	var providerRecordID string
 	var err error
 
-	if record.ProviderRecordID != "" {
+	if record.ProviderRecordID != nil && *record.ProviderRecordID != "" {
 		// Update existing record
-		log.Printf("[DNSSyncWorker] Updating existing record: provider_record_id=%s\n", record.ProviderRecordID)
+		log.Printf("[DNSSyncWorker] Updating existing record: provider_record_id=%s\n", *record.ProviderRecordID)
 		providerRecordID, err = client.UpdateDNSRecord(
 			provider.ProviderZoneID,
-			record.ProviderRecordID,
+			*record.ProviderRecordID,
 			record.Type,
 			fullName,
 			record.Value,
@@ -223,7 +223,7 @@ func (w *DNSSyncWorker) markError(recordID int, errorMsg string) {
 // This is used when deleting a record from the database
 func (w *DNSSyncWorker) DeleteDNSRecordFromProvider(record models.DomainDNSRecord) error {
 	// If no provider_record_id, nothing to delete
-	if record.ProviderRecordID == "" {
+	if record.ProviderRecordID == nil || *record.ProviderRecordID == "" {
 		return nil
 	}
 
@@ -248,7 +248,7 @@ func (w *DNSSyncWorker) DeleteDNSRecordFromProvider(record models.DomainDNSRecor
 	client := w.cloudflareClient.WithToken(apiKey.APIToken)
 
 	// Delete record from Cloudflare
-	if err := client.DeleteDNSRecord(provider.ProviderZoneID, record.ProviderRecordID); err != nil {
+	if err := client.DeleteDNSRecord(provider.ProviderZoneID, *record.ProviderRecordID); err != nil {
 		return fmt.Errorf("failed to delete from Cloudflare: %w", err)
 	}
 

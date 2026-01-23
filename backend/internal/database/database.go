@@ -12,6 +12,11 @@ import (
 
 var DB *gorm.DB
 
+// GetDB returns the database instance
+func GetDB() *gorm.DB {
+	return DB
+}
+
 // Connect initializes database connection
 func Connect(dsn string) error {
 	var err error
