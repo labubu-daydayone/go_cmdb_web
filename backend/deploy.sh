@@ -159,7 +159,7 @@ echo -e "${YELLOW}步骤6: 运行数据库迁移${NC}"
 echo "----------------------------------------"
 
 # 运行迁移和种子数据
-go run cmd/main.go migrate --seed
+go run cmd/cdn-control/main.go migrate --seed
 
 echo -e "${GREEN}✓ 数据库迁移完成${NC}"
 
@@ -168,7 +168,7 @@ echo -e "${YELLOW}步骤7: 编译程序${NC}"
 echo "----------------------------------------"
 
 # 编译
-go build -o cdn-control cmd/main.go
+go build -o cdn-control cmd/cdn-control/main.go
 
 echo -e "${GREEN}✓ 编译完成: ./cdn-control${NC}"
 
