@@ -47,7 +47,7 @@ func (h *DomainHandler) ListDomains(c *gin.Context) {
 
 	domains, total, err := h.domainService.ListDomains(filter)
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, 1001, "Failed to list domains", err.Error())
+		response.Error(c, 1001, "Failed to list domains: " + err.Error())
 		return
 	}
 
@@ -67,17 +67,17 @@ func (h *DomainHandler) ListDomains(c *gin.Context) {
 func (h *DomainHandler) CreateDomain(c *gin.Context) {
 	var req service.CreateDomainRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, 2001, "Invalid request", err.Error())
+		response.Error(c, 2001, "Invalid request: " + err.Error())
 		return
 	}
 
 	domain, err := h.domainService.CreateDomain(req)
 	if err != nil {
 		if err == service.ErrDomainAlreadyExists {
-			response.Error(c, http.StatusConflict, 3002, "Domain already exists", err.Error())
+			response.Error(c, 3002, "Domain already exists: " + err.Error())
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, 1001, "Failed to create domain", err.Error())
+		response.Error(c, 1001, "Failed to create domain: " + err.Error())
 		return
 	}
 
@@ -101,16 +101,16 @@ func (h *DomainHandler) UpdateDomain(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, 2001, "Invalid request", err.Error())
+		response.Error(c, 2001, "Invalid request: " + err.Error())
 		return
 	}
 
 	if err := h.domainService.UpdateDomain(req.ID, req.Updates); err != nil {
 		if err == service.ErrDomainNotFound {
-			response.Error(c, http.StatusNotFound, 3001, "Domain not found", err.Error())
+			response.Error(c, 3001, "Domain not found: " + err.Error())
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, 1001, "Failed to update domain", err.Error())
+		response.Error(c, 1001, "Failed to update domain: " + err.Error())
 		return
 	}
 
@@ -133,20 +133,20 @@ func (h *DomainHandler) DeleteDomain(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, 2001, "Invalid request", err.Error())
+		response.Error(c, 2001, "Invalid request: " + err.Error())
 		return
 	}
 
 	if err := h.domainService.DeleteDomain(req.ID); err != nil {
 		if err == service.ErrDomainNotFound {
-			response.Error(c, http.StatusNotFound, 3001, "Domain not found", err.Error())
+			response.Error(c, 3001, "Domain not found: " + err.Error())
 			return
 		}
 		if err == service.ErrDomainHasDependency {
-			response.Error(c, http.StatusConflict, 3003, "Domain has dependencies", err.Error())
+			response.Error(c, 3003, "Domain has dependencies: " + err.Error())
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, 1001, "Failed to delete domain", err.Error())
+		response.Error(c, 1001, "Failed to delete domain: " + err.Error())
 		return
 	}
 

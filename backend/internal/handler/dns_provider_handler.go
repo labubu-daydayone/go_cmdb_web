@@ -30,7 +30,7 @@ func NewDNSProviderHandler(providerService *service.DNSProviderService) *DNSProv
 func (h *DNSProviderHandler) ListProviders(c *gin.Context) {
 	providers, err := h.providerService.ListProviders()
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, 1001, "Failed to list providers", err.Error())
+		response.Error(c, 1001, "Failed to list providers: " + err.Error())
 		return
 	}
 
@@ -52,21 +52,21 @@ func (h *DNSProviderHandler) ListProviders(c *gin.Context) {
 func (h *DNSProviderHandler) CreateProvider(c *gin.Context) {
 	var req service.CreateProviderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, 2001, "Invalid request", err.Error())
+		response.Error(c, 2001, "Invalid request: " + err.Error())
 		return
 	}
 
 	provider, err := h.providerService.CreateProvider(req)
 	if err != nil {
 		if err == service.ErrProviderAlreadyExists {
-			response.Error(c, http.StatusConflict, 3002, "Provider already exists for this domain", err.Error())
+			response.Error(c, 3002, "Provider already exists for this domain: " + err.Error())
 			return
 		}
 		if err == service.ErrDomainNotFound {
-			response.Error(c, http.StatusNotFound, 3001, "Domain not found", err.Error())
+			response.Error(c, 3001, "Domain not found: " + err.Error())
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, 1001, "Failed to create provider", err.Error())
+		response.Error(c, 1001, "Failed to create provider: " + err.Error())
 		return
 	}
 
@@ -90,16 +90,16 @@ func (h *DNSProviderHandler) UpdateProvider(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, 2001, "Invalid request", err.Error())
+		response.Error(c, 2001, "Invalid request: " + err.Error())
 		return
 	}
 
 	if err := h.providerService.UpdateProvider(req.ID, req.Updates); err != nil {
 		if err == service.ErrProviderNotFound {
-			response.Error(c, http.StatusNotFound, 3001, "Provider not found", err.Error())
+			response.Error(c, 3001, "Provider not found: " + err.Error())
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, 1001, "Failed to update provider", err.Error())
+		response.Error(c, 1001, "Failed to update provider: " + err.Error())
 		return
 	}
 
@@ -122,16 +122,16 @@ func (h *DNSProviderHandler) DeleteProvider(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, 2001, "Invalid request", err.Error())
+		response.Error(c, 2001, "Invalid request: " + err.Error())
 		return
 	}
 
 	if err := h.providerService.DeleteProvider(req.ID); err != nil {
 		if err == service.ErrProviderNotFound {
-			response.Error(c, http.StatusNotFound, 3001, "Provider not found", err.Error())
+			response.Error(c, 3001, "Provider not found: " + err.Error())
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, 1001, "Failed to delete provider", err.Error())
+		response.Error(c, 1001, "Failed to delete provider: " + err.Error())
 		return
 	}
 

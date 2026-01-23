@@ -56,7 +56,7 @@ func (h *DNSRecordHandler) ListRecords(c *gin.Context) {
 
 	records, total, err := h.recordService.ListRecords(filter)
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, 1001, "Failed to list records", err.Error())
+		response.Error(c, 1001, "Failed to list records: " + err.Error())
 		return
 	}
 
@@ -76,25 +76,25 @@ func (h *DNSRecordHandler) ListRecords(c *gin.Context) {
 func (h *DNSRecordHandler) CreateRecord(c *gin.Context) {
 	var req service.CreateDNSRecordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, 2001, "Invalid request", err.Error())
+		response.Error(c, 2001, "Invalid request: " + err.Error())
 		return
 	}
 
 	record, err := h.recordService.CreateRecord(req)
 	if err != nil {
 		if err == service.ErrInvalidFQDN {
-			response.Error(c, http.StatusBadRequest, 2003, "Invalid FQDN for this zone", err.Error())
+			response.Error(c, 2003, "Invalid FQDN for this zone: " + err.Error())
 			return
 		}
 		if err == service.ErrDNSRecordAlreadyExists {
-			response.Error(c, http.StatusConflict, 3002, "DNS record already exists", err.Error())
+			response.Error(c, 3002, "DNS record already exists: " + err.Error())
 			return
 		}
 		if err == service.ErrDomainNotFound {
-			response.Error(c, http.StatusNotFound, 3001, "Domain not found", err.Error())
+			response.Error(c, 3001, "Domain not found: " + err.Error())
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, 1001, "Failed to create record", err.Error())
+		response.Error(c, 1001, "Failed to create record: " + err.Error())
 		return
 	}
 
@@ -118,16 +118,16 @@ func (h *DNSRecordHandler) UpdateRecord(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, 2001, "Invalid request", err.Error())
+		response.Error(c, 2001, "Invalid request: " + err.Error())
 		return
 	}
 
 	if err := h.recordService.UpdateRecord(req.ID, req.Updates); err != nil {
 		if err == service.ErrDNSRecordNotFound {
-			response.Error(c, http.StatusNotFound, 3001, "DNS record not found", err.Error())
+			response.Error(c, 3001, "DNS record not found: " + err.Error())
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, 1001, "Failed to update record", err.Error())
+		response.Error(c, 1001, "Failed to update record: " + err.Error())
 		return
 	}
 
@@ -150,16 +150,16 @@ func (h *DNSRecordHandler) DeleteRecord(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, 2001, "Invalid request", err.Error())
+		response.Error(c, 2001, "Invalid request: " + err.Error())
 		return
 	}
 
 	if err := h.recordService.DeleteRecord(req.ID); err != nil {
 		if err == service.ErrDNSRecordNotFound {
-			response.Error(c, http.StatusNotFound, 3001, "DNS record not found", err.Error())
+			response.Error(c, 3001, "DNS record not found: " + err.Error())
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, 1001, "Failed to delete record", err.Error())
+		response.Error(c, 1001, "Failed to delete record: " + err.Error())
 		return
 	}
 
@@ -184,7 +184,7 @@ func (h *DNSRecordHandler) TriggerSync(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		// If no body, trigger sync for all error records
 		if err := h.recordService.TriggerSync(nil); err != nil {
-			response.Error(c, http.StatusInternalServerError, 1001, "Failed to trigger sync", err.Error())
+			response.Error(c, 1001, "Failed to trigger sync: " + err.Error())
 			return
 		}
 		response.Success(c, map[string]interface{}{
@@ -195,10 +195,10 @@ func (h *DNSRecordHandler) TriggerSync(c *gin.Context) {
 
 	if err := h.recordService.TriggerSync(req.ID); err != nil {
 		if err == service.ErrDNSRecordNotFound {
-			response.Error(c, http.StatusNotFound, 3001, "DNS record not found", err.Error())
+			response.Error(c, 3001, "DNS record not found: " + err.Error())
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, 1001, "Failed to trigger sync", err.Error())
+		response.Error(c, 1001, "Failed to trigger sync: " + err.Error())
 		return
 	}
 
