@@ -272,29 +272,17 @@ response.Success(c, nil)
 // @Security BearerAuth
 // @Router /api/v1/websites/clear-cache [post]
 func (h *WebsiteHandler) ClearCache(c *gin.Context) {
-var req service.ClearCacheRequest
-if err := c.ShouldBindJSON(&req); err != nil {
-c.JSON(http.StatusBadRequest, Response{
-Code:    2001,
-Message: err.Error(),
-Data:    nil,
-})
-return
-}
+	var req service.ClearCacheRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, response.CodeValidationFailed, err.Error())
+		return
+	}
 
-err := h.websiteService.ClearCache(req)
-if err != nil {
-c.JSON(http.StatusInternalServerError, Response{
-Code:    5001,
-Message: err.Error(),
-Data:    nil,
-})
-return
-}
+	err := h.websiteService.ClearCache(req)
+	if err != nil {
+		response.Error(c, response.CodeSystemError, err.Error())
+		return
+	}
 
-c.JSON(http.StatusOK, Response{
-Code:    0,
-Message: "success",
-Data:    nil,
-})
+	response.Success(c, nil)
 }
