@@ -1,4 +1,4 @@
-.PHONY: help build run test clean migrate seed dev
+.PHONY: help build run test clean migrate seed create-admin dev
 
 help: ## Display this help message
 	@echo "Available commands:"
@@ -6,12 +6,12 @@ help: ## Display this help message
 
 build: ## Build the server binary
 	@echo "Building server..."
-	@go build -o bin/cdn-control-server cmd/server/main.go
-	@echo "Build complete: bin/cdn-control-server"
+	@go build -o bin/cdn-control cmd/main.go
+	@echo "Build complete: bin/cdn-control"
 
 run: ## Run the server
 	@echo "Starting server..."
-	@go run cmd/server/main.go
+	@go run cmd/main.go serve
 
 dev: ## Run server with hot reload (requires air)
 	@echo "Starting development server with hot reload..."
@@ -23,15 +23,19 @@ test: ## Run tests
 
 migrate: ## Run database migrations
 	@echo "Running database migrations..."
-	@go run cmd/server/main.go --migrate
+	@go run cmd/main.go migrate
 
 seed: ## Seed default data
 	@echo "Seeding default data..."
-	@go run cmd/server/main.go --seed
+	@go run cmd/main.go migrate --seed
 
 migrate-seed: ## Run migrations and seed data
 	@echo "Running migrations and seeding data..."
-	@go run cmd/server/main.go --migrate --seed
+	@go run cmd/main.go migrate --seed
+
+create-admin: ## Create admin user (interactive)
+	@echo "Creating admin user..."
+	@go run cmd/main.go create-admin
 
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."

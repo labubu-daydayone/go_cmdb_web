@@ -9,6 +9,8 @@ require (
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/cloudflare/cloudflare-go v0.108.0
 	github.com/go-acme/lego/v4 v4.20.4
+	github.com/spf13/cobra v1.8.0
+	github.com/spf13/viper v1.18.2
 	golang.org/x/crypto v0.31.0
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.12
