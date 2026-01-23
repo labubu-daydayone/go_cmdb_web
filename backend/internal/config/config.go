@@ -12,6 +12,7 @@ type Config struct {
 	Database DatabaseConfig
 	Redis    RedisConfig
 	JWT      JWTConfig
+	TLS      TLSConfig
 }
 
 type ServerConfig struct {
@@ -37,6 +38,14 @@ type RedisConfig struct {
 
 type JWTConfig struct {
 	Secret string
+}
+
+type TLSConfig struct {
+	Enabled    bool
+	CertFile   string
+	KeyFile    string
+	CAFile     string
+	ClientAuth bool
 }
 
 // Load loads configuration from environment variables
@@ -65,6 +74,13 @@ func Load() (*Config, error) {
 		},
 		JWT: JWTConfig{
 			Secret: getEnv("JWT_SECRET", ""),
+		},
+		TLS: TLSConfig{
+			Enabled:    getEnv("TLS_ENABLED", "false") == "true",
+			CertFile:   getEnv("TLS_CERT_FILE", ""),
+			KeyFile:    getEnv("TLS_KEY_FILE", ""),
+			CAFile:     getEnv("TLS_CA_FILE", ""),
+			ClientAuth: getEnv("TLS_CLIENT_AUTH", "false") == "true",
 		},
 	}
 
