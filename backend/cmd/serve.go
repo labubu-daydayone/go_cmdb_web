@@ -77,6 +77,10 @@ func runServer() {
 	domainService := service.NewDomainService()
 	dnsProviderService := service.NewDNSProviderService()
 	dnsRecordService := service.NewDNSRecordService(domainService)
+	
+	// Node and API Key services
+	nodeService := service.NewNodeService(configVersionService)
+	apiKeyService := service.NewAPIKeyService()
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
@@ -87,6 +91,10 @@ func runServer() {
 	domainHandler := handler.NewDomainHandler(domainService)
 	dnsProviderHandler := handler.NewDNSProviderHandler(dnsProviderService)
 	dnsRecordHandler := handler.NewDNSRecordHandler(dnsRecordService)
+	
+	// Node and API Key handlers
+	nodeHandler := handler.NewNodeHandler(nodeService)
+	apiKeyHandler := handler.NewAPIKeyHandler(apiKeyService)
 	
 	// Start DNS sync worker
 	ctx := context.Background()
@@ -165,6 +173,27 @@ func runServer() {
 				dns.POST("/records/update", dnsRecordHandler.UpdateRecord)
 				dns.POST("/records/delete", dnsRecordHandler.DeleteRecord)
 				dns.POST("/records/sync", dnsRecordHandler.TriggerSync)
+			}
+			
+			// API Keys
+			apiKeys := protected.Group("/api-keys")
+			{
+				apiKeys.GET("", apiKeyHandler.ListAPIKeys)
+				apiKeys.POST("/create", apiKeyHandler.CreateAPIKey)
+				apiKeys.POST("/update", apiKeyHandler.UpdateAPIKey)
+				apiKeys.POST("/delete", apiKeyHandler.DeleteAPIKey)
+			}
+			
+			// Nodes
+			nodes := protected.Group("/nodes")
+			{
+				nodes.GET("", nodeHandler.ListNodes)
+				nodes.POST("/create", nodeHandler.CreateNode)
+				nodes.POST("/update", nodeHandler.UpdateNode)
+				nodes.POST("/delete", nodeHandler.DeleteNode)
+				nodes.POST("/sub-ips/add", nodeHandler.AddSubIP)
+				nodes.POST("/sub-ips/update", nodeHandler.UpdateSubIP)
+				nodes.POST("/sub-ips/delete", nodeHandler.DeleteSubIP)
 			}
 		}
 	}
