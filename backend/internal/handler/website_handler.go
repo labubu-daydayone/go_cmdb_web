@@ -1,11 +1,11 @@
 package handler
 
 import (
-"net/http"
-"strconv"
+	"strconv"
 
-"github.com/gin-gonic/gin"
-"github.com/labubu-daydayone/go_cmdb_web/backend/internal/service"
+	"github.com/gin-gonic/gin"
+	"github.com/labubu-daydayone/go_cmdb_web/backend/internal/service"
+	"github.com/labubu-daydayone/go_cmdb_web/backend/pkg/response"
 )
 
 type WebsiteHandler struct {
@@ -45,29 +45,13 @@ pageSize = 10
 
 websites, total, err := h.websiteService.ListWebsites(page, pageSize, status)
 if err != nil {
-c.JSON(http.StatusInternalServerError, Response{
-Code:    5001,
-Message: err.Error(),
-Data:    nil,
-})
+	response.Error(c, response.CodeSystemError, err.Error())
 return
 }
 
 totalPages := (int(total) + pageSize - 1) / pageSize
 
-c.JSON(http.StatusOK, Response{
-Code:    0,
-Message: "success",
-Data: gin.H{
-"websites": websites,
-"pagination": gin.H{
-"page":        page,
-"page_size":   pageSize,
-"total":       total,
-"total_pages": totalPages,
-},
-},
-})
+	response.SuccessWithPagination(c, websites, total, page, pageSize)
 }
 
 // GetWebsite godoc
@@ -85,22 +69,14 @@ Data: gin.H{
 func (h *WebsiteHandler) GetWebsite(c *gin.Context) {
 id, err := strconv.Atoi(c.Param("id"))
 if err != nil {
-c.JSON(http.StatusBadRequest, Response{
-Code:    2001,
-Message: "invalid website ID",
-Data:    nil,
-})
+	response.Error(c, response.CodeValidationFailed, "invalid website ID")
 return
 }
 
 website, err := h.websiteService.GetWebsite(id)
 if err != nil {
 if err == service.ErrWebsiteNotFound {
-c.JSON(http.StatusNotFound, Response{
-Code:    3001,
-Message: "website not found",
-Data:    nil,
-})
+	response.NotFoundError(c, "website not found")
 return
 }
 c.JSON(http.StatusInternalServerError, Response{
@@ -117,15 +93,11 @@ domains, _ := h.websiteService.GetWebsiteDomains(id)
 // Get HTTPS config
 https, _ := h.websiteService.GetWebsiteHTTPS(id)
 
-c.JSON(http.StatusOK, Response{
-Code:    0,
-Message: "success",
-Data: gin.H{
-"website": website,
-"domains": domains,
-"https":   https,
-},
-})
+	response.Success(c, gin.H{
+		"website": website,
+		"domains": domains,
+		"https":   https,
+	})
 }
 
 // CreateWebsite godoc
@@ -143,11 +115,7 @@ Data: gin.H{
 func (h *WebsiteHandler) CreateWebsite(c *gin.Context) {
 var req service.CreateWebsiteRequest
 if err := c.ShouldBindJSON(&req); err != nil {
-c.JSON(http.StatusBadRequest, Response{
-Code:    2001,
-Message: err.Error(),
-Data:    nil,
-})
+	response.Error(c, response.CodeValidationFailed, err.Error())
 return
 }
 
@@ -164,19 +132,11 @@ code = 2003
 code = 2004
 }
 
-c.JSON(http.StatusBadRequest, Response{
-Code:    code,
-Message: err.Error(),
-Data:    nil,
-})
+	response.Error(c, code, err.Error())
 return
 }
 
-c.JSON(http.StatusOK, Response{
-Code:    0,
-Message: "success",
-Data:    response,
-})
+	response.Success(c, response)
 }
 
 // UpdateWebsite godoc
@@ -226,11 +186,7 @@ Data:    nil,
 return
 }
 
-c.JSON(http.StatusOK, Response{
-Code:    0,
-Message: "success",
-Data:    nil,
-})
+	response.Success(c, nil)
 }
 
 // DeleteWebsite godoc
