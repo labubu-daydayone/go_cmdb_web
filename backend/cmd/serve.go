@@ -1,14 +1,17 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/cdn-control-panel/backend/internal/config"
 	"github.com/cdn-control-panel/backend/internal/database"
 	"github.com/cdn-control-panel/backend/internal/handler"
 	"github.com/cdn-control-panel/backend/internal/middleware"
 	"github.com/cdn-control-panel/backend/internal/service"
+	"github.com/cdn-control-panel/backend/internal/worker"
 	_ "github.com/cdn-control-panel/backend/docs"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
@@ -69,11 +72,27 @@ func runServer() {
 	configVersionService := service.NewConfigVersionService()
 	nodeGroupService := service.NewNodeGroupService(configVersionService)
 	lineGroupService := service.NewLineGroupService(configVersionService)
+	
+	// DNS services
+	domainService := service.NewDomainService()
+	dnsProviderService := service.NewDNSProviderService()
+	dnsRecordService := service.NewDNSRecordService(domainService)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
 	groupHandler := handler.NewGroupHandler(nodeGroupService, lineGroupService)
 	configHandler := handler.NewConfigHandler(configVersionService)
+	
+	// DNS handlers
+	domainHandler := handler.NewDomainHandler(domainService)
+	dnsProviderHandler := handler.NewDNSProviderHandler(dnsProviderService)
+	dnsRecordHandler := handler.NewDNSRecordHandler(dnsRecordService)
+	
+	// Start DNS sync worker
+	ctx := context.Background()
+	dnsSyncWorker := worker.NewDNSSyncWorker(30 * time.Second)
+	go dnsSyncWorker.Start(ctx)
+	log.Println("DNS sync worker started")
 
 	// Setup Gin router
 	gin.SetMode(gin.ReleaseMode)
@@ -120,6 +139,32 @@ func runServer() {
 			config := protected.Group("/config")
 			{
 				config.GET("/version", configHandler.GetVersion)
+			}
+			
+			// Domains
+			domains := protected.Group("/domains")
+			{
+				domains.GET("", domainHandler.ListDomains)
+				domains.POST("/create", domainHandler.CreateDomain)
+				domains.POST("/update", domainHandler.UpdateDomain)
+				domains.POST("/delete", domainHandler.DeleteDomain)
+			}
+			
+			// DNS
+			dns := protected.Group("/dns")
+			{
+				// DNS Providers
+				dns.GET("/providers", dnsProviderHandler.ListProviders)
+				dns.POST("/providers/create", dnsProviderHandler.CreateProvider)
+				dns.POST("/providers/update", dnsProviderHandler.UpdateProvider)
+				dns.POST("/providers/delete", dnsProviderHandler.DeleteProvider)
+				
+				// DNS Records
+				dns.GET("/records", dnsRecordHandler.ListRecords)
+				dns.POST("/records/create", dnsRecordHandler.CreateRecord)
+				dns.POST("/records/update", dnsRecordHandler.UpdateRecord)
+				dns.POST("/records/delete", dnsRecordHandler.DeleteRecord)
+				dns.POST("/records/sync", dnsRecordHandler.TriggerSync)
 			}
 		}
 	}
