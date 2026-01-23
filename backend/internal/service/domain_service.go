@@ -87,7 +87,7 @@ func (s *DomainService) CreateDomain(req CreateDomainRequest) (*models.Domain, e
 			DomainID:       domain.ID,
 			Provider:       req.Provider,
 			ProviderZoneID: req.ProviderZoneID,
-			APIKeyID       req.APIKeyID,
+			APIKeyID:       req.APIKeyID,
 			Status:         "active",
 		}
 
