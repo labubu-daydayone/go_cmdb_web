@@ -104,6 +104,9 @@ func runServer() {
 	originHandler := handler.NewOriginHandler(originService)
 	cacheRuleHandler := handler.NewCacheRuleHandler(cacheRuleService)
 	
+	// Website handler
+	websiteHandler := handler.NewWebsiteHandler()
+	
 	// Start DNS sync worker
 	ctx := context.Background()
 	dnsSyncWorker := worker.NewDNSSyncWorker(30 * time.Second)
@@ -220,6 +223,18 @@ func runServer() {
 				cacheRules.POST("/create", cacheRuleHandler.CreateCacheRule)
 				cacheRules.POST("/update", cacheRuleHandler.UpdateCacheRule)
 				cacheRules.POST("/delete", cacheRuleHandler.DeleteCacheRule)
+			}
+			
+			// Websites
+			websites := protected.Group("/websites")
+			{
+				websites.GET("", websiteHandler.ListWebsites)
+				websites.GET("/:id", websiteHandler.GetWebsite)
+				websites.POST("/create", websiteHandler.CreateWebsite)
+				websites.POST("/update", websiteHandler.UpdateWebsite)
+				websites.POST("/delete", websiteHandler.DeleteWebsite)
+				websites.POST("/domains/manage", websiteHandler.ManageDomains)
+				websites.POST("/clear-cache", websiteHandler.ClearCache)
 			}
 		}
 	}
