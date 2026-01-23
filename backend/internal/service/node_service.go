@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/cdn-control-panel/backend/internal/database"
 	"github.com/cdn-control-panel/backend/internal/models"
@@ -27,19 +26,19 @@ func NewNodeService(configVersionService *ConfigVersionService) *NodeService {
 
 // CreateNodeRequest represents request to create a node
 type CreateNodeRequest struct {
-	Name        string  `json:"name" binding:"required"`
-	Description *string `json:"description"`
-	MainIP      string  `json:"main_ip" binding:"required"`
-	Location    *string `json:"location"`
+	Name      string `json:"name" binding:"required"`
+	MainIP    string `json:"main_ip" binding:"required"`
+	AgentPort int    `json:"agent_port"`
+	Enabled   bool   `json:"enabled"`
 }
 
 // UpdateNodeRequest represents request to update a node
 type UpdateNodeRequest struct {
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-	MainIP      *string `json:"main_ip"`
-	Location    *string `json:"location"`
-	Status      *string `json:"status"`
+	Name      *string `json:"name"`
+	MainIP    *string `json:"main_ip"`
+	AgentPort *int    `json:"agent_port"`
+	Enabled   *bool   `json:"enabled"`
+	Status    *string `json:"status"`
 }
 
 // AddSubIPRequest represents request to add a sub IP
@@ -64,12 +63,17 @@ func (s *NodeService) CreateNode(req CreateNodeRequest) (*models.Node, error) {
 		return nil, ErrNodeAlreadyExists
 	}
 
+	agentPort := 8080
+	if req.AgentPort > 0 {
+		agentPort = req.AgentPort
+	}
+
 	node := &models.Node{
-		Name:        req.Name,
-		Description: req.Description,
-		MainIP:      req.MainIP,
-		Location:    req.Location,
-		Status:      "active",
+		Name:      req.Name,
+		MainIP:    req.MainIP,
+		AgentPort: agentPort,
+		Enabled:   req.Enabled,
+		Status:    "offline",
 	}
 
 	err := db.Transaction(func(tx *gorm.DB) error {
@@ -142,14 +146,14 @@ func (s *NodeService) UpdateNode(id int, req UpdateNodeRequest) (*models.Node, e
 	if req.Name != nil {
 		updates["name"] = *req.Name
 	}
-	if req.Description != nil {
-		updates["description"] = *req.Description
-	}
 	if req.MainIP != nil {
 		updates["main_ip"] = *req.MainIP
 	}
-	if req.Location != nil {
-		updates["location"] = *req.Location
+	if req.AgentPort != nil {
+		updates["agent_port"] = *req.AgentPort
+	}
+	if req.Enabled != nil {
+		updates["enabled"] = *req.Enabled
 	}
 	if req.Status != nil {
 		updates["status"] = *req.Status

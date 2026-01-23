@@ -1,10 +1,7 @@
 package service
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/cdn-control-panel/backend/internal/database"
@@ -25,31 +22,18 @@ func NewAPIKeyService() *APIKeyService {
 
 // CreateAPIKeyRequest represents request to create an API key
 type CreateAPIKeyRequest struct {
-	Name        string     `json:"name" binding:"required"`
-	Description *string    `json:"description"`
-	Provider    string     `json:"provider" binding:"required"` // cloudflare, aliyun, etc
-	APIKey      string     `json:"api_key" binding:"required"`
-	APISecret   *string    `json:"api_secret"`
-	ExpiresAt   *time.Time `json:"expires_at"`
+	Name      string  `json:"name" binding:"required"`
+	Provider  string  `json:"provider" binding:"required"` // cloudflare
+	Account   *string `json:"account"`
+	APIToken  string  `json:"api_token" binding:"required"`
 }
 
 // UpdateAPIKeyRequest represents request to update an API key
 type UpdateAPIKeyRequest struct {
-	Name        *string    `json:"name"`
-	Description *string    `json:"description"`
-	APIKey      *string    `json:"api_key"`
-	APISecret   *string    `json:"api_secret"`
-	ExpiresAt   *time.Time `json:"expires_at"`
-	Status      *string    `json:"status"`
-}
-
-// generateToken generates a random token for API key identification
-func generateToken() (string, error) {
-	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-	return base64.URLEncoding.EncodeToString(b), nil
+	Name     *string `json:"name"`
+	Account  *string `json:"account"`
+	APIToken *string `json:"api_token"`
+	Status   *string `json:"status"`
 }
 
 // CreateAPIKey creates a new API key
@@ -62,21 +46,12 @@ func (s *APIKeyService) CreateAPIKey(req CreateAPIKeyRequest) (*models.APIKey, e
 		return nil, ErrAPIKeyAlreadyExists
 	}
 
-	// Generate token
-	token, err := generateToken()
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate token: %w", err)
-	}
-
 	apiKey := &models.APIKey{
-		Name:        req.Name,
-		Description: req.Description,
-		Provider:    req.Provider,
-		APIKey:      req.APIKey,
-		APISecret:   req.APISecret,
-		Token:       token,
-		ExpiresAt:   req.ExpiresAt,
-		Status:      "active",
+		Name:     req.Name,
+		Provider: req.Provider,
+		Account:  req.Account,
+		APIToken: req.APIToken,
+		Status:   "active",
 	}
 
 	if err := db.Create(apiKey).Error; err != nil {
@@ -133,10 +108,7 @@ func (s *APIKeyService) GetAPIKeyByToken(token string) (*models.APIKey, error) {
 		return nil, err
 	}
 
-	// Check if expired
-	if apiKey.ExpiresAt != nil && apiKey.ExpiresAt.Before(time.Now()) {
-		return nil, errors.New("API key expired")
-	}
+	// Status check is already done in query
 
 	return &apiKey, nil
 }
@@ -157,17 +129,11 @@ func (s *APIKeyService) UpdateAPIKey(id int, req UpdateAPIKeyRequest) (*models.A
 	if req.Name != nil {
 		updates["name"] = *req.Name
 	}
-	if req.Description != nil {
-		updates["description"] = *req.Description
+	if req.Account != nil {
+		updates["account"] = *req.Account
 	}
-	if req.APIKey != nil {
-		updates["api_key"] = *req.APIKey
-	}
-	if req.APISecret != nil {
-		updates["api_secret"] = *req.APISecret
-	}
-	if req.ExpiresAt != nil {
-		updates["expires_at"] = *req.ExpiresAt
+	if req.APIToken != nil {
+		updates["api_token"] = *req.APIToken
 	}
 	if req.Status != nil {
 		updates["status"] = *req.Status
