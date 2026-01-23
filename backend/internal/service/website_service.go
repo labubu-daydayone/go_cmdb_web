@@ -30,11 +30,11 @@ originService        *OriginService
 }
 
 func NewWebsiteService() *WebsiteService {
-configVersionService := NewConfigVersionService()
-domainService := NewDomainService()
-return &WebsiteService{
-domainService:        domainService,
-configVersionService: NewConfigVersionService(),
+	configVersionService := NewConfigVersionService()
+	domainService := NewDomainService()
+	return &WebsiteService{
+		domainService:        domainService,
+		configVersionService: configVersionService,
 dnsRecordService:     NewDNSRecordService(NewDomainService()),
 lineGroupService:     NewLineGroupService(NewConfigVersionService()),
 originService:        NewOriginService(NewConfigVersionService()),
@@ -838,14 +838,13 @@ if err := tx.First(&website, websiteID).Error; err != nil {
 continue
 }
 
-// Create agent task
-task := &models.AgentTask{
-TaskType:  "purge_cache",
-TargetID:  websiteID,
-Status:    "pending",
-Params:    fmt.Sprintf(`{"type":"%s","targets":%v}`, req.Type, req.Targets),
-CreatedAt: time.Now(),
-}
+		// Create agent task
+		task := &models.AgentTask{
+			NodeID:  0, // Will be assigned by task scheduler
+			Type:    "purge_cache",
+			Payload: fmt.Sprintf(`{"website_id":%d,"type":"%s","targets":%v}`, websiteID, req.Type, req.Targets),
+			Status:  "pending",
+		}
 
 if err := tx.Create(task).Error; err != nil {
 return err
