@@ -1,9 +1,10 @@
 package service
 
 import (
-"errors"
-"fmt"
-"time"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
 
 "github.com/labubu-daydayone/go_cmdb_web/backend/internal/database"
 "github.com/labubu-daydayone/go_cmdb_web/backend/internal/models"
@@ -13,7 +14,6 @@ import (
 
 var (
 ErrWebsiteNotFound        = errors.New("website not found")
-ErrDomainAlreadyExists    = errors.New("domain already exists")
 ErrLineGroupNotFound      = errors.New("line group not found")
 ErrInvalidOriginMode      = errors.New("invalid origin mode")
 ErrOriginGroupRequired    = errors.New("origin_group_id required when mode=group")
@@ -22,6 +22,7 @@ ErrNoPrimaryDomain        = errors.New("at least one primary domain required")
 )
 
 type WebsiteService struct {
+domainService        *DomainService
 configVersionService *ConfigVersionService
 dnsRecordService     *DNSRecordService
 lineGroupService     *LineGroupService
@@ -29,11 +30,14 @@ originService        *OriginService
 }
 
 func NewWebsiteService() *WebsiteService {
+configVersionService := NewConfigVersionService()
+domainService := NewDomainService()
 return &WebsiteService{
+domainService:        domainService,
 configVersionService: NewConfigVersionService(),
-dnsRecordService:     NewDNSRecordService(),
-lineGroupService:     NewLineGroupService(),
-originService:        NewOriginService(),
+dnsRecordService:     NewDNSRecordService(NewDomainService()),
+lineGroupService:     NewLineGroupService(NewConfigVersionService()),
+originService:        NewOriginService(NewConfigVersionService()),
 }
 }
 
@@ -252,7 +256,7 @@ continue
 // Find domain_id for DNS record
 var domain models.Domain
 fqdn := domainReq.Domain
-zoneName, err := utils.FindZoneForFQDN(tx, fqdn)
+			zoneName, err := s.findZoneForFQDN(tx, fqdn)
 if err != nil {
 response.DomainsFailed++
 response.FailedDomains = append(response.FailedDomains, domainReq.Domain)
@@ -275,7 +279,7 @@ continue
 relativeName := utils.CalculateRelativeName(fqdn, zoneName)
 
 // Create DNS CNAME record (pending)
-dnsRecord := &models.DNSRecord{
+			dnsRecord := &models.DomainDNSRecord{
 DomainID:  domain.ID,
 Type:      "CNAME",
 Name:      relativeName,
@@ -534,7 +538,7 @@ return err
 for _, domain := range domains {
 // Find zone for this domain
 var domainRecord models.Domain
-zoneName, err := utils.FindZoneForFQDN(tx, domain.Domain)
+		zoneName, err := s.findZoneForFQDN(tx, domain.Domain)
 if err != nil {
 continue
 }
@@ -546,7 +550,7 @@ continue
 relativeName := utils.CalculateRelativeName(domain.Domain, zoneName)
 
 // Create new DNS record (pending)
-dnsRecord := &models.DNSRecord{
+		dnsRecord := &models.DomainDNSRecord{
 DomainID:  domainRecord.ID,
 Type:      "CNAME",
 Name:      relativeName,
@@ -662,7 +666,7 @@ return err
 for _, domain := range domains {
 // Delete DNS records
 if err := tx.Where("owner_type = ? AND owner_id = ?", "website_domain", domain.ID).
-Delete(&models.DNSRecord{}).Error; err != nil {
+			Delete(&models.DomainDNSRecord{}).Error; err != nil {
 return err
 }
 }
@@ -739,7 +743,7 @@ return err
 
 // Find zone and create DNS record
 var domainRecord models.Domain
-zoneName, err := utils.FindZoneForFQDN(tx, domain)
+		zoneName, err := s.findZoneForFQDN(tx, domain)
 if err != nil {
 return err
 }
@@ -750,7 +754,7 @@ return err
 
 relativeName := utils.CalculateRelativeName(domain, zoneName)
 
-dnsRecord := &models.DNSRecord{
+	dnsRecord := &models.DomainDNSRecord{
 DomainID:  domainRecord.ID,
 Type:      "CNAME",
 Name:      relativeName,
@@ -791,7 +795,7 @@ return err
 
 // Delete DNS records
 if err := tx.Where("owner_type = ? AND owner_id = ?", "website_domain", websiteDomain.ID).
-Delete(&models.DNSRecord{}).Error; err != nil {
+		Delete(&models.DomainDNSRecord{}).Error; err != nil {
 return err
 }
 
@@ -850,4 +854,26 @@ return err
 
 return nil
 })
+}
+
+// findZoneForFQDN finds the zone (domain) that contains the given FQDN
+func (s *WebsiteService) findZoneForFQDN(tx *gorm.DB, fqdn string) (string, error) {
+	fqdn = strings.TrimSuffix(fqdn, ".")
+	
+	// Try to find exact match first
+	var domain models.Domain
+	if err := tx.Where("domain = ?", fqdn).First(&domain).Error; err == nil {
+		return domain.Domain, nil
+	}
+	
+	// Try to find parent zones
+	parts := strings.Split(fqdn, ".")
+	for i := 1; i < len(parts); i++ {
+		zone := strings.Join(parts[i:], ".")
+		if err := tx.Where("domain = ?", zone).First(&domain).Error; err == nil {
+			return domain.Domain, nil
+		}
+	}
+	
+	return "", errors.New("no zone found for FQDN: " + fqdn)
 }
