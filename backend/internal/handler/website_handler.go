@@ -49,8 +49,6 @@ if err != nil {
 return
 }
 
-totalPages := (int(total) + pageSize - 1) / pageSize
-
 	response.SuccessWithPagination(c, websites, total, page, pageSize)
 }
 
@@ -79,11 +77,7 @@ if err == service.ErrWebsiteNotFound {
 	response.NotFoundError(c, "website not found")
 return
 }
-c.JSON(http.StatusInternalServerError, Response{
-Code:    5001,
-Message: err.Error(),
-Data:    nil,
-})
+	response.Error(c, response.CodeSystemError, err.Error())
 return
 }
 
@@ -119,24 +113,24 @@ if err := c.ShouldBindJSON(&req); err != nil {
 return
 }
 
-response, err := h.websiteService.CreateWebsite(req)
-if err != nil {
-code := 5001
-if err == service.ErrLineGroupNotFound {
-code = 3002
-} else if err == service.ErrOriginGroupRequired {
-code = 2002
-} else if err == service.ErrOriginAddressesRequired {
-code = 2003
-} else if err == service.ErrNoPrimaryDomain {
-code = 2004
-}
+	resp, err := h.websiteService.CreateWebsite(req)
+	if err != nil {
+		code := 5001
+		if err == service.ErrLineGroupNotFound {
+			code = 3002
+		} else if err == service.ErrOriginGroupRequired {
+			code = 2002
+		} else if err == service.ErrOriginAddressesRequired {
+			code = 2003
+		} else if err == service.ErrNoPrimaryDomain {
+			code = 2004
+		}
 
-	response.Error(c, code, err.Error())
-return
-}
+		response.Error(c, code, err.Error())
+		return
+	}
 
-	response.Success(c, response)
+	response.Success(c, resp)
 }
 
 // UpdateWebsite godoc
@@ -160,29 +154,17 @@ service.UpdateWebsiteRequest
 }
 
 if err := c.ShouldBindJSON(&req); err != nil {
-c.JSON(http.StatusBadRequest, Response{
-Code:    2001,
-Message: err.Error(),
-Data:    nil,
-})
+	response.Error(c, response.CodeValidationFailed, err.Error())
 return
 }
 
 err := h.websiteService.UpdateWebsite(req.ID, req.UpdateWebsiteRequest)
 if err != nil {
 if err == service.ErrWebsiteNotFound {
-c.JSON(http.StatusNotFound, Response{
-Code:    3001,
-Message: "website not found",
-Data:    nil,
-})
+	response.NotFoundError(c, "website not found")
 return
 }
-c.JSON(http.StatusInternalServerError, Response{
-Code:    5001,
-Message: err.Error(),
-Data:    nil,
-})
+	response.Error(c, response.CodeSystemError, err.Error())
 return
 }
 
@@ -234,11 +216,7 @@ Data:    nil,
 return
 }
 
-c.JSON(http.StatusOK, Response{
-Code:    0,
-Message: "success",
-Data:    nil,
-})
+	response.Success(c, nil)
 }
 
 // ManageDomains godoc
