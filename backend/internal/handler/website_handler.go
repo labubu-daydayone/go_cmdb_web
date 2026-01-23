@@ -190,29 +190,17 @@ ID int `json:"id" binding:"required"`
 }
 
 if err := c.ShouldBindJSON(&req); err != nil {
-c.JSON(http.StatusBadRequest, Response{
-Code:    2001,
-Message: err.Error(),
-Data:    nil,
-})
+response.Error(c, response.CodeValidationFailed, err.Error())
 return
 }
 
 err := h.websiteService.DeleteWebsite(req.ID)
 if err != nil {
 if err == service.ErrWebsiteNotFound {
-c.JSON(http.StatusNotFound, Response{
-Code:    3001,
-Message: "website not found",
-Data:    nil,
-})
+response.NotFoundError(c, "website not found")
 return
 }
-c.JSON(http.StatusInternalServerError, Response{
-Code:    5001,
-Message: err.Error(),
-Data:    nil,
-})
+response.Error(c, response.CodeSystemError, err.Error())
 return
 }
 
@@ -264,19 +252,11 @@ code = 3001
 code = 3002
 }
 
-c.JSON(http.StatusBadRequest, Response{
-Code:    code,
-Message: err.Error(),
-Data:    nil,
-})
+response.Error(c, code, err.Error())
 return
 }
 
-c.JSON(http.StatusOK, Response{
-Code:    0,
-Message: "success",
-Data:    nil,
-})
+response.Success(c, nil)
 }
 
 // ClearCache godoc
