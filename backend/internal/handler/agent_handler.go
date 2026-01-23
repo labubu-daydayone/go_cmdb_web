@@ -89,3 +89,90 @@ func (h *AgentHandler) GetConfig(c *gin.Context) {
 
 	response.Success(c, config)
 }
+
+// GetPendingTasks godoc
+// @Summary Get pending tasks for the current node
+// @Description Get all pending tasks assigned to the authenticated node
+// @Tags agent
+// @Accept json
+// @Produce json
+// @Success 200 {object} response.Response{data=[]models.AgentTask}
+// @Failure 401 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Security mTLS
+// @Router /api/v1/agent/tasks [get]
+func (h *AgentHandler) GetPendingTasks(c *gin.Context) {
+	// Get node from context (set by mTLS middleware)
+	nodeID, exists := c.Get("node_id")
+	if !exists {
+		response.Error(c, response.CodeUnauthorized, "node not authenticated")
+		return
+	}
+
+	taskService := service.NewAgentTaskService()
+	tasks, err := taskService.GetPendingTasks(nodeID.(int))
+	if err != nil {
+		response.Error(c, response.CodeSystemError, err.Error())
+		return
+	}
+
+	response.Success(c, tasks)
+}
+
+// UpdateTaskStatus godoc
+// @Summary Update task status
+// @Description Update the status of a task (called by agent after task execution)
+// @Tags agent
+// @Accept json
+// @Produce json
+// @Param id path int true "Task ID"
+// @Param request body service.UpdateTaskStatusRequest true "Status update request"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 401 {object} response.Response
+// @Failure 404 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Security mTLS
+// @Router /api/v1/agent/tasks/:id/status [post]
+func (h *AgentHandler) UpdateTaskStatus(c *gin.Context) {
+	// Get task ID from path
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		response.Error(c, response.CodeInvalidParams, "invalid task id")
+		return
+	}
+
+	// Parse request
+	var req service.UpdateTaskStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, response.CodeInvalidParams, err.Error())
+		return
+	}
+
+	// Verify task belongs to authenticated node
+	nodeID, exists := c.Get("node_id")
+	if !exists {
+		response.Error(c, response.CodeUnauthorized, "node not authenticated")
+		return
+	}
+
+	taskService := service.NewAgentTaskService()
+	task, err := taskService.GetTaskByID(id)
+	if err != nil {
+		response.Error(c, response.CodeNotFound, "task not found")
+		return
+	}
+
+	if task.NodeID != nodeID.(int) {
+		response.Error(c, response.CodeForbidden, "task does not belong to this node")
+		return
+	}
+
+	// Update status
+	if err := taskService.UpdateTaskStatus(id, req); err != nil {
+		response.Error(c, response.CodeSystemError, err.Error())
+		return
+	}
+
+	response.Success(c, nil)
+}
