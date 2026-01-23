@@ -88,8 +88,8 @@ func (s *CacheRuleService) CreateCacheRule(req CreateCacheRuleRequest) (*models.
 		return nil, err
 	}
 
-	// Load items
-	db.Preload("Items").First(rule, rule.ID)
+	// Reload rule
+	db.First(rule, rule.ID)
 
 	return rule, nil
 }
@@ -99,7 +99,7 @@ func (s *CacheRuleService) ListCacheRules(page, pageSize int) ([]models.CacheRul
 	var rules []models.CacheRule
 	var total int64
 
-	query := database.DB.Model(&models.CacheRule{}).Preload("Items")
+	query := database.DB.Model(&models.CacheRule{})
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -116,7 +116,7 @@ func (s *CacheRuleService) ListCacheRules(page, pageSize int) ([]models.CacheRul
 // GetCacheRule returns a cache rule by ID
 func (s *CacheRuleService) GetCacheRule(id int) (*models.CacheRule, error) {
 	var rule models.CacheRule
-	if err := database.DB.Preload("Items").First(&rule, id).Error; err != nil {
+	if err := database.DB.First(&rule, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrCacheRuleNotFound
 		}
@@ -185,8 +185,8 @@ func (s *CacheRuleService) UpdateCacheRule(id int, req UpdateCacheRuleRequest) (
 		return nil, err
 	}
 
-	// Reload with items
-	db.Preload("Items").First(&rule, id)
+	// Reload rule
+	db.First(&rule, id)
 
 	return &rule, nil
 }
