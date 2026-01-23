@@ -107,6 +107,7 @@ func runServer() {
 	// Website handler
 	websiteHandler := handler.NewWebsiteHandler()
 	certificateHandler := handler.NewCertificateHandler()
+	agentHandler := handler.NewAgentHandler()
 	
 	// Start DNS sync worker
 	ctx := context.Background()
@@ -247,6 +248,13 @@ func runServer() {
 				certificates.POST("/delete", certificateHandler.DeleteCertificate)
 				certificates.POST("/bind", certificateHandler.BindCertificate)
 				certificates.POST("/unbind", certificateHandler.UnbindCertificate)
+			}
+
+			// Agent API (mTLS authentication - TODO: implement mTLS middleware)
+			agent := protected.Group("/agent")
+			{
+				agent.GET("/certificates", agentHandler.GetCertificates)
+				agent.GET("/certificates/:id", agentHandler.GetCertificateByID)
 			}
 		}
 	}
