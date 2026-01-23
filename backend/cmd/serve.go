@@ -81,6 +81,10 @@ func runServer() {
 	// Node and API Key services
 	nodeService := service.NewNodeService(configVersionService)
 	apiKeyService := service.NewAPIKeyService()
+	
+	// Origin and Cache Rule services
+	originService := service.NewOriginService(configVersionService)
+	cacheRuleService := service.NewCacheRuleService(configVersionService)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
@@ -95,6 +99,10 @@ func runServer() {
 	// Node and API Key handlers
 	nodeHandler := handler.NewNodeHandler(nodeService)
 	apiKeyHandler := handler.NewAPIKeyHandler(apiKeyService)
+	
+	// Origin and Cache Rule handlers
+	originHandler := handler.NewOriginHandler(originService)
+	cacheRuleHandler := handler.NewCacheRuleHandler(cacheRuleService)
 	
 	// Start DNS sync worker
 	ctx := context.Background()
@@ -194,6 +202,24 @@ func runServer() {
 				nodes.POST("/sub-ips/add", nodeHandler.AddSubIP)
 				nodes.POST("/sub-ips/update", nodeHandler.UpdateSubIP)
 				nodes.POST("/sub-ips/delete", nodeHandler.DeleteSubIP)
+			}
+			
+			// Origin Groups
+			originGroups := protected.Group("/origin-groups")
+			{
+				originGroups.GET("", originHandler.ListOriginGroups)
+				originGroups.POST("/create", originHandler.CreateOriginGroup)
+				originGroups.POST("/update", originHandler.UpdateOriginGroup)
+				originGroups.POST("/delete", originHandler.DeleteOriginGroup)
+			}
+			
+			// Cache Rules
+			cacheRules := protected.Group("/cache-rules")
+			{
+				cacheRules.GET("", cacheRuleHandler.ListCacheRules)
+				cacheRules.POST("/create", cacheRuleHandler.CreateCacheRule)
+				cacheRules.POST("/update", cacheRuleHandler.UpdateCacheRule)
+				cacheRules.POST("/delete", cacheRuleHandler.DeleteCacheRule)
 			}
 		}
 	}
