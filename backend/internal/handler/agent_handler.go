@@ -69,3 +69,23 @@ func (h *AgentHandler) GetCertificateByID(c *gin.Context) {
 
 	response.Success(c, certificate)
 }
+
+// GetConfig godoc
+// @Summary Get complete CDN configuration
+// @Description Get all configuration data for the agent node including websites, node groups, and line groups
+// @Tags agent
+// @Accept json
+// @Produce json
+// @Success 200 {object} response.Response{data=service.AgentConfigResponse}
+// @Failure 500 {object} response.Response
+// @Security mTLS
+// @Router /api/v1/agent/config [get]
+func (h *AgentHandler) GetConfig(c *gin.Context) {
+	config, err := h.agentService.GetConfig()
+	if err != nil {
+		response.Error(c, response.CodeSystemError, err.Error())
+		return
+	}
+
+	response.Success(c, config)
+}

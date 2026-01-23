@@ -250,13 +250,14 @@ func runServer() {
 				certificates.POST("/unbind", certificateHandler.UnbindCertificate)
 			}
 
-			// Agent API (mTLS authentication)
-			agent := v1.Group("/agent")
-			agent.Use(middleware.MTLSAuth())
-			{
-				agent.GET("/certificates", agentHandler.GetCertificates)
-				agent.GET("/certificates/:id", agentHandler.GetCertificateByID)
-			}
+				// Agent API (mTLS authentication)
+				agent := v1.Group("/agent")
+				agent.Use(middleware.MTLSAuth())
+				{
+					agent.GET("/config", agentHandler.GetConfig)
+					agent.GET("/certificates", agentHandler.GetCertificates)
+					agent.GET("/certificates/:id", agentHandler.GetCertificateByID)
+				}
 		}
 	}
 
