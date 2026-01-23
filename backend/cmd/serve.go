@@ -115,6 +115,11 @@ func runServer() {
 	go dnsSyncWorker.Start(ctx)
 	log.Println("DNS sync worker started")
 
+	// Start ACME worker
+	acmeWorker := worker.NewACMEWorker(acmeService, certificateService, dnsRecordService)
+	go acmeWorker.Start()
+	log.Println("ACME worker started")
+
 	// Setup Gin router
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
