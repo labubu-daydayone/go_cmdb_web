@@ -25,6 +25,7 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	DBName   string
+	Socket   string
 }
 
 type RedisConfig struct {
@@ -54,6 +55,7 @@ func Load() (*Config, error) {
 			User:     getEnv("DB_USER", "root"),
 			Password: getEnv("DB_PASSWORD", ""),
 			DBName:   getEnv("DB_NAME", "cdn_control"),
+			Socket:   getEnv("DB_SOCKET", ""),
 		},
 		Redis: RedisConfig{
 			Host:     getEnv("REDIS_HOST", "localhost"),
@@ -75,6 +77,16 @@ func Load() (*Config, error) {
 
 // GetDSN returns MySQL DSN connection string
 func (c *DatabaseConfig) GetDSN() string {
+	// If socket is specified, use unix socket connection
+	if c.Socket != "" {
+		return fmt.Sprintf("%s:%s@unix(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+			c.User,
+			c.Password,
+			c.Socket,
+			c.DBName,
+		)
+	}
+	// Otherwise use TCP connection
 	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		c.User,
 		c.Password,
