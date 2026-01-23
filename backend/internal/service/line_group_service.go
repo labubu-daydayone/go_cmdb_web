@@ -69,10 +69,7 @@ func (s *LineGroupService) CreateLineGroup(req CreateLineGroupRequest) (*models.
 		}
 
 		// 2. Insert domain_dns_records (CNAME pointing to node_group.cname)
-		relativeName, err := utils.CalculateRelativeName(cname, domain.Domain)
-		if err != nil {
-			return fmt.Errorf("failed to calculate relative name: %w", err)
-		}
+		relativeName := utils.CalculateRelativeName(cname, domain.Domain)
 
 		dnsRecord := models.DomainDNSRecord{
 			DomainID:  req.DomainID,

@@ -83,10 +83,7 @@ func (s *NodeGroupService) CreateNodeGroup(req CreateNodeGroupRequest) (*models.
 		}
 
 		// Calculate relative name for DNS record
-		relativeName, err := utils.CalculateRelativeName(cname, domain.Domain)
-		if err != nil {
-			return fmt.Errorf("failed to calculate relative name: %w", err)
-		}
+		relativeName := utils.CalculateRelativeName(cname, domain.Domain)
 
 		for _, subIP := range subIPs {
 			dnsRecord := models.DomainDNSRecord{
