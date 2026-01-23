@@ -94,3 +94,18 @@ func SystemError(c *gin.Context, message string) {
 func DatabaseError(c *gin.Context, message string) {
 	Error(c, CodeDatabaseError, message)
 }
+
+// SuccessWithPagination sends a successful response with pagination info
+func SuccessWithPagination(c *gin.Context, data interface{}, total int64, page int, pageSize int) {
+	c.JSON(http.StatusOK, gin.H{
+		"code":    CodeSuccess,
+		"message": "success",
+		"data":    data,
+		"pagination": gin.H{
+			"total":     total,
+			"page":      page,
+			"page_size": pageSize,
+			"total_pages": (total + int64(pageSize) - 1) / int64(pageSize),
+		},
+	})
+}

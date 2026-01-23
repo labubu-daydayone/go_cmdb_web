@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"net/http"
 
 	"github.com/cdn-control-panel/backend/internal/service"
 	"github.com/cdn-control-panel/backend/pkg/response"
