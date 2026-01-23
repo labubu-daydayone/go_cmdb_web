@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"time"
 
 	"github.com/cdn-control-panel/backend/internal/database"
 	"github.com/cdn-control-panel/backend/internal/models"
@@ -28,12 +27,12 @@ func NewOriginService(configVersionService *ConfigVersionService) *OriginService
 
 // CreateOriginGroupRequest represents request to create an origin group
 type CreateOriginGroupRequest struct {
-	Name        string                     `json:"name" binding:"required"`
-	Description *string                    `json:"description"`
-	Items       []CreateOriginGroupItemReq `json:"items" binding:"required,min=1"`
+	Name        string                       `json:"name" binding:"required"`
+	Description *string                      `json:"description"`
+	Addresses   []CreateOriginGroupAddressReq `json:"addresses" binding:"required,min=1"`
 }
 
-type CreateOriginGroupItemReq struct {
+type CreateOriginGroupAddressReq struct {
 	Role     string `json:"role" binding:"required,oneof=primary backup"`
 	Protocol string `json:"protocol" binding:"required,oneof=http https"`
 	Address  string `json:"address" binding:"required"`
@@ -43,9 +42,9 @@ type CreateOriginGroupItemReq struct {
 
 // UpdateOriginGroupRequest represents request to update an origin group
 type UpdateOriginGroupRequest struct {
-	Name        *string                    `json:"name"`
-	Description *string                    `json:"description"`
-	Items       []CreateOriginGroupItemReq `json:"items"`
+	Name        *string                       `json:"name"`
+	Description *string                       `json:"description"`
+	Addresses   []CreateOriginGroupAddressReq `json:"addresses"`
 }
 
 // CreateOriginGroup creates a new origin group
@@ -69,17 +68,17 @@ func (s *OriginService) CreateOriginGroup(req CreateOriginGroupRequest) (*models
 			return err
 		}
 
-		// Create items
-		for _, itemReq := range req.Items {
-			item := &models.OriginGroupAddress{
+		// Create addresses
+		for _, addrReq := range req.Addresses {
+			addr := &models.OriginGroupAddress{
 				OriginGroupID: group.ID,
-				Role:          itemReq.Role,
-				Protocol:      itemReq.Protocol,
-				Address:       itemReq.Address,
-				Weight:        itemReq.Weight,
-				Enabled:       itemReq.Enabled,
+				Role:          addrReq.Role,
+				Protocol:      addrReq.Protocol,
+				Address:       addrReq.Address,
+				Weight:        addrReq.Weight,
+				Enabled:       addrReq.Enabled,
 			}
-			if err := tx.Create(item).Error; err != nil {
+			if err := tx.Create(addr).Error; err != nil {
 				return err
 			}
 		}
@@ -96,9 +95,6 @@ func (s *OriginService) CreateOriginGroup(req CreateOriginGroupRequest) (*models
 		return nil, err
 	}
 
-	// Load items
-	db.Preload("Addresses").First(group, group.ID)
-
 	return group, nil
 }
 
@@ -107,7 +103,7 @@ func (s *OriginService) ListOriginGroups(page, pageSize int) ([]models.OriginGro
 	var groups []models.OriginGroup
 	var total int64
 
-	query := database.DB.Model(&models.OriginGroup{}).Preload("Addresses")
+	query := database.DB.Model(&models.OriginGroup{})
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -124,7 +120,7 @@ func (s *OriginService) ListOriginGroups(page, pageSize int) ([]models.OriginGro
 // GetOriginGroup returns an origin group by ID
 func (s *OriginService) GetOriginGroup(id int) (*models.OriginGroup, error) {
 	var group models.OriginGroup
-	if err := database.DB.Preload("Addresses").First(&group, id).Error; err != nil {
+	if err := database.DB.First(&group, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrOriginGroupNotFound
 		}
@@ -160,24 +156,24 @@ func (s *OriginService) UpdateOriginGroup(id int, req UpdateOriginGroupRequest) 
 			}
 		}
 
-		// Update items if provided
-		if req.Items != nil {
-			// Delete old items
+		// Update addresses if provided
+		if req.Addresses != nil {
+			// Delete old addresses
 			if err := tx.Where("origin_group_id = ?", id).Delete(&models.OriginGroupAddress{}).Error; err != nil {
 				return err
 			}
 
-			// Create new items
-			for _, itemReq := range req.Items {
-				item := &models.OriginGroupAddress{
+			// Create new addresses
+			for _, addrReq := range req.Addresses {
+				addr := &models.OriginGroupAddress{
 					OriginGroupID: id,
-					Role:          itemReq.Role,
-					Protocol:      itemReq.Protocol,
-					Address:       itemReq.Address,
-					Weight:        itemReq.Weight,
-					Enabled:       itemReq.Enabled,
+					Role:          addrReq.Role,
+					Protocol:      addrReq.Protocol,
+					Address:       addrReq.Address,
+					Weight:        addrReq.Weight,
+					Enabled:       addrReq.Enabled,
 				}
-				if err := tx.Create(item).Error; err != nil {
+				if err := tx.Create(addr).Error; err != nil {
 					return err
 				}
 			}
@@ -195,9 +191,6 @@ func (s *OriginService) UpdateOriginGroup(id int, req UpdateOriginGroupRequest) 
 		return nil, err
 	}
 
-	// Reload with items
-	db.Preload("Addresses").First(&group, id)
-
 	return &group, nil
 }
 
@@ -205,9 +198,9 @@ func (s *OriginService) UpdateOriginGroup(id int, req UpdateOriginGroupRequest) 
 func (s *OriginService) DeleteOriginGroup(id int) error {
 	db := database.DB
 
-	// Check if group is in use by websites
+	// Check if group is in use by websites (via origin_sets)
 	var count int64
-	if err := db.Model(&models.Website{}).Where("origin_mode = ? AND origin_group_id = ?", "group", id).Count(&count).Error; err != nil {
+	if err := db.Model(&models.OriginSet{}).Where("origin_group_id = ?", id).Count(&count).Error; err != nil {
 		return err
 	}
 
@@ -216,7 +209,7 @@ func (s *OriginService) DeleteOriginGroup(id int) error {
 	}
 
 	return db.Transaction(func(tx *gorm.DB) error {
-		// Delete items first
+		// Delete addresses first
 		if err := tx.Where("origin_group_id = ?", id).Delete(&models.OriginGroupAddress{}).Error; err != nil {
 			return err
 		}
@@ -238,115 +231,4 @@ func (s *OriginService) DeleteOriginGroup(id int) error {
 
 		return nil
 	})
-}
-
-// ===== Origin Set (Snapshot) =====
-
-// CreateOriginSetFromGroup creates an origin set (snapshot) from a group
-func (s *OriginService) CreateOriginSetFromGroup(websiteID, groupID int) (*models.OriginSet, error) {
-	db := database.DB
-
-	// Get group with items
-	var group models.OriginGroup
-	if err := db.Preload("Addresses").First(&group, groupID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrOriginGroupNotFound
-		}
-		return nil, err
-	}
-
-	set := &models.OriginSet{
-		WebsiteID:       websiteID,
-		OriginGroupID:   &groupID,
-		OriginGroupName: &group.Name,
-		SnapshotAt:      time.Now(),
-	}
-
-	err := db.Transaction(func(tx *gorm.DB) error {
-		// Create set
-		if err := tx.Create(set).Error; err != nil {
-			return err
-		}
-
-		// Copy items from group
-		for _, groupItem := range group.Addresses {
-			setItem := &models.OriginSetAddress{
-				OriginSetID: set.ID,
-				Role:        groupItem.Role,
-				Protocol:    groupItem.Protocol,
-				Address:     groupItem.Address,
-				Weight:      groupItem.Weight,
-				Enabled:     groupItem.Enabled,
-			}
-			if err := tx.Create(setItem).Error; err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Load items
-	db.Preload("Addresses").First(set, set.ID)
-
-	return set, nil
-}
-
-// CreateOriginSetManual creates an origin set manually
-func (s *OriginService) CreateOriginSetManual(websiteID int, items []CreateOriginGroupItemReq) (*models.OriginSet, error) {
-	db := database.DB
-
-	set := &models.OriginSet{
-		WebsiteID:  websiteID,
-		SnapshotAt: time.Now(),
-	}
-
-	err := db.Transaction(func(tx *gorm.DB) error {
-		// Create set
-		if err := tx.Create(set).Error; err != nil {
-			return err
-		}
-
-		// Create items
-		for _, itemReq := range items {
-			item := &models.OriginSetAddress{
-				OriginSetID: set.ID,
-				Role:        itemReq.Role,
-				Protocol:    itemReq.Protocol,
-				Address:     itemReq.Address,
-				Weight:      itemReq.Weight,
-				Enabled:     itemReq.Enabled,
-			}
-			if err := tx.Create(item).Error; err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Load items
-	db.Preload("Addresses").First(set, set.ID)
-
-	return set, nil
-}
-
-// GetOriginSetByWebsite returns the origin set for a website
-func (s *OriginService) GetOriginSetByWebsite(websiteID int) (*models.OriginSet, error) {
-	var set models.OriginSet
-	if err := database.DB.Preload("Addresses").Where("website_id = ?", websiteID).First(&set).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrOriginSetNotFound
-		}
-		return nil, err
-	}
-	return &set, nil
 }
