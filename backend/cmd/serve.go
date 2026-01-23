@@ -106,6 +106,7 @@ func runServer() {
 	
 	// Website handler
 	websiteHandler := handler.NewWebsiteHandler()
+	certificateHandler := handler.NewCertificateHandler()
 	
 	// Start DNS sync worker
 	ctx := context.Background()
@@ -235,6 +236,17 @@ func runServer() {
 				websites.POST("/delete", websiteHandler.DeleteWebsite)
 				websites.POST("/domains/manage", websiteHandler.ManageDomains)
 				websites.POST("/clear-cache", websiteHandler.ClearCache)
+			}
+
+			certificates := protected.Group("/certificates")
+			{
+				certificates.GET("", certificateHandler.ListCertificates)
+				certificates.GET("/:id", certificateHandler.GetCertificate)
+				certificates.POST("/upload", certificateHandler.UploadCertificate)
+				certificates.POST("/request", certificateHandler.RequestCertificate)
+				certificates.POST("/delete", certificateHandler.DeleteCertificate)
+				certificates.POST("/bind", certificateHandler.BindCertificate)
+				certificates.POST("/unbind", certificateHandler.UnbindCertificate)
 			}
 		}
 	}
