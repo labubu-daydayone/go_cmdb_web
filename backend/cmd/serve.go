@@ -9,8 +9,11 @@ import (
 	"github.com/cdn-control-panel/backend/internal/handler"
 	"github.com/cdn-control-panel/backend/internal/middleware"
 	"github.com/cdn-control-panel/backend/internal/service"
+	_ "github.com/cdn-control-panel/backend/docs"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	swaggerFiles "github.com/swaggo/files"
 )
 
 var (
@@ -80,6 +83,9 @@ func runServer() {
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
+
+	// Swagger documentation
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// API v1 routes
 	v1 := r.Group("/api/v1")

@@ -11,6 +11,9 @@ require (
 	github.com/go-acme/lego/v4 v4.20.4
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
+	github.com/swaggo/swag v1.16.4
+	github.com/swaggo/gin-swagger v1.6.0
+	github.com/swaggo/files v1.0.1
 	golang.org/x/crypto v0.31.0
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.12

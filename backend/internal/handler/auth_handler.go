@@ -27,7 +27,18 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
-// Login handles POST /api/v1/auth/login
+// Login godoc
+// @Summary 用户登录
+// @Description 使用用户名和密码登录，返回JWT token
+// @Tags 认证
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "登录请求"
+// @Success 200 {object} response.Response{data=LoginResponse} "登录成功"
+// @Failure 400 {object} response.Response "参数错误"
+// @Failure 401 {object} response.Response "用户名或密码错误"
+// @Failure 500 {object} response.Response "系统错误"
+// @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
