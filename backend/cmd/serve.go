@@ -145,6 +145,7 @@ func runServer() {
 			{
 				nodeGroups.GET("", groupHandler.ListNodeGroups)
 				nodeGroups.POST("/create", groupHandler.CreateNodeGroup)
+				nodeGroups.POST("/update", groupHandler.UpdateNodeGroup)
 				nodeGroups.POST("/delete", groupHandler.DeleteNodeGroup)
 			}
 
@@ -153,6 +154,7 @@ func runServer() {
 			{
 				lineGroups.GET("", groupHandler.ListLineGroups)
 				lineGroups.POST("/create", groupHandler.CreateLineGroup)
+				lineGroups.POST("/update", groupHandler.UpdateLineGroup)
 				lineGroups.POST("/delete", groupHandler.DeleteLineGroup)
 			}
 

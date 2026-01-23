@@ -149,3 +149,80 @@ func (s *LineGroupService) DeleteLineGroup(id int) error {
 		return nil
 	})
 }
+
+// UpdateLineGroupRequest represents the request to update a line group
+type UpdateLineGroupRequest struct {
+	Name        *string `json:"name"`
+	NodeGroupID *int    `json:"node_group_id"`
+}
+
+// UpdateLineGroup updates a line group
+// DB Writes (transaction):
+// 1. update line_groups (name, node_group_id)
+// 2. if node_group_id changed: update domain_dns_records(value=new_node_group.cname, status=pending)
+// 3. bump config_versions(reason="line_group:update")
+func (s *LineGroupService) UpdateLineGroup(id int, req UpdateLineGroupRequest) (*models.LineGroup, error) {
+	var lineGroup *models.LineGroup
+
+	err := database.DB.Transaction(func(tx *gorm.DB) error {
+		// Get existing line group
+		lineGroup = &models.LineGroup{}
+		if err := tx.First(lineGroup, id).Error; err != nil {
+			return fmt.Errorf("line group not found: %w", err)
+		}
+
+		oldNodeGroupID := lineGroup.NodeGroupID
+
+		// 1. Update line_groups
+		updates := make(map[string]interface{})
+		if req.Name != nil {
+			updates["name"] = *req.Name
+		}
+		if req.NodeGroupID != nil {
+			updates["node_group_id"] = *req.NodeGroupID
+		}
+
+		if len(updates) > 0 {
+			if err := tx.Model(lineGroup).Updates(updates).Error; err != nil {
+				return fmt.Errorf("failed to update line group: %w", err)
+			}
+		}
+
+		// 2. If node_group_id changed, update DNS records
+		if req.NodeGroupID != nil && *req.NodeGroupID != oldNodeGroupID {
+			// Get new node group to get its CNAME
+			var newNodeGroup models.NodeGroup
+			if err := tx.First(&newNodeGroup, *req.NodeGroupID).Error; err != nil {
+				return fmt.Errorf("new node group not found: %w", err)
+			}
+
+			// Update DNS record value and set status to pending
+			if err := tx.Model(&models.DomainDNSRecord{}).
+				Where("owner_type = ? AND owner_id = ?", "line_group", id).
+				Updates(map[string]interface{}{
+					"value":  newNodeGroup.CNAME,
+					"status": "pending",
+				}).Error; err != nil {
+				return fmt.Errorf("failed to update DNS record: %w", err)
+			}
+		}
+
+		// 3. Bump config_versions
+		if err := s.configVersionService.BumpVersion(tx, "line_group:update"); err != nil {
+			return fmt.Errorf("failed to bump config version: %w", err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Reload line group with relations
+	if err := database.DB.Preload("Domain").Preload("NodeGroup").First(lineGroup, id).Error; err != nil {
+		return nil, fmt.Errorf("failed to reload line group: %w", err)
+	}
+
+	return lineGroup, nil
+}

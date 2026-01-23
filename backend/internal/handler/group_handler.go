@@ -127,3 +127,57 @@ func (h *GroupHandler) DeleteLineGroup(c *gin.Context) {
 
 	response.Success(c, gin.H{"message": "Line group deleted successfully"})
 }
+
+// UpdateNodeGroup handles POST /api/v1/node-groups/update
+func (h *GroupHandler) UpdateNodeGroup(c *gin.Context) {
+	var req struct {
+		ID          int                                `json:"id" binding:"required"`
+		Name        *string                            `json:"name"`
+		Description *string                            `json:"description"`
+		SubIPIDs    []int                              `json:"sub_ip_ids"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, "Invalid request parameters")
+		return
+	}
+
+	updateReq := service.UpdateNodeGroupRequest{
+		Name:        req.Name,
+		Description: req.Description,
+		SubIPIDs:    req.SubIPIDs,
+	}
+
+	nodeGroup, err := h.nodeGroupService.UpdateNodeGroup(req.ID, updateReq)
+	if err != nil {
+		response.SystemError(c, "Failed to update node group")
+		return
+	}
+
+	response.Success(c, nodeGroup)
+}
+
+// UpdateLineGroup handles POST /api/v1/line-groups/update
+func (h *GroupHandler) UpdateLineGroup(c *gin.Context) {
+	var req struct {
+		ID          int     `json:"id" binding:"required"`
+		Name        *string `json:"name"`
+		NodeGroupID *int    `json:"node_group_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, "Invalid request parameters")
+		return
+	}
+
+	updateReq := service.UpdateLineGroupRequest{
+		Name:        req.Name,
+		NodeGroupID: req.NodeGroupID,
+	}
+
+	lineGroup, err := h.lineGroupService.UpdateLineGroup(req.ID, updateReq)
+	if err != nil {
+		response.SystemError(c, "Failed to update line group")
+		return
+	}
+
+	response.Success(c, lineGroup)
+}
