@@ -66,10 +66,10 @@ func (s *CacheRuleService) CreateCacheRule(req CreateCacheRuleRequest) (*models.
 		// Create items
 		for _, itemReq := range req.Items {
 			item := &models.CacheRuleItem{
-				RuleID: rule.ID,
-				Type:   itemReq.Type,
-				Value:  itemReq.Value,
-				TTL:    itemReq.TTL,
+				CacheRuleID: rule.ID,
+				RuleType:    itemReq.Type,
+				Path:        itemReq.Value,
+				TTL:         itemReq.TTL,
 			}
 			if err := tx.Create(item).Error; err != nil {
 				return err
@@ -77,7 +77,7 @@ func (s *CacheRuleService) CreateCacheRule(req CreateCacheRuleRequest) (*models.
 		}
 
 		// Bump config version
-		if err := s.configVersionService.BumpVersion("cache_rule_created"); err != nil {
+		if err := s.configVersionService.BumpVersion(tx, "cache_rule_created"); err != nil {
 			return err
 		}
 
@@ -162,10 +162,10 @@ func (s *CacheRuleService) UpdateCacheRule(id int, req UpdateCacheRuleRequest) (
 			// Create new items
 			for _, itemReq := range req.Items {
 				item := &models.CacheRuleItem{
-					RuleID: id,
-					Type:   itemReq.Type,
-					Value:  itemReq.Value,
-					TTL:    itemReq.TTL,
+					CacheRuleID: id,
+					RuleType:    itemReq.Type,
+					Path:        itemReq.Value,
+					TTL:         itemReq.TTL,
 				}
 				if err := tx.Create(item).Error; err != nil {
 					return err
@@ -174,7 +174,7 @@ func (s *CacheRuleService) UpdateCacheRule(id int, req UpdateCacheRuleRequest) (
 		}
 
 		// Bump config version
-		if err := s.configVersionService.BumpVersion("cache_rule_updated"); err != nil {
+		if err := s.configVersionService.BumpVersion(tx, "cache_rule_updated"); err != nil {
 			return err
 		}
 
@@ -222,7 +222,7 @@ func (s *CacheRuleService) DeleteCacheRule(id int) error {
 		}
 
 		// Bump config version
-		if err := s.configVersionService.BumpVersion("cache_rule_deleted"); err != nil {
+		if err := s.configVersionService.BumpVersion(tx, "cache_rule_deleted"); err != nil {
 			return err
 		}
 

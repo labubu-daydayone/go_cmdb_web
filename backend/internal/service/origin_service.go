@@ -34,9 +34,11 @@ type CreateOriginGroupRequest struct {
 }
 
 type CreateOriginGroupItemReq struct {
-	Origin   string `json:"origin" binding:"required"`
+	Role     string `json:"role" binding:"required,oneof=primary backup"`
+	Protocol string `json:"protocol" binding:"required,oneof=http https"`
+	Address  string `json:"address" binding:"required"`
 	Weight   int    `json:"weight" binding:"required,min=1"`
-	Priority int    `json:"priority" binding:"required,min=1"`
+	Enabled  bool   `json:"enabled"`
 }
 
 // UpdateOriginGroupRequest represents request to update an origin group
@@ -69,11 +71,13 @@ func (s *OriginService) CreateOriginGroup(req CreateOriginGroupRequest) (*models
 
 		// Create items
 		for _, itemReq := range req.Items {
-			item := &models.OriginGroupItem{
-				GroupID:  group.ID,
-				Origin:   itemReq.Origin,
-				Weight:   itemReq.Weight,
-				Priority: itemReq.Priority,
+			item := &models.OriginGroupAddress{
+				OriginGroupID: group.ID,
+				Role:          itemReq.Role,
+				Protocol:      itemReq.Protocol,
+				Address:       itemReq.Address,
+				Weight:        itemReq.Weight,
+				Enabled:       itemReq.Enabled,
 			}
 			if err := tx.Create(item).Error; err != nil {
 				return err
@@ -81,7 +85,7 @@ func (s *OriginService) CreateOriginGroup(req CreateOriginGroupRequest) (*models
 		}
 
 		// Bump config version
-		if err := s.configVersionService.BumpVersion("origin_group_created"); err != nil {
+		if err := s.configVersionService.BumpVersion(tx, "origin_group_created"); err != nil {
 			return err
 		}
 
@@ -93,7 +97,7 @@ func (s *OriginService) CreateOriginGroup(req CreateOriginGroupRequest) (*models
 	}
 
 	// Load items
-	db.Preload("Items").First(group, group.ID)
+	db.Preload("Addresses").First(group, group.ID)
 
 	return group, nil
 }
@@ -103,7 +107,7 @@ func (s *OriginService) ListOriginGroups(page, pageSize int) ([]models.OriginGro
 	var groups []models.OriginGroup
 	var total int64
 
-	query := database.DB.Model(&models.OriginGroup{}).Preload("Items")
+	query := database.DB.Model(&models.OriginGroup{}).Preload("Addresses")
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -120,7 +124,7 @@ func (s *OriginService) ListOriginGroups(page, pageSize int) ([]models.OriginGro
 // GetOriginGroup returns an origin group by ID
 func (s *OriginService) GetOriginGroup(id int) (*models.OriginGroup, error) {
 	var group models.OriginGroup
-	if err := database.DB.Preload("Items").First(&group, id).Error; err != nil {
+	if err := database.DB.Preload("Addresses").First(&group, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrOriginGroupNotFound
 		}
@@ -159,17 +163,19 @@ func (s *OriginService) UpdateOriginGroup(id int, req UpdateOriginGroupRequest) 
 		// Update items if provided
 		if req.Items != nil {
 			// Delete old items
-			if err := tx.Where("group_id = ?", id).Delete(&models.OriginGroupItem{}).Error; err != nil {
+			if err := tx.Where("origin_group_id = ?", id).Delete(&models.OriginGroupAddress{}).Error; err != nil {
 				return err
 			}
 
 			// Create new items
 			for _, itemReq := range req.Items {
-				item := &models.OriginGroupItem{
-					GroupID:  id,
-					Origin:   itemReq.Origin,
-					Weight:   itemReq.Weight,
-					Priority: itemReq.Priority,
+				item := &models.OriginGroupAddress{
+					OriginGroupID: id,
+					Role:          itemReq.Role,
+					Protocol:      itemReq.Protocol,
+					Address:       itemReq.Address,
+					Weight:        itemReq.Weight,
+					Enabled:       itemReq.Enabled,
 				}
 				if err := tx.Create(item).Error; err != nil {
 					return err
@@ -178,7 +184,7 @@ func (s *OriginService) UpdateOriginGroup(id int, req UpdateOriginGroupRequest) 
 		}
 
 		// Bump config version
-		if err := s.configVersionService.BumpVersion("origin_group_updated"); err != nil {
+		if err := s.configVersionService.BumpVersion(tx, "origin_group_updated"); err != nil {
 			return err
 		}
 
@@ -190,7 +196,7 @@ func (s *OriginService) UpdateOriginGroup(id int, req UpdateOriginGroupRequest) 
 	}
 
 	// Reload with items
-	db.Preload("Items").First(&group, id)
+	db.Preload("Addresses").First(&group, id)
 
 	return &group, nil
 }
@@ -211,7 +217,7 @@ func (s *OriginService) DeleteOriginGroup(id int) error {
 
 	return db.Transaction(func(tx *gorm.DB) error {
 		// Delete items first
-		if err := tx.Where("group_id = ?", id).Delete(&models.OriginGroupItem{}).Error; err != nil {
+		if err := tx.Where("origin_group_id = ?", id).Delete(&models.OriginGroupAddress{}).Error; err != nil {
 			return err
 		}
 
@@ -226,7 +232,7 @@ func (s *OriginService) DeleteOriginGroup(id int) error {
 		}
 
 		// Bump config version
-		if err := s.configVersionService.BumpVersion("origin_group_deleted"); err != nil {
+		if err := s.configVersionService.BumpVersion(tx, "origin_group_deleted"); err != nil {
 			return err
 		}
 
@@ -242,7 +248,7 @@ func (s *OriginService) CreateOriginSetFromGroup(websiteID, groupID int) (*model
 
 	// Get group with items
 	var group models.OriginGroup
-	if err := db.Preload("Items").First(&group, groupID).Error; err != nil {
+	if err := db.Preload("Addresses").First(&group, groupID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrOriginGroupNotFound
 		}
@@ -263,12 +269,14 @@ func (s *OriginService) CreateOriginSetFromGroup(websiteID, groupID int) (*model
 		}
 
 		// Copy items from group
-		for _, groupItem := range group.Items {
-			setItem := &models.OriginSetItem{
-				SetID:    set.ID,
-				Origin:   groupItem.Origin,
-				Weight:   groupItem.Weight,
-				Priority: groupItem.Priority,
+		for _, groupItem := range group.Addresses {
+			setItem := &models.OriginSetAddress{
+				OriginSetID: set.ID,
+				Role:        groupItem.Role,
+				Protocol:    groupItem.Protocol,
+				Address:     groupItem.Address,
+				Weight:      groupItem.Weight,
+				Enabled:     groupItem.Enabled,
 			}
 			if err := tx.Create(setItem).Error; err != nil {
 				return err
@@ -283,7 +291,7 @@ func (s *OriginService) CreateOriginSetFromGroup(websiteID, groupID int) (*model
 	}
 
 	// Load items
-	db.Preload("Items").First(set, set.ID)
+	db.Preload("Addresses").First(set, set.ID)
 
 	return set, nil
 }
@@ -305,11 +313,13 @@ func (s *OriginService) CreateOriginSetManual(websiteID int, items []CreateOrigi
 
 		// Create items
 		for _, itemReq := range items {
-			item := &models.OriginSetItem{
-				SetID:    set.ID,
-				Origin:   itemReq.Origin,
-				Weight:   itemReq.Weight,
-				Priority: itemReq.Priority,
+			item := &models.OriginSetAddress{
+				OriginSetID: set.ID,
+				Role:        itemReq.Role,
+				Protocol:    itemReq.Protocol,
+				Address:     itemReq.Address,
+				Weight:      itemReq.Weight,
+				Enabled:     itemReq.Enabled,
 			}
 			if err := tx.Create(item).Error; err != nil {
 				return err
@@ -324,7 +334,7 @@ func (s *OriginService) CreateOriginSetManual(websiteID int, items []CreateOrigi
 	}
 
 	// Load items
-	db.Preload("Items").First(set, set.ID)
+	db.Preload("Addresses").First(set, set.ID)
 
 	return set, nil
 }
@@ -332,7 +342,7 @@ func (s *OriginService) CreateOriginSetManual(websiteID int, items []CreateOrigi
 // GetOriginSetByWebsite returns the origin set for a website
 func (s *OriginService) GetOriginSetByWebsite(websiteID int) (*models.OriginSet, error) {
 	var set models.OriginSet
-	if err := database.DB.Preload("Items").Where("website_id = ?", websiteID).First(&set).Error; err != nil {
+	if err := database.DB.Preload("Addresses").Where("website_id = ?", websiteID).First(&set).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrOriginSetNotFound
 		}
