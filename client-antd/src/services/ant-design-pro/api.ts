@@ -2,27 +2,27 @@
 /* eslint-disable */
 import { request } from '@umijs/max';
 
-/** 获取当前的用户 GET /api/currentUser */
+/** 获取当前的用户 GET /api/v1/auth/current-user */
 export async function currentUser(options?: { [key: string]: any }) {
   return request<{
     data: API.CurrentUser;
-  }>('/api/currentUser', {
+  }>('/api/v1/auth/current-user', {
     method: 'GET',
     ...(options || {}),
   });
 }
 
-/** 退出登录接口 POST /api/login/outLogin */
+/** 退出登录接口 POST /api/v1/auth/logout */
 export async function outLogin(options?: { [key: string]: any }) {
-  return request<Record<string, any>>('/api/login/outLogin', {
+  return request<Record<string, any>>('/api/v1/auth/logout', {
     method: 'POST',
     ...(options || {}),
   });
 }
 
-/** 登录接口 POST /api/login/account */
+/** 登录接口 POST /api/v1/auth/login */
 export async function login(body: API.LoginParams, options?: { [key: string]: any }) {
-  return request<API.LoginResult>('/api/login/account', {
+  return request<API.LoginResult>('/api/v1/auth/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
