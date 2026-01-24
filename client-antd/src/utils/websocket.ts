@@ -8,7 +8,7 @@ import { io, Socket } from 'socket.io-client';
 const SOCKET_URL = process.env.SOCKET_URL || 'http://20.2.140.226:8080';
 
 /**
- * WebSocket 事件类型
+ * WebSocket 事件类型（必须在最前面导出）
  */
 export type WebSocketEvent = string;
 
