@@ -5,7 +5,6 @@ import { PlusOutlined } from '@ant-design/icons';
 import type { TransferDirection } from 'antd/es/transfer';
 import { nodeGroupsAPI, nodesAPI } from '@/services/api';
 import { connectWebSocket, subscribe, unsubscribe } from '@/utils/websocket';
-import type { WebSocketEvent } from '@/utils/websocket';
 
 interface SubIP {
   id: string;

@@ -4,7 +4,6 @@ import { Button, Tag, message, Popconfirm, Tabs, Space, Input, Select, InputNumb
 import { useRef, useState, useEffect } from 'react';
 import { websitesAPI } from '@/services/api';
 import { connectWebSocket, subscribe, unsubscribe } from '@/utils/websocket';
-import type { WebSocketEvent } from '@/utils/websocket';
 
 const { TabPane } = Tabs;
 

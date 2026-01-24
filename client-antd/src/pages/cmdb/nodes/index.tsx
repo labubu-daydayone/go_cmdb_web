@@ -4,7 +4,6 @@ import { ProTable } from '@ant-design/pro-components';
 import { Button, Tag, message, Popconfirm, Space, Drawer, Form, Input, InputNumber, Table, Switch } from 'antd';
 import { nodesAPI } from '@/services/api';
 import { connectWebSocket, subscribe, unsubscribe } from '@/utils/websocket';
-import type { WebSocketEvent } from '@/utils/websocket';
 
 /**
  * 子 IP 类型

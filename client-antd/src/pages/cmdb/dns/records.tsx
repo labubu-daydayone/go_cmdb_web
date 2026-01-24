@@ -6,7 +6,6 @@ import { Button, Tag, Breadcrumb, Space, Card } from 'antd';
 import { ReloadOutlined, ArrowLeftOutlined, HomeOutlined } from '@ant-design/icons';
 import { dnsAPI } from '@/services/api';
 import { connectWebSocket, subscribe, unsubscribe } from '@/utils/websocket';
-import type { WebSocketEvent } from '@/utils/websocket';
 
 /**
  * DNS 解析记录数据类型
