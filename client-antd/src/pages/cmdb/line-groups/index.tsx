@@ -1,8 +1,9 @@
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useRef, useState, useEffect } from 'react';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { Button, Tag, message, Popconfirm, Space, Drawer, Form, Input, Select, Row, Col } from 'antd';
-import { useRef, useState } from 'react';
+import { lineGroupsAPI, nodeGroupsAPI, dnsAPI } from '@/services/api';
+import { connectWebSocket, subscribe, unsubscribe, WebSocketEvent } from '@/utils/websocket';
 
 /**
  * 线路分组类型
@@ -10,38 +11,10 @@ import { useRef, useState } from 'react';
 export type LineGroupItem = {
   id: string;
   name: string;
-  nodeGroups: string[];
+  nodeGroupId: string;
+  nodeGroupName?: string;
   cname: string;
   nodeCount: number;
-};
-
-/**
- * 生成 mock 数据
- */
-const generateMockLineGroups = (): LineGroupItem[] => {
-  return [
-    {
-      id: '1',
-      name: '线路1',
-      nodeGroups: ['节点分组1', '节点分组2'],
-      cname: 'cdn1.example.com',
-      nodeCount: 10,
-    },
-    {
-      id: '2',
-      name: '线路2',
-      nodeGroups: ['节点分组3'],
-      cname: 'cdn2.example.com',
-      nodeCount: 5,
-    },
-    {
-      id: '3',
-      name: '线路3',
-      nodeGroups: ['节点分组1', '节点分组3', '节点分组4'],
-      cname: 'cdn3.example.com',
-      nodeCount: 15,
-    },
-  ];
 };
 
 /**
@@ -51,29 +24,90 @@ const LineGroupsPage: React.FC = () => {
   const actionRef = useRef<ActionType>();
   const [form] = Form.useForm();
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [lineGroups, setLineGroups] = useState<LineGroupItem[]>(generateMockLineGroups());
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [editingGroup, setEditingGroup] = useState<LineGroupItem | null>(null);
+  const [availableNodeGroups, setAvailableNodeGroups] = useState<Array<{ label: string; value: string }>>([]);
+  const [availableDomains, setAvailableDomains] = useState<Array<{ label: string; value: string }>>([]);
+  const [wsConnected, setWsConnected] = useState(false);
 
-  // 可用的节点分组列表
-  const availableNodeGroups = [
-    { label: '节点分组1', value: '节点分组1' },
-    { label: '节点分组2', value: '节点分组2' },
-    { label: '节点分组3', value: '节点分组3' },
-    { label: '节点分组4', value: '节点分组4' },
-    { label: '节点分组5', value: '节点分组5' },
-    { label: '节点分组6', value: '节点分组6' },
-  ];
+  /**
+   * 初始化 WebSocket 连接
+   */
+  useEffect(() => {
+    try {
+      connectWebSocket();
+      setWsConnected(true);
+    } catch (error) {
+      console.warn('WebSocket 连接失败:', error);
+      setWsConnected(false);
+    }
 
-  // 可用的域名列表（来自 DNS 设置）
-  const availableDomains = [
-    { label: 'example.com', value: 'example.com' },
-    { label: 'test.com', value: 'test.com' },
-    { label: 'api.example.com', value: 'api.example.com' },
-    { label: 'cdn.example.com', value: 'cdn.example.com' },
-  ];
+    // 订阅线路分组相关事件
+    const handleGroupCreated = () => {
+      message.info('检测到新线路分组创建');
+      actionRef.current?.reload();
+    };
+    const handleGroupUpdated = () => {
+      message.info('检测到线路分组更新');
+      actionRef.current?.reload();
+    };
+    const handleGroupDeleted = () => {
+      message.info('检测到线路分组删除');
+      actionRef.current?.reload();
+    };
 
-  // 生成随机 CNAME 前缀
+    subscribe(WebSocketEvent.LINE_GROUP_CREATED, handleGroupCreated);
+    subscribe(WebSocketEvent.LINE_GROUP_UPDATED, handleGroupUpdated);
+    subscribe(WebSocketEvent.LINE_GROUP_DELETED, handleGroupDeleted);
+
+    return () => {
+      unsubscribe(WebSocketEvent.LINE_GROUP_CREATED, handleGroupCreated);
+      unsubscribe(WebSocketEvent.LINE_GROUP_UPDATED, handleGroupUpdated);
+      unsubscribe(WebSocketEvent.LINE_GROUP_DELETED, handleGroupDeleted);
+    };
+  }, []);
+
+  /**
+   * 加载节点分组列表
+   */
+  const loadNodeGroups = async () => {
+    try {
+      const response = await nodeGroupsAPI.list({ page: 1, pageSize: 1000 });
+      if (response.code === 0) {
+        setAvailableNodeGroups(
+          response.data.items.map((item: any) => ({
+            label: item.name,
+            value: item.id,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error('加载节点分组失败:', error);
+    }
+  };
+
+  /**
+   * 加载域名列表
+   */
+  const loadDomains = async () => {
+    try {
+      const response = await dnsAPI.list({ page: 1, pageSize: 1000 });
+      if (response.code === 0) {
+        setAvailableDomains(
+          response.data.items.map((item: any) => ({
+            label: item.domain,
+            value: item.domain,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error('加载域名列表失败:', error);
+    }
+  };
+
+  /**
+   * 生成随机 CNAME 前缀
+   */
   const generateCNAMEPrefix = () => {
     const randomStr = Math.random().toString(36).substring(2, 8);
     return randomStr;
@@ -84,11 +118,11 @@ const LineGroupsPage: React.FC = () => {
    */
   const handleDelete = async (id: string) => {
     try {
-      setLineGroups((prev) => prev.filter((g) => g.id !== id));
+      await lineGroupsAPI.delete([Number(id)]);
       message.success('删除成功');
       actionRef.current?.reload();
     } catch (error) {
-      message.error('删除失败');
+      // 错误已由 request 工具自动处理
     }
   };
 
@@ -96,41 +130,55 @@ const LineGroupsPage: React.FC = () => {
    * 批量删除
    */
   const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('请选择要删除的线路分组');
+      return;
+    }
+
     try {
-      setLineGroups((prev) => prev.filter((g) => !selectedRowKeys.includes(g.id)));
+      await lineGroupsAPI.delete(selectedRowKeys.map(key => Number(key)));
       message.success(`成功删除 ${selectedRowKeys.length} 个线路分组`);
       setSelectedRowKeys([]);
       actionRef.current?.reload();
     } catch (error) {
-      message.error('批量删除失败');
+      // 错误已由 request 工具自动处理
     }
   };
 
   /**
-   * 处理编辑操作
+   * 打开添加线路分组抽屉
    */
-  const handleEdit = (record: LineGroupItem) => {
-    setEditingGroup(record);
+  const handleAdd = async () => {
+    await loadNodeGroups();
+    await loadDomains();
+    setEditingGroup(null);
+    form.resetFields();
+    // 生成默认 CNAME
+    const prefix = generateCNAMEPrefix();
     form.setFieldsValue({
-      name: record.name,
-      nodeGroup: record.nodeGroups[0], // 单选，取第一个
-      cnamePrefix: record.cname.split('.')[0],
-      domain: record.cname.split('.').slice(1).join('.'),
+      cnamePrefix: prefix,
     });
     setDrawerVisible(true);
   };
 
   /**
-   * 处理添加
+   * 打开编辑线路分组抽屉
    */
-  const handleAdd = () => {
-    setEditingGroup(null);
-    form.resetFields();
-    // 生成随机 CNAME 前缀
-    const randomPrefix = Math.random().toString(36).substring(2, 8);
+  const handleEdit = async (record: LineGroupItem) => {
+    await loadNodeGroups();
+    await loadDomains();
+    setEditingGroup(record);
+    
+    // 解析 CNAME
+    const cnameParts = record.cname.split('.');
+    const prefix = cnameParts[0];
+    const domain = cnameParts.slice(1).join('.');
+    
     form.setFieldsValue({
-      cnamePrefix: randomPrefix,
-      domain: 'example.com',
+      name: record.name,
+      nodeGroupId: record.nodeGroupId,
+      cnamePrefix: prefix,
+      cnameDomain: domain,
     });
     setDrawerVisible(true);
   };
@@ -141,253 +189,244 @@ const LineGroupsPage: React.FC = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      const cname = `${values.cnamePrefix}.${values.domain}`;
+
+      // 构建完整的 CNAME
+      const cname = `${values.cnamePrefix}.${values.cnameDomain}`;
+
+      const data = {
+        name: values.name,
+        nodeGroupId: Number(values.nodeGroupId),
+        cname,
+      };
 
       if (editingGroup) {
-        // 编辑模式
-        setLineGroups((prev) =>
-          prev.map((g) =>
-            g.id === editingGroup.id
-              ? {
-                  ...g,
-                  name: values.name,
-                  nodeGroups: [values.nodeGroup], // 单选，转为数组
-                  cname,
-                }
-              : g
-          )
-        );
-        message.success('线路分组更新成功');
+        await lineGroupsAPI.update({
+          id: Number(editingGroup.id),
+          ...data,
+        });
+        message.success('更新成功');
       } else {
-        // 添加模式
-        const newGroup: LineGroupItem = {
-          id: Date.now().toString(),
-          name: values.name,
-          nodeGroups: [values.nodeGroup], // 单选，转为数组
-          cname,
-          nodeCount: Math.floor(Math.random() * 20) + 1,
-        };
-        setLineGroups((prev) => [newGroup, ...prev]);
-        message.success('线路分组添加成功');
+        await lineGroupsAPI.create(data);
+        message.success('添加成功');
       }
 
       setDrawerVisible(false);
       actionRef.current?.reload();
     } catch (error) {
-      console.error('表单验证失败:', error);
+      // 错误已由 request 工具自动处理
     }
   };
 
   /**
-   * 表格列配置
+   * ProTable 数据请求
+   */
+  const request = async (params: any, sort: any, filter: any) => {
+    try {
+      const response = await lineGroupsAPI.list({
+        page: params.current,
+        pageSize: params.pageSize,
+        name: params.name,
+        cname: params.cname,
+        sortBy: sort && Object.keys(sort).length > 0 ? Object.keys(sort)[0] : undefined,
+        order: sort && Object.keys(sort).length > 0 ? (sort[Object.keys(sort)[0]] === 'ascend' ? 'asc' : 'desc') : undefined,
+      });
+
+      return {
+        data: response.data.items,
+        success: response.code === 0,
+        total: response.data.total,
+      };
+    } catch (error) {
+      return {
+        data: [],
+        success: false,
+        total: 0,
+      };
+    }
+  };
+
+  /**
+   * 表格列定义
    */
   const columns: ProColumns<LineGroupItem>[] = [
     {
-      title: '名称',
-      dataIndex: 'name',
-      key: 'name',
-      width: 150,
+      title: 'ID',
+      dataIndex: 'id',
+      width: 80,
+      search: false,
+      sorter: true,
     },
     {
-      title: '节点组',
-      dataIndex: 'nodeGroups',
-      key: 'nodeGroups',
-      width: 250,
-      hideInSearch: true,
-      render: (_, record) => (
-        <Space size={[0, 4]} wrap>
-          {record.nodeGroups.map((group, index) => (
-            <Tag key={index} color="blue">
-              {group}
-            </Tag>
-          ))}
-        </Space>
-      ),
+      title: '线路名称',
+      dataIndex: 'name',
+      width: 150,
+      ellipsis: true,
+    },
+    {
+      title: '节点分组',
+      dataIndex: 'nodeGroupName',
+      width: 150,
+      search: false,
+      ellipsis: true,
     },
     {
       title: 'CNAME',
       dataIndex: 'cname',
-      key: 'cname',
-      width: 200,
+      width: 250,
       copyable: true,
+      ellipsis: true,
     },
     {
       title: '节点数量',
       dataIndex: 'nodeCount',
-      key: 'nodeCount',
       width: 120,
-      hideInSearch: true,
-      sorter: (a, b) => a.nodeCount - b.nodeCount,
+      search: false,
+      sorter: true,
     },
     {
       title: '操作',
-      key: 'action',
-      width: 150,
       valueType: 'option',
+      width: 150,
+      fixed: 'right',
       render: (_, record) => [
-        <Button
-          key="edit"
-          type="link"
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => handleEdit(record)}
-        >
+        <a key="edit" onClick={() => handleEdit(record)}>
           编辑
-        </Button>,
+        </a>,
         <Popconfirm
           key="delete"
           title="确定要删除这个线路分组吗？"
-          description="删除后无法恢复，是否继续？"
           onConfirm={() => handleDelete(record.id)}
           okText="确定"
           cancelText="取消"
         >
-          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-            删除
-          </Button>
+          <a style={{ color: 'red' }}>删除</a>
         </Popconfirm>,
       ],
     },
   ];
 
-  /**
-   * 请求数据
-   */
-  const request = async (params: any, sort: any, filter: any) => {
-    return {
-      data: lineGroups,
-      success: true,
-      total: lineGroups.length,
-    };
-  };
-
   return (
     <>
       <ProTable<LineGroupItem>
-        headerTitle="线路分组"
+        columns={columns}
         actionRef={actionRef}
+        request={request}
         rowKey="id"
         search={{
           labelWidth: 'auto',
-        }}
-        form={{
-          syncToUrl: true,
-        }}
-        scroll={{ x: 'max-content' }}
-        toolBarRender={() => [
-          selectedRowKeys.length > 0 && (
-            <Popconfirm
-              key="batchDelete"
-              title={`确定要删除选中的 ${selectedRowKeys.length} 个线路分组吗？`}
-              onConfirm={handleBatchDelete}
-              okText="确定"
-              cancelText="取消"
-            >
-              <Button type="primary" danger>
-                批量删除 ({selectedRowKeys.length})
-              </Button>
-            </Popconfirm>
-          ),
-          <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            添加分组
-          </Button>,
-        ]}
-        request={request}
-        columns={columns}
-        rowSelection={{
-          selectedRowKeys,
-          onChange: setSelectedRowKeys,
         }}
         pagination={{
           defaultPageSize: 15,
           showSizeChanger: true,
           showQuickJumper: true,
-          showTotal: (total) => `共 ${total} 条记录`,
         }}
+        scroll={{ x: 1200 }}
+        rowSelection={{
+          selectedRowKeys,
+          onChange: setSelectedRowKeys,
+        }}
+        tableAlertRender={({ selectedRowKeys }) => (
+          <Space>
+            <span>已选择 {selectedRowKeys.length} 项</span>
+            <a onClick={() => setSelectedRowKeys([])}>取消选择</a>
+          </Space>
+        )}
+        tableAlertOptionRender={() => (
+          <Space>
+            <Popconfirm
+              title={`确定要删除选中的 ${selectedRowKeys.length} 个线路分组吗？`}
+              onConfirm={handleBatchDelete}
+              okText="确定"
+              cancelText="取消"
+            >
+              <a style={{ color: 'red' }}>批量删除</a>
+            </Popconfirm>
+          </Space>
+        )}
+        toolBarRender={() => [
+          <Button key="add" type="primary" onClick={handleAdd}>
+            添加线路分组
+          </Button>,
+        ]}
+        headerTitle={
+          <Space>
+            线路分组管理
+            {wsConnected && <Tag color="success">实时连接</Tag>}
+            {!wsConnected && <Tag color="warning">未连接</Tag>}
+          </Space>
+        }
       />
 
       {/* 添加/编辑线路分组抽屉 */}
       <Drawer
         title={editingGroup ? '编辑线路分组' : '添加线路分组'}
-        width={720}
+        width={600}
         open={drawerVisible}
         onClose={() => setDrawerVisible(false)}
-        footer={
-          <div style={{ textAlign: 'right' }}>
-            <Space>
-              <Button onClick={() => setDrawerVisible(false)}>取消</Button>
-              <Button type="primary" onClick={handleSubmit}>
-                {editingGroup ? '保存' : '提交'}
-              </Button>
-            </Space>
-          </div>
+        extra={
+          <Space>
+            <Button onClick={() => setDrawerVisible(false)}>取消</Button>
+            <Button type="primary" onClick={handleSubmit}>
+              {editingGroup ? '保存' : '添加'}
+            </Button>
+          </Space>
         }
-        destroyOnClose
       >
-        <div style={{ padding: '0 24px' }}>
-          <Form form={form} layout="horizontal" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
-            {/* 名称 */}
-            <Form.Item
-              name="name"
-              label="名称"
-              rules={[{ required: true, message: '请输入线路分组名称' }]}
-            >
-              <Input placeholder="输入线路分组名称" style={{ width: 240 }} />
-            </Form.Item>
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="name"
+            label="线路名称"
+            rules={[{ required: true, message: '请输入线路名称' }]}
+          >
+            <Input placeholder="线路1" />
+          </Form.Item>
 
-            {/* 解析记录 */}
-            <Form.Item label="解析记录" required>
-              <Row gutter={8} align="middle">
-                <Col>
-                  <Form.Item
-                    name="cnamePrefix"
-                    noStyle
-                    rules={[{ required: true, message: '请输入前缀' }]}
-                  >
-                    <Input placeholder="前缀" style={{ width: 140 }} />
-                  </Form.Item>
-                </Col>
-                <Col>
-                  <span style={{ color: '#999' }}>.</span>
-                </Col>
-                <Col>
-                  <Form.Item
-                    name="domain"
-                    noStyle
-                    rules={[{ required: true, message: '请选择域名' }]}
-                  >
-                    <Select
-                      placeholder="-- 请选择域名 --"
-                      options={availableDomains}
-                      style={{ width: 180 }}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col>
-                  <Button
-                    onClick={() => {
-                      form.setFieldsValue({ cnamePrefix: generateCNAMEPrefix() });
-                    }}
-                  >
-                    生成
-                  </Button>
-                </Col>
-              </Row>
-            </Form.Item>
+          <Form.Item
+            name="nodeGroupId"
+            label="节点分组"
+            rules={[{ required: true, message: '请选择节点分组' }]}
+            tooltip="只能选择一个节点分组"
+          >
+            <Select
+              placeholder="请选择节点分组"
+              options={availableNodeGroups}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+            />
+          </Form.Item>
 
-            {/* 添加节点分组 */}
-            <Form.Item
-              name="nodeGroup"
-              label="添加节点分组"
-              rules={[{ required: true, message: '请选择节点分组' }]}
-            >
-              <Select
-                placeholder="请选择节点分组"
-                options={availableNodeGroups}
-              />
-            </Form.Item>
-          </Form>
-        </div>
+          <Form.Item label="CNAME" required>
+            <Row gutter={8}>
+              <Col span={12}>
+                <Form.Item
+                  name="cnamePrefix"
+                  noStyle
+                  rules={[{ required: true, message: '请输入前缀' }]}
+                >
+                  <Input placeholder="cdn1" addonAfter="." />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="cnameDomain"
+                  noStyle
+                  rules={[{ required: true, message: '请选择域名' }]}
+                >
+                  <Select
+                    placeholder="选择域名"
+                    options={availableDomains}
+                    showSearch
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form.Item>
+        </Form>
       </Drawer>
     </>
   );

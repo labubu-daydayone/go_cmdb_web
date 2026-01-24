@@ -1,8 +1,9 @@
-import { PlusOutlined, EditOutlined, DeleteOutlined, ClearOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { Button, Tag, message, Popconfirm, Tabs, Space, Input, Select, InputNumber, Drawer, Form, Checkbox, Row, Col, Modal, Radio, Alert } from 'antd';
 import { useRef, useState, useEffect } from 'react';
+import { websitesAPI } from '@/services/api';
+import { connectWebSocket, subscribe, unsubscribe, WebSocketEvent } from '@/utils/websocket';
 
 const { TabPane } = Tabs;
 
@@ -30,50 +31,6 @@ type OriginIP = {
   protocol: 'http' | 'https';
   address: string;
   weight: number;
-};
-
-/**
- * 生成 mock 数据
- */
-const generateMockWebsites = (): WebsiteItem[] => {
-  return [
-    {
-      id: '1',
-      domain: 'example.com',
-      cname: 'example.cdn.example.com',
-      lineGroup: '线路1',
-      https: true,
-      httpsForceRedirect: true,
-      hstsEnabled: false,
-      status: 'active',
-      createdAt: '2024-01-01 10:00:00',
-      cacheRules: '首页缓存',
-    },
-    {
-      id: '2',
-      domain: 'test.com',
-      cname: 'test.cdn.example.com',
-      lineGroup: '线路2',
-      https: false,
-      httpsForceRedirect: false,
-      hstsEnabled: false,
-      status: 'active',
-      createdAt: '2024-01-15 14:30:00',
-      cacheRules: '图片缓存',
-    },
-    {
-      id: '3',
-      domain: 'demo.net',
-      cname: 'demo.cdn.example.com',
-      lineGroup: '线路1',
-      https: true,
-      httpsForceRedirect: false,
-      hstsEnabled: true,
-      status: 'inactive',
-      createdAt: '2024-02-01 09:00:00',
-      cacheRules: 'API缓存',
-    },
-  ];
 };
 
 /**
@@ -120,25 +77,49 @@ const WebsitesPage: React.FC = () => {
   const [batchClearCacheUrl, setBatchClearCacheUrl] = useState('');
   const [batchClearCacheDirectory, setBatchClearCacheDirectory] = useState('');
   
-  // 使用 mock 数据模拟 Socket.IO
-  const [websites, setWebsites] = useState<WebsiteItem[]>(generateMockWebsites());
-  const [wsConnected, setWsConnected] = useState(true); // mock 始终连接
+  // WebSocket 连接状态
+  const [wsConnected, setWsConnected] = useState(false);
 
   /**
-   * 模拟 WebSocket 连接
+   * 初始化 WebSocket 连接
    */
   useEffect(() => {
-    // 模拟连接成功
-    message.success('实时连接已建立（Mock 模式）');
-    setWsConnected(true);
+    try {
+      connectWebSocket();
+      setWsConnected(true);
+      message.success('实时连接已建立');
+    } catch (error) {
+      console.warn('WebSocket 连接失败:', error);
+      setWsConnected(false);
+    }
 
-    // 模拟每 30 秒更新一次连接状态
-    const interval = setInterval(() => {
-      console.log('Mock WebSocket heartbeat');
-    }, 30000);
+    // 订阅网站相关事件
+    const handleWebsiteCreated = () => {
+      message.info('检测到新网站创建');
+      actionRef.current?.reload();
+    };
+    const handleWebsiteUpdated = () => {
+      message.info('检测到网站更新');
+      actionRef.current?.reload();
+    };
+    const handleWebsiteDeleted = () => {
+      message.info('检测到网站删除');
+      actionRef.current?.reload();
+    };
+    const handleCacheCleared = () => {
+      message.info('缓存清除完成');
+    };
+
+    subscribe(WebSocketEvent.WEBSITE_CREATED, handleWebsiteCreated);
+    subscribe(WebSocketEvent.WEBSITE_UPDATED, handleWebsiteUpdated);
+    subscribe(WebSocketEvent.WEBSITE_DELETED, handleWebsiteDeleted);
+    subscribe(WebSocketEvent.WEBSITE_CACHE_CLEARED, handleCacheCleared);
 
     return () => {
-      clearInterval(interval);
+      unsubscribe(WebSocketEvent.WEBSITE_CREATED, handleWebsiteCreated);
+      unsubscribe(WebSocketEvent.WEBSITE_UPDATED, handleWebsiteUpdated);
+      unsubscribe(WebSocketEvent.WEBSITE_DELETED, handleWebsiteDeleted);
+      unsubscribe(WebSocketEvent.WEBSITE_CACHE_CLEARED, handleCacheCleared);
     };
   }, []);
 
@@ -147,106 +128,11 @@ const WebsitesPage: React.FC = () => {
    */
   const handleDelete = async (id: string) => {
     try {
-      // 模拟删除
-      setWebsites((prev) => prev.filter((w) => w.id !== id));
+      await websitesAPI.delete([Number(id)]);
       message.success('删除成功');
       actionRef.current?.reload();
     } catch (error) {
-      message.error('删除失败');
-    }
-  };
-
-  /**
-   * 打开清除缓存对话框
-   */
-  const openClearCacheModal = (id: string, domain: string) => {
-    setClearCacheWebsiteId(id);
-    setClearCacheWebsiteDomain(domain);
-    setClearCacheType('all');
-    setClearCacheUrl('');
-    setClearCacheDirectory('');
-    setClearCacheModalVisible(true);
-  };
-
-  /**
-   * 处理清除缓存
-   */
-  const handleClearCache = async () => {
-    // 验证输入
-    if (clearCacheType === 'url' && !clearCacheUrl) {
-      message.error('请输入要清除的 URL 地址');
-      return;
-    }
-    if (clearCacheType === 'directory' && !clearCacheDirectory) {
-      message.error('请输入要清除的目录路径');
-      return;
-    }
-
-    try {
-      let successMessage = '';
-      switch (clearCacheType) {
-        case 'all':
-          successMessage = `已清除网站 ${clearCacheWebsiteDomain} 的所有缓存`;
-          break;
-        case 'url':
-          successMessage = `已清除 URL: ${clearCacheUrl} 的缓存`;
-          break;
-        case 'directory':
-          successMessage = `已清除目录: ${clearCacheDirectory} 的缓存`;
-          break;
-      }
-
-      // 模拟清除缓存 API 调用
-      console.log('Clearing cache:', {
-        websiteId: clearCacheWebsiteId,
-        type: clearCacheType,
-        url: clearCacheUrl,
-        directory: clearCacheDirectory,
-      });
-
-      message.success(successMessage);
-      setClearCacheModalVisible(false);
-    } catch (error) {
-      message.error('清除缓存失败');
-    }
-  };
-
-  /**
-   * 批量清除缓存 - 打开 Modal
-   */
-  const handleBatchClearCacheClick = () => {
-    setBatchClearCacheModalVisible(true);
-    setBatchClearCacheType('all');
-    setBatchClearCacheUrl('');
-    setBatchClearCacheDirectory('');
-  };
-
-  /**
-   * 批量清除缓存 - 确认
-   */
-  const handleBatchClearCacheConfirm = async () => {
-    try {
-      console.log('Batch clearing cache:', {
-        websites: selectedRowKeys,
-        type: batchClearCacheType,
-        url: batchClearCacheUrl,
-        directory: batchClearCacheDirectory,
-      });
-      
-      let successMessage = '';
-      if (batchClearCacheType === 'all') {
-        successMessage = `已清除 ${selectedRowKeys.length} 个网站的所有缓存`;
-      } else if (batchClearCacheType === 'url') {
-        successMessage = `已清除 ${selectedRowKeys.length} 个网站的 URL: ${batchClearCacheUrl}`;
-      } else if (batchClearCacheType === 'directory') {
-        successMessage = `已清除 ${selectedRowKeys.length} 个网站的目录: ${batchClearCacheDirectory}`;
-      }
-      
-      message.success(successMessage);
-      setBatchClearCacheModalVisible(false);
-      setSelectedRowKeys([]);
-    } catch (error) {
-      message.error('批量清除缓存失败');
+      // 错误已由 request 工具自动处理
     }
   };
 
@@ -254,22 +140,224 @@ const WebsitesPage: React.FC = () => {
    * 批量删除
    */
   const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('请选择要删除的网站');
+      return;
+    }
+
     try {
-      // 模拟批量删除
-      setWebsites((prev) => prev.filter((w) => !selectedRowKeys.includes(w.id)));
-      message.success(`成功删除 ${selectedRowKeys.length} 个网站`);
+      await websitesAPI.delete(selectedRowKeys.map(key => Number(key)));
+      message.success(`已删除 ${selectedRowKeys.length} 个网站`);
       setSelectedRowKeys([]);
       actionRef.current?.reload();
     } catch (error) {
-      message.error('批量删除失败');
+      // 错误已由 request 工具自动处理
     }
   };
 
   /**
-   * 处理添加回源 IP
+   * 打开添加网站抽屉
+   */
+  const handleAdd = () => {
+    addForm.resetFields();
+    setAddFormTab('group');
+    setAddOriginIPs([{ type: 'primary', protocol: 'http', address: '', weight: 10 }]);
+    setAddRedirectUrl('');
+    setAddRedirectStatusCode(301);
+    setAddSelectedTemplate('');
+    setAddDrawerVisible(true);
+  };
+
+  /**
+   * 提交添加表单
+   */
+  const handleAddSubmit = async () => {
+    try {
+      const values = await addForm.validateFields();
+      
+      // 构建请求数据
+      const data: any = {
+        domain: values.domain,
+        lineGroup: values.lineGroup,
+        https: values.https || false,
+        httpsForceRedirect: values.httpsForceRedirect || false,
+        hstsEnabled: values.hstsEnabled || false,
+        cacheRules: values.cacheRules || '',
+      };
+
+      // 根据不同的回源方式添加配置
+      if (addFormTab === 'group') {
+        data.originGroupId = addSelectedTemplate;
+      } else if (addFormTab === 'redirect') {
+        data.redirectUrl = addRedirectUrl;
+        data.redirectStatusCode = addRedirectStatusCode;
+      } else if (addFormTab === 'manual') {
+        data.originIPs = addOriginIPs.filter(ip => ip.address.trim() !== '');
+      }
+
+      await websitesAPI.create(data);
+      message.success('添加成功');
+      setAddDrawerVisible(false);
+      actionRef.current?.reload();
+    } catch (error) {
+      // 错误已由 request 工具自动处理
+    }
+  };
+
+  /**
+   * 打开编辑网站抽屉
+   */
+  const handleEdit = (record: WebsiteItem) => {
+    setCurrentWebsite(record);
+    editForm.setFieldsValue({
+      domain: record.domain,
+      lineGroup: record.lineGroup,
+      https: record.https,
+      httpsForceRedirect: record.httpsForceRedirect,
+      hstsEnabled: record.hstsEnabled,
+      cacheRules: record.cacheRules,
+    });
+    setEditFormTab('group');
+    setEditOriginIPs([{ type: 'primary', protocol: 'http', address: '', weight: 10 }]);
+    setEditRedirectUrl('');
+    setEditRedirectStatusCode(301);
+    setEditSelectedTemplate('');
+    setEditDrawerVisible(true);
+  };
+
+  /**
+   * 提交编辑表单
+   */
+  const handleEditSubmit = async () => {
+    try {
+      const values = await editForm.validateFields();
+      
+      // 构建请求数据
+      const data: any = {
+        id: Number(currentWebsite?.id),
+        domain: values.domain,
+        lineGroup: values.lineGroup,
+        https: values.https || false,
+        httpsForceRedirect: values.httpsForceRedirect || false,
+        hstsEnabled: values.hstsEnabled || false,
+        cacheRules: values.cacheRules || '',
+      };
+
+      // 根据不同的回源方式添加配置
+      if (editFormTab === 'group') {
+        data.originGroupId = editSelectedTemplate;
+      } else if (editFormTab === 'redirect') {
+        data.redirectUrl = editRedirectUrl;
+        data.redirectStatusCode = editRedirectStatusCode;
+      } else if (editFormTab === 'manual') {
+        data.originIPs = editOriginIPs.filter(ip => ip.address.trim() !== '');
+      }
+
+      await websitesAPI.update(data);
+      message.success('更新成功');
+      setEditDrawerVisible(false);
+      actionRef.current?.reload();
+    } catch (error) {
+      // 错误已由 request 工具自动处理
+    }
+  };
+
+  /**
+   * 打开清除缓存 Modal
+   */
+  const handleClearCache = (record: WebsiteItem) => {
+    setClearCacheWebsiteId(record.id);
+    setClearCacheWebsiteDomain(record.domain);
+    setClearCacheType('all');
+    setClearCacheUrl('');
+    setClearCacheDirectory('');
+    setClearCacheModalVisible(true);
+  };
+
+  /**
+   * 提交清除缓存
+   */
+  const handleClearCacheSubmit = async () => {
+    try {
+      const params: any = {
+        ids: [Number(clearCacheWebsiteId)],
+        type: clearCacheType,
+      };
+
+      if (clearCacheType === 'url') {
+        if (!clearCacheUrl.trim()) {
+          message.warning('请输入要清除的 URL');
+          return;
+        }
+        params.url = clearCacheUrl;
+      } else if (clearCacheType === 'directory') {
+        if (!clearCacheDirectory.trim()) {
+          message.warning('请输入要清除的目录');
+          return;
+        }
+        params.directory = clearCacheDirectory;
+      }
+
+      await websitesAPI.clearCache(params);
+      message.success('缓存清除成功');
+      setClearCacheModalVisible(false);
+    } catch (error) {
+      // 错误已由 request 工具自动处理
+    }
+  };
+
+  /**
+   * 打开批量清除缓存 Modal
+   */
+  const handleBatchClearCache = () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('请选择要清除缓存的网站');
+      return;
+    }
+    setBatchClearCacheType('all');
+    setBatchClearCacheUrl('');
+    setBatchClearCacheDirectory('');
+    setBatchClearCacheModalVisible(true);
+  };
+
+  /**
+   * 提交批量清除缓存
+   */
+  const handleBatchClearCacheSubmit = async () => {
+    try {
+      const params: any = {
+        ids: selectedRowKeys.map(key => Number(key)),
+        type: batchClearCacheType,
+      };
+
+      if (batchClearCacheType === 'url') {
+        if (!batchClearCacheUrl.trim()) {
+          message.warning('请输入要清除的 URL');
+          return;
+        }
+        params.url = batchClearCacheUrl;
+      } else if (batchClearCacheType === 'directory') {
+        if (!batchClearCacheDirectory.trim()) {
+          message.warning('请输入要清除的目录');
+          return;
+        }
+        params.directory = batchClearCacheDirectory;
+      }
+
+      await websitesAPI.clearCache(params);
+      message.success(`已清除 ${selectedRowKeys.length} 个网站的缓存`);
+      setBatchClearCacheModalVisible(false);
+      setSelectedRowKeys([]);
+    } catch (error) {
+      // 错误已由 request 工具自动处理
+    }
+  };
+
+  /**
+   * 添加回源 IP
    */
   const handleAddOriginIP = (isEdit: boolean = false) => {
-    const newIP = { type: 'primary' as const, protocol: 'http' as const, address: '', weight: 10 };
+    const newIP: OriginIP = { type: 'primary', protocol: 'http', address: '', weight: 10 };
     if (isEdit) {
       setEditOriginIPs([...editOriginIPs, newIP]);
     } else {
@@ -278,316 +366,167 @@ const WebsitesPage: React.FC = () => {
   };
 
   /**
-   * 处理删除回源 IP
+   * 删除回源 IP
    */
   const handleRemoveOriginIP = (index: number, isEdit: boolean = false) => {
     if (isEdit) {
-      setEditOriginIPs(editOriginIPs.filter((_, i) => i !== index));
+      const newIPs = editOriginIPs.filter((_, i) => i !== index);
+      if (newIPs.length === 0) {
+        newIPs.push({ type: 'primary', protocol: 'http', address: '', weight: 10 });
+      }
+      setEditOriginIPs(newIPs);
     } else {
-      setAddOriginIPs(addOriginIPs.filter((_, i) => i !== index));
+      const newIPs = addOriginIPs.filter((_, i) => i !== index);
+      if (newIPs.length === 0) {
+        newIPs.push({ type: 'primary', protocol: 'http', address: '', weight: 10 });
+      }
+      setAddOriginIPs(newIPs);
     }
   };
 
   /**
-   * 处理回源 IP 变更
+   * 更新回源 IP
    */
-  const handleOriginIPChange = (
-    index: number,
-    field: keyof OriginIP,
-    value: string | number,
-    isEdit: boolean = false
-  ) => {
-    const ips = isEdit ? [...editOriginIPs] : [...addOriginIPs];
-    ips[index] = { ...ips[index], [field]: value };
+  const handleUpdateOriginIP = (index: number, field: keyof OriginIP, value: any, isEdit: boolean = false) => {
     if (isEdit) {
-      setEditOriginIPs(ips);
+      const newIPs = [...editOriginIPs];
+      newIPs[index] = { ...newIPs[index], [field]: value };
+      setEditOriginIPs(newIPs);
     } else {
-      setAddOriginIPs(ips);
+      const newIPs = [...addOriginIPs];
+      newIPs[index] = { ...newIPs[index], [field]: value };
+      setAddOriginIPs(newIPs);
     }
   };
 
   /**
-   * 处理添加网站
+   * ProTable 数据请求
    */
-  const handleAddWebsite = async () => {
+  const request = async (params: any, sort: any, filter: any) => {
     try {
-      const values = await addForm.validateFields();
-      const newWebsite: WebsiteItem = {
-        id: Date.now().toString(),
-        domain: values.domain,
-        cname: `${values.domain}.cdn.example.com`,
-        lineGroup: values.lineGroup || '线路1',
-        https: values.https || false,
-        httpsForceRedirect: values.httpsForceRedirect || false,
-        hstsEnabled: values.hstsEnabled || false,
-        status: 'active',
-        createdAt: new Date().toLocaleString('zh-CN', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        }),
-        cacheRules: values.cacheRules,
+      const response = await websitesAPI.list({
+        page: params.current,
+        pageSize: params.pageSize,
+        domain: params.domain,
+        status: params.status,
+        lineGroup: params.lineGroup,
+        sortBy: sort && Object.keys(sort).length > 0 ? Object.keys(sort)[0] : undefined,
+        order: sort && Object.keys(sort).length > 0 ? (sort[Object.keys(sort)[0]] === 'ascend' ? 'asc' : 'desc') : undefined,
+      });
+
+      return {
+        data: response.data.items,
+        success: response.code === 0,
+        total: response.data.total,
       };
-
-      // 模拟添加
-      setWebsites((prev) => [newWebsite, ...prev]);
-      message.success(`网站 ${newWebsite.domain} 添加成功`);
-      setAddDrawerVisible(false);
-      resetAddForm();
-      actionRef.current?.reload();
     } catch (error) {
-      console.error('表单验证失败:', error);
+      return {
+        data: [],
+        success: false,
+        total: 0,
+      };
     }
   };
 
   /**
-   * 处理编辑网站
-   */
-  const handleEditWebsite = async () => {
-    if (!currentWebsite) return;
-
-    try {
-      const values = await editForm.validateFields();
-      // 模拟更新
-      setWebsites((prev) =>
-        prev.map((w) =>
-          w.id === currentWebsite.id
-            ? {
-                ...w,
-                domain: values.domain,
-                lineGroup: values.lineGroup,
-                https: values.https,
-                httpsForceRedirect: values.httpsForceRedirect,
-                hstsEnabled: values.hstsEnabled,
-                cname: `${values.domain}.cdn.example.com`,
-                cacheRules: values.cacheRules,
-              }
-            : w
-        )
-      );
-
-      message.success(`网站 ${values.domain} 更新成功`);
-      setEditDrawerVisible(false);
-      setCurrentWebsite(null);
-      resetEditForm();
-      actionRef.current?.reload();
-    } catch (error) {
-      console.error('表单验证失败:', error);
-    }
-  };
-
-  /**
-   * 重置添加表单
-   */
-  const resetAddForm = () => {
-    setAddFormTab('group');
-    setAddOriginIPs([{ type: 'primary', protocol: 'http', address: '', weight: 10 }]);
-    setAddRedirectUrl('');
-    setAddRedirectStatusCode(301);
-    setAddSelectedTemplate('');
-    addForm.resetFields();
-  };
-
-  /**
-   * 重置编辑表单
-   */
-  const resetEditForm = () => {
-    setEditFormTab('group');
-    setEditOriginIPs([{ type: 'primary', protocol: 'http', address: '', weight: 10 }]);
-    setEditRedirectUrl('');
-    setEditRedirectStatusCode(301);
-    setEditSelectedTemplate('');
-  };
-
-  /**
-   * 打开编辑抽屉
-   */
-  const openEditDrawer = (record: WebsiteItem) => {
-    setCurrentWebsite(record);
-    editForm.setFieldsValue(record);
-    // 模拟加载回源设置数据
-    setEditFormTab('manual');
-    setEditOriginIPs([
-      { type: 'primary', protocol: 'http', address: '192.168.1.100', weight: 10 },
-      { type: 'backup', protocol: 'https', address: '192.168.1.101', weight: 5 },
-    ]);
-    setEditDrawerVisible(true);
-  };
-
-  /**
-   * 表格列配置
+   * 表格列定义
    */
   const columns: ProColumns<WebsiteItem>[] = [
     {
+      title: 'ID',
+      dataIndex: 'id',
+      width: 80,
+      search: false,
+      sorter: true,
+    },
+    {
       title: '域名',
       dataIndex: 'domain',
-      key: 'domain',
-      width: 250,
+      width: 200,
       copyable: true,
       ellipsis: true,
     },
     {
       title: 'CNAME',
       dataIndex: 'cname',
-      key: 'cname',
-      width: 300,
+      width: 250,
+      search: false,
       copyable: true,
       ellipsis: true,
-      hideInSearch: true,
     },
     {
-      title: '线路',
+      title: '线路分组',
       dataIndex: 'lineGroup',
-      key: 'lineGroup',
       width: 150,
-      valueType: 'select',
-      valueEnum: {
-        '线路1': { text: '线路1' },
-        '线路2': { text: '线路2' },
-        '线路3': { text: '线路3' },
-      },
+      ellipsis: true,
     },
     {
       title: 'HTTPS',
       dataIndex: 'https',
-      key: 'https',
       width: 100,
-      valueType: 'select',
-      valueEnum: {
-        true: { text: '有效', status: 'Success' },
-        false: { text: '无', status: 'Default' },
-      },
-      render: (_, record) => {
-        return record.https ? <Tag color="success">有效</Tag> : <Tag color="default">无</Tag>;
-      },
+      search: false,
+      render: (_, record) => (
+        <Tag color={record.https ? 'success' : 'default'}>
+          {record.https ? '已启用' : '未启用'}
+        </Tag>
+      ),
     },
     {
       title: '状态',
       dataIndex: 'status',
-      key: 'status',
       width: 100,
       valueType: 'select',
       valueEnum: {
-        active: { text: '活跃', status: 'Success' },
-        inactive: { text: '非活跃', status: 'Error' },
-      },
-      render: (_, record) => {
-        const statusMap = {
-          active: { color: 'success', text: '活跃' },
-          inactive: { color: 'error', text: '非活跃' },
-        };
-        const status = statusMap[record.status];
-        return <Tag color={status.color}>{status.text}</Tag>;
+        active: { text: '启用', status: 'Success' },
+        inactive: { text: '停用', status: 'Default' },
       },
     },
     {
+      title: '创建时间',
+      dataIndex: 'createdAt',
+      width: 180,
+      search: false,
+      sorter: true,
+    },
+    {
       title: '操作',
-      key: 'action',
-      width: 200,
       valueType: 'option',
+      width: 200,
+      fixed: 'right',
       render: (_, record) => [
-        <Button
-          key="edit"
-          type="link"
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => openEditDrawer(record)}
-        >
+        <a key="edit" onClick={() => handleEdit(record)}>
           编辑
-        </Button>,
-        <Button
-          key="clear"
-          type="link"
-          size="small"
-          icon={<ClearOutlined />}
-          onClick={() => openClearCacheModal(record.id, record.domain)}
-          style={{ color: '#ff9800' }}
-        >
+        </a>,
+        <a key="cache" onClick={() => handleClearCache(record)}>
           清除缓存
-        </Button>,
+        </a>,
         <Popconfirm
           key="delete"
           title="确定要删除这个网站吗？"
-          description="删除后无法恢复，是否继续？"
           onConfirm={() => handleDelete(record.id)}
           okText="确定"
           cancelText="取消"
         >
-          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-            删除
-          </Button>
+          <a style={{ color: 'red' }}>删除</a>
         </Popconfirm>,
       ],
     },
   ];
 
   /**
-   * 请求数据
-   */
-  const request = async (params: any, sort: any, filter: any) => {
-    // 使用 mock 数据，并处理搜索和筛选
-    let filteredData = [...websites];
-
-    // 搜索功能：根据域名搜索
-    if (params.domain) {
-      filteredData = filteredData.filter((item) =>
-        item.domain.toLowerCase().includes(params.domain.toLowerCase())
-      );
-    }
-
-    // 筛选功能：根据 CNAME 搜索
-    if (params.cname) {
-      filteredData = filteredData.filter((item) =>
-        item.cname.toLowerCase().includes(params.cname.toLowerCase())
-      );
-    }
-
-    // 筛选功能：根据线路分组筛选
-    if (params.lineGroup) {
-      filteredData = filteredData.filter((item) => item.lineGroup === params.lineGroup);
-    }
-
-    // 筛选功能：根据状态筛选
-    if (params.status) {
-      filteredData = filteredData.filter((item) => item.status === params.status);
-    }
-
-    // 筛选功能：根据 HTTPS 筛选
-    if (params.https !== undefined) {
-      filteredData = filteredData.filter((item) => item.https === params.https);
-    }
-
-    // 分页功能
-    const { current = 1, pageSize = 15 } = params;
-    const startIndex = (current - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
-
-    return {
-      data: paginatedData,
-      success: true,
-      total: filteredData.length,
-    };
-  };
-
-  /**
-   * 模拟的回源分组模板
+   * 回源分组模板（TODO: 从 API 获取）
    */
   const mockTemplates = [
     { id: 't1', name: '默认回源组', type: 'IP', address: '192.168.1.100' },
     { id: 't2', name: '备用回源组', type: 'IP', address: '192.168.1.101' },
-    { id: 't3', name: 'CDN回源组', type: '域名', address: 'origin.example.com' },
   ];
 
   /**
-   * 渲染回源配置 Tabs
+   * 渲染回源配置表单
    */
-  const renderOriginTabs = (isEdit: boolean = false) => {
-    const activeTab = isEdit ? editFormTab : addFormTab;
-    const setActiveTab = isEdit ? setEditFormTab : setAddFormTab;
+  const renderOriginConfig = (isEdit: boolean = false) => {
+    const currentTab = isEdit ? editFormTab : addFormTab;
+    const setCurrentTab = isEdit ? setEditFormTab : setAddFormTab;
     const originIPs = isEdit ? editOriginIPs : addOriginIPs;
     const redirectUrl = isEdit ? editRedirectUrl : addRedirectUrl;
     const setRedirectUrl = isEdit ? setEditRedirectUrl : setAddRedirectUrl;
@@ -597,13 +536,12 @@ const WebsitesPage: React.FC = () => {
     const setSelectedTemplate = isEdit ? setEditSelectedTemplate : setAddSelectedTemplate;
 
     return (
-      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key as any)}>
-        <TabPane tab="使用分组" key="group">
-          <div style={{ marginTop: 16 }}>
+      <Tabs activeKey={currentTab} onChange={(key) => setCurrentTab(key as any)}>
+        <TabPane tab="选择回源分组" key="group">
+          <Form.Item label="回源分组" required>
             <Space direction="vertical" style={{ width: '100%' }}>
               <Select
-                style={{ width: '100%' }}
-                placeholder="选择回源分组"
+                placeholder="请选择回源分组"
                 value={selectedTemplate}
                 onChange={setSelectedTemplate}
               >
@@ -615,276 +553,160 @@ const WebsitesPage: React.FC = () => {
               </Select>
               <Button
                 type="dashed"
-                icon={<PlusOutlined />}
                 style={{ width: '100%' }}
                 onClick={() => {
-                  message.info('添加源站组功能（Mock 模式）');
+                  message.info('添加源站组功能');
                   // TODO: 打开添加源站组对话框
                 }}
               >
-                添加源站组
+                + 添加新的回源分组
               </Button>
             </Space>
-          </div>
+          </Form.Item>
         </TabPane>
-        <TabPane tab="重定向" key="redirect">
-          <div style={{ marginTop: 16 }}>
-            <Space.Compact style={{ width: '100%' }}>
-              <Input
-                placeholder="输入重定向 URL"
-                value={redirectUrl}
-                onChange={(e) => setRedirectUrl(e.target.value)}
-              />
-              <Select
-                value={redirectStatusCode}
-                onChange={setRedirectStatusCode}
-                style={{ width: 100 }}
-              >
-                <Select.Option value={301}>301</Select.Option>
-                <Select.Option value={302}>302</Select.Option>
-              </Select>
-            </Space.Compact>
-          </div>
-        </TabPane>
-        <TabPane tab="手动回源" key="manual">
-          <div style={{ marginTop: 16 }}>
-            <Button
-              type="dashed"
-              onClick={() => handleAddOriginIP(isEdit)}
-              style={{ marginBottom: 16, width: '100%' }}
+
+        <TabPane tab="301/302 跳转" key="redirect">
+          <Form.Item label="跳转 URL" required>
+            <Input
+              placeholder="https://example.com"
+              value={redirectUrl}
+              onChange={(e) => setRedirectUrl(e.target.value)}
+            />
+          </Form.Item>
+          <Form.Item label="状态码" required>
+            <Radio.Group
+              value={redirectStatusCode}
+              onChange={(e) => setRedirectStatusCode(e.target.value)}
             >
-              + 添加回源
-            </Button>
-            {originIPs.map((ip, index) => (
-              <div key={index} style={{ marginBottom: 12 }}>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Space wrap style={{ width: '100%' }}>
+              <Radio value={301}>301 永久跳转</Radio>
+              <Radio value={302}>302 临时跳转</Radio>
+            </Radio.Group>
+          </Form.Item>
+        </TabPane>
+
+        <TabPane tab="手动配置回源 IP" key="manual">
+          <Alert
+            message="回源 IP 配置说明"
+            description="可以配置多个回源 IP，支持主备和权重设置。地址格式：IP:端口，例如 192.168.1.100:80"
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+          {originIPs.map((ip, index) => (
+            <div key={index} style={{ marginBottom: 16, padding: 16, border: '1px solid #d9d9d9', borderRadius: 4 }}>
+              <Row gutter={16}>
+                <Col span={6}>
+                  <Form.Item label="类型" style={{ marginBottom: 8 }}>
                     <Select
                       value={ip.type}
-                      onChange={(value) => handleOriginIPChange(index, 'type', value, isEdit)}
-                      style={{ width: 100 }}
+                      onChange={(value) => handleUpdateOriginIP(index, 'type', value, isEdit)}
                     >
-                      <Select.Option value="primary">主源</Select.Option>
-                      <Select.Option value="backup">备源</Select.Option>
+                      <Select.Option value="primary">主</Select.Option>
+                      <Select.Option value="backup">备</Select.Option>
                     </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item label="协议" style={{ marginBottom: 8 }}>
                     <Select
                       value={ip.protocol}
-                      onChange={(value) => handleOriginIPChange(index, 'protocol', value, isEdit)}
-                      style={{ width: 100 }}
+                      onChange={(value) => handleUpdateOriginIP(index, 'protocol', value, isEdit)}
                     >
                       <Select.Option value="http">HTTP</Select.Option>
                       <Select.Option value="https">HTTPS</Select.Option>
                     </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="地址 (IP:端口)" style={{ marginBottom: 8 }}>
                     <Input
-                      placeholder="IP 或域名"
+                      placeholder="192.168.1.100:80"
                       value={ip.address}
-                      onChange={(e) => handleOriginIPChange(index, 'address', e.target.value, isEdit)}
-                      style={{ width: 200 }}
+                      onChange={(e) => handleUpdateOriginIP(index, 'address', e.target.value, isEdit)}
                     />
+                  </Form.Item>
+                </Col>
+                <Col span={4}>
+                  <Form.Item label="权重" style={{ marginBottom: 8 }}>
                     <InputNumber
                       min={1}
                       max={100}
                       value={ip.weight}
-                      onChange={(value) => handleOriginIPChange(index, 'weight', value || 10, isEdit)}
-                      style={{ width: 80 }}
-                      placeholder="权重"
+                      onChange={(value) => handleUpdateOriginIP(index, 'weight', value || 10, isEdit)}
+                      style={{ width: '100%' }}
                     />
-                    {originIPs.length > 1 && (
-                      <Button danger onClick={() => handleRemoveOriginIP(index, isEdit)}>
-                        删除
-                      </Button>
-                    )}
-                  </Space>
-                </Space>
-              </div>
-            ))}
-          </div>
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Button
+                danger
+                size="small"
+                onClick={() => handleRemoveOriginIP(index, isEdit)}
+                disabled={originIPs.length === 1}
+              >
+                删除
+              </Button>
+            </div>
+          ))}
+          <Button type="dashed" onClick={() => handleAddOriginIP(isEdit)} style={{ width: '100%' }}>
+            + 添加回源 IP
+          </Button>
         </TabPane>
       </Tabs>
-    );
-  };
-
-  /**
-   * 渲染表单内容
-   */
-  const renderFormContent = (form: any, isEdit: boolean = false) => {
-    return (
-      <div style={{ padding: '0 24px' }}>
-        <Form form={form} layout="horizontal" labelCol={{ span: 4 }} wrapperCol={{ span: 20 }}>
-          {/* 域名 */}
-          {isEdit ? (
-            <Form.Item
-              name="domain"
-              label="域名"
-              rules={[{ required: true, message: '请输入域名' }]}
-            >
-              <Input placeholder="请输入域名，例如：example.com" />
-            </Form.Item>
-          ) : (
-            <Form.Item
-              name="domain"
-              label="域名"
-              rules={[{ required: true, message: '请输入域名' }]}
-              extra="每行一个域名，支持批量添加"
-            >
-              <Input.TextArea
-                rows={4}
-                placeholder="请输入域名，每行一个，例如：&#10;example.com&#10;www.example.com&#10;api.example.com"
-              />
-            </Form.Item>
-          )}
-
-          {/* 线路配置（数据来自线路分组） */}
-          <Form.Item
-            name="lineGroup"
-            label="线路配置"
-            rules={[{ required: true, message: '请选择线路组' }]}
-            tooltip="数据来源：线路分组"
-          >
-            <Select placeholder="请选择线路分组" style={{ width: 200 }}>
-              <Select.Option value="线路1">线路1</Select.Option>
-              <Select.Option value="线路2">线路2</Select.Option>
-              <Select.Option value="线路3">线路3</Select.Option>
-            </Select>
-          </Form.Item>
-
-          {/* 缓存规则 */}
-          <Form.Item name="cacheRules" label="缓存规则">
-            <Select placeholder="请选择缓存规则" style={{ width: 200 }}>
-              <Select.Option value="首页缓存">首页缓存</Select.Option>
-              <Select.Option value="图片缓存">图片缓存</Select.Option>
-              <Select.Option value="API缓存">API缓存</Select.Option>
-              <Select.Option value="静态资源缓存">静态资源缓存</Select.Option>
-              <Select.Option value="视频缓存">视频缓存</Select.Option>
-            </Select>
-          </Form.Item>
-
-          {/* HTTPS 配置 - 横向排列 */}
-          <Form.Item label="HTTPS 配置">
-            <Space size="large">
-              <Form.Item name="https" valuePropName="checked" noStyle>
-                <Checkbox
-                  onChange={(e) => {
-                    // 当取消 HTTPS 时，同时取消跳转和 HSTS
-                    if (!e.target.checked) {
-                      form.setFieldsValue({
-                        httpsForceRedirect: false,
-                        hstsEnabled: false,
-                      });
-                    }
-                  }}
-                >
-                  启用 HTTPS
-                </Checkbox>
-              </Form.Item>
-              <Form.Item noStyle shouldUpdate={(prev, curr) => prev.https !== curr.https}>
-                {({ getFieldValue }) => (
-                  <Form.Item name="httpsForceRedirect" valuePropName="checked" noStyle>
-                    <Checkbox disabled={!getFieldValue('https')}>
-                      HTTPS 跳转
-                    </Checkbox>
-                  </Form.Item>
-                )}
-              </Form.Item>
-              <Form.Item noStyle shouldUpdate={(prev, curr) => prev.https !== curr.https}>
-                {({ getFieldValue }) => (
-                  <Form.Item name="hstsEnabled" valuePropName="checked" noStyle>
-                    <Checkbox disabled={!getFieldValue('https')}>
-                      HSTS
-                    </Checkbox>
-                  </Form.Item>
-                )}
-              </Form.Item>
-            </Space>
-          </Form.Item>
-
-          {/* 回源设置 */}
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ marginBottom: 8, fontWeight: 500 }}>回源设置</div>
-            {renderOriginTabs(isEdit)}
-          </div>
-        </Form>
-      </div>
     );
   };
 
   return (
     <>
       <ProTable<WebsiteItem>
-        headerTitle={
-          <Space>
-            网站管理
-            {wsConnected && <Tag color="success">实时连接 (Mock)</Tag>}
-            {!wsConnected && <Tag color="error">连接断开</Tag>}
-          </Space>
-        }
+        columns={columns}
         actionRef={actionRef}
+        request={request}
         rowKey="id"
         search={{
           labelWidth: 'auto',
-        }}
-        scroll={{ x: 'max-content' }}
-        options={{
-          reload: true,
-          density: true,
-          setting: true,
         }}
         pagination={{
           defaultPageSize: 15,
           showSizeChanger: true,
           showQuickJumper: true,
-          pageSizeOptions: ['10', '15', '20', '50', '100'],
         }}
-        // 启用 URL 参数同步：分页、搜索、筛选状态都会同步到 URL
-        // 设置 form 的 syncToUrl 为 true 即可启用
-        form={{
-          syncToUrl: true,
+        scroll={{ x: 1400 }}
+        rowSelection={{
+          selectedRowKeys,
+          onChange: setSelectedRowKeys,
         }}
-        toolBarRender={() => [
-          selectedRowKeys.length > 0 && (
-            <Button
-              key="batchClearCache"
-              icon={<ClearOutlined />}
-              style={{ color: '#ff9800', borderColor: '#ff9800' }}
-              onClick={handleBatchClearCacheClick}
-            >
-              批量清除缓存 ({selectedRowKeys.length})
-            </Button>
-          ),
-          selectedRowKeys.length > 0 && (
+        tableAlertRender={({ selectedRowKeys }) => (
+          <Space>
+            <span>已选择 {selectedRowKeys.length} 项</span>
+            <a onClick={() => setSelectedRowKeys([])}>取消选择</a>
+          </Space>
+        )}
+        tableAlertOptionRender={() => (
+          <Space>
+            <a onClick={handleBatchClearCache}>批量清除缓存</a>
             <Popconfirm
-              key="batchDelete"
               title={`确定要删除选中的 ${selectedRowKeys.length} 个网站吗？`}
               onConfirm={handleBatchDelete}
               okText="确定"
               cancelText="取消"
             >
-              <Button type="primary" danger>
-                批量删除 ({selectedRowKeys.length})
-              </Button>
+              <a style={{ color: 'red' }}>批量删除</a>
             </Popconfirm>
-          ),
-          <Button
-            key="add"
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setAddDrawerVisible(true)}
-          >
+          </Space>
+        )}
+        toolBarRender={() => [
+          <Button key="add" type="primary" onClick={handleAdd}>
             添加网站
           </Button>,
         ]}
-        request={request}
-        columns={columns}
-        rowSelection={{
-          selectedRowKeys,
-          onChange: setSelectedRowKeys,
-        }}
-        pagination={{
-          defaultPageSize: 15,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total) => `共 ${total} 条记录`,
-        }}
+        headerTitle={
+          <Space>
+            网站管理
+            {wsConnected && <Tag color="success">实时连接</Tag>}
+            {!wsConnected && <Tag color="warning">未连接</Tag>}
+          </Space>
+        }
       />
 
       {/* 添加网站抽屉 */}
@@ -892,31 +714,71 @@ const WebsitesPage: React.FC = () => {
         title="添加网站"
         width={720}
         open={addDrawerVisible}
-        onClose={() => {
-          setAddDrawerVisible(false);
-          resetAddForm();
-        }}
-        footer={
-          <div style={{ textAlign: 'right' }}>
-            <Space>
-              <Button onClick={() => {
-                setAddDrawerVisible(false);
-                resetAddForm();
-              }}>
-                取消
-              </Button>
-              <Button onClick={resetAddForm}>
-                重置
-              </Button>
-              <Button type="primary" onClick={handleAddWebsite}>
-                提交
-              </Button>
-            </Space>
-          </div>
+        onClose={() => setAddDrawerVisible(false)}
+        extra={
+          <Space>
+            <Button onClick={() => setAddDrawerVisible(false)}>取消</Button>
+            <Button type="primary" onClick={handleAddSubmit}>
+              提交
+            </Button>
+          </Space>
         }
-        destroyOnClose
       >
-        {renderFormContent(addForm, false)}
+        <Form form={addForm} layout="vertical">
+          <Form.Item
+            name="domain"
+            label="域名"
+            rules={[{ required: true, message: '请输入域名' }]}
+          >
+            <Input placeholder="example.com" />
+          </Form.Item>
+
+          <Form.Item
+            name="lineGroup"
+            label="线路分组"
+            rules={[{ required: true, message: '请选择线路分组' }]}
+          >
+            <Select placeholder="请选择线路分组">
+              <Select.Option value="线路1">线路1</Select.Option>
+              <Select.Option value="线路2">线路2</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="回源配置" required>
+            {renderOriginConfig(false)}
+          </Form.Item>
+
+          <Form.Item name="https" valuePropName="checked">
+            <Checkbox>启用 HTTPS</Checkbox>
+          </Form.Item>
+
+          <Form.Item
+            noStyle
+            shouldUpdate={(prevValues, currentValues) => prevValues.https !== currentValues.https}
+          >
+            {({ getFieldValue }) => {
+              const httpsEnabled = getFieldValue('https');
+              return (
+                <>
+                  <Form.Item name="httpsForceRedirect" valuePropName="checked">
+                    <Checkbox disabled={!httpsEnabled}>强制 HTTPS 跳转</Checkbox>
+                  </Form.Item>
+                  <Form.Item name="hstsEnabled" valuePropName="checked">
+                    <Checkbox disabled={!httpsEnabled}>启用 HSTS</Checkbox>
+                  </Form.Item>
+                </>
+              );
+            }}
+          </Form.Item>
+
+          <Form.Item name="cacheRules" label="缓存规则">
+            <Select placeholder="请选择缓存规则" allowClear>
+              <Select.Option value="首页缓存">首页缓存</Select.Option>
+              <Select.Option value="图片缓存">图片缓存</Select.Option>
+              <Select.Option value="API缓存">API缓存</Select.Option>
+            </Select>
+          </Form.Item>
+        </Form>
       </Drawer>
 
       {/* 编辑网站抽屉 */}
@@ -924,174 +786,151 @@ const WebsitesPage: React.FC = () => {
         title="编辑网站"
         width={720}
         open={editDrawerVisible}
-        onClose={() => {
-          setEditDrawerVisible(false);
-          setCurrentWebsite(null);
-          resetEditForm();
-        }}
-        footer={
-          <div style={{ textAlign: 'right' }}>
-            <Space>
-              <Button onClick={() => {
-                setEditDrawerVisible(false);
-                setCurrentWebsite(null);
-                resetEditForm();
-              }}>
-                取消
-              </Button>
-              <Button type="primary" onClick={handleEditWebsite}>
-                保存
-              </Button>
-            </Space>
-          </div>
+        onClose={() => setEditDrawerVisible(false)}
+        extra={
+          <Space>
+            <Button onClick={() => setEditDrawerVisible(false)}>取消</Button>
+            <Button type="primary" onClick={handleEditSubmit}>
+              保存
+            </Button>
+          </Space>
         }
-        destroyOnClose
       >
-        {renderFormContent(editForm, true)}
+        <Form form={editForm} layout="vertical">
+          <Form.Item label="域名">
+            <Input value={currentWebsite?.domain} disabled />
+          </Form.Item>
+
+          <Form.Item
+            name="lineGroup"
+            label="线路分组"
+            rules={[{ required: true, message: '请选择线路分组' }]}
+          >
+            <Select placeholder="请选择线路分组">
+              <Select.Option value="线路1">线路1</Select.Option>
+              <Select.Option value="线路2">线路2</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="回源配置" required>
+            {renderOriginConfig(true)}
+          </Form.Item>
+
+          <Form.Item name="https" valuePropName="checked">
+            <Checkbox>启用 HTTPS</Checkbox>
+          </Form.Item>
+
+          <Form.Item
+            noStyle
+            shouldUpdate={(prevValues, currentValues) => prevValues.https !== currentValues.https}
+          >
+            {({ getFieldValue }) => {
+              const httpsEnabled = getFieldValue('https');
+              return (
+                <>
+                  <Form.Item name="httpsForceRedirect" valuePropName="checked">
+                    <Checkbox disabled={!httpsEnabled}>强制 HTTPS 跳转</Checkbox>
+                  </Form.Item>
+                  <Form.Item name="hstsEnabled" valuePropName="checked">
+                    <Checkbox disabled={!httpsEnabled}>启用 HSTS</Checkbox>
+                  </Form.Item>
+                </>
+              );
+            }}
+          </Form.Item>
+
+          <Form.Item name="cacheRules" label="缓存规则">
+            <Select placeholder="请选择缓存规则" allowClear>
+              <Select.Option value="首页缓存">首页缓存</Select.Option>
+              <Select.Option value="图片缓存">图片缓存</Select.Option>
+              <Select.Option value="API缓存">API缓存</Select.Option>
+            </Select>
+          </Form.Item>
+        </Form>
       </Drawer>
 
-      {/* 清除缓存对话框 */}
+      {/* 清除缓存 Modal */}
       <Modal
-        title="清除缓存"
+        title={`清除缓存 - ${clearCacheWebsiteDomain}`}
         open={clearCacheModalVisible}
-        onOk={handleClearCache}
+        onOk={handleClearCacheSubmit}
         onCancel={() => setClearCacheModalVisible(false)}
-        okText="确认清除"
+        okText="确定"
         cancelText="取消"
-        okButtonProps={{
-          disabled:
-            (clearCacheType === 'url' && !clearCacheUrl) ||
-            (clearCacheType === 'directory' && !clearCacheDirectory),
-          danger: true,
-        }}
-        width={520}
       >
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          {/* 清除类型选择 */}
-          <div>
-            <div style={{ marginBottom: 12, fontWeight: 500 }}>清除类型</div>
-            <Radio.Group
-              value={clearCacheType}
-              onChange={(e) => setClearCacheType(e.target.value)}
-              style={{ width: '100%' }}
-            >
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Radio value="all">清除所有缓存</Radio>
-                <Radio value="url">指定 URL 清除</Radio>
-                <Radio value="directory">清除目录</Radio>
+        <Form layout="vertical">
+          <Form.Item label="清除类型">
+            <Radio.Group value={clearCacheType} onChange={(e) => setClearCacheType(e.target.value)}>
+              <Space direction="vertical">
+                <Radio value="all">全部缓存</Radio>
+                <Radio value="url">指定 URL</Radio>
+                <Radio value="directory">指定目录</Radio>
               </Space>
             </Radio.Group>
-          </div>
+          </Form.Item>
 
-          {/* URL 输入框 */}
           {clearCacheType === 'url' && (
-            <div>
-              <div style={{ marginBottom: 8, fontWeight: 500 }}>URL 地址</div>
+            <Form.Item label="URL" required>
               <Input
+                placeholder="https://example.com/path/to/file.jpg"
                 value={clearCacheUrl}
                 onChange={(e) => setClearCacheUrl(e.target.value)}
-                placeholder="例如: https://example.com/path/to/file.html"
               />
-            </div>
+            </Form.Item>
           )}
 
-          {/* 目录输入框 */}
           {clearCacheType === 'directory' && (
-            <div>
-              <div style={{ marginBottom: 8, fontWeight: 500 }}>目录路径</div>
+            <Form.Item label="目录" required>
               <Input
+                placeholder="/images/"
                 value={clearCacheDirectory}
                 onChange={(e) => setClearCacheDirectory(e.target.value)}
-                placeholder="例如: /images/ 或 /static/"
               />
-            </div>
+            </Form.Item>
           )}
-
-          {/* 提示信息 */}
-          <Alert
-            message={
-              clearCacheType === 'all'
-                ? '将清除该网站的所有缓存，需要重新生成。'
-                : clearCacheType === 'url'
-                ? '将清除指定 URL 的缓存。'
-                : '将清除指定目录下的所有缓存。'
-            }
-            type="warning"
-            showIcon
-          />
-        </Space>
+        </Form>
       </Modal>
 
       {/* 批量清除缓存 Modal */}
       <Modal
         title={`批量清除缓存 (${selectedRowKeys.length} 个网站)`}
         open={batchClearCacheModalVisible}
-        onOk={handleBatchClearCacheConfirm}
+        onOk={handleBatchClearCacheSubmit}
         onCancel={() => setBatchClearCacheModalVisible(false)}
-        okText="确认清除"
+        okText="确定"
         cancelText="取消"
-        okButtonProps={{
-          disabled:
-            (batchClearCacheType === 'url' && !batchClearCacheUrl) ||
-            (batchClearCacheType === 'directory' && !batchClearCacheDirectory),
-          danger: true,
-        }}
-        width={520}
       >
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          {/* 清除类型选择 */}
-          <div>
-            <div style={{ marginBottom: 12, fontWeight: 500 }}>清除类型</div>
-            <Radio.Group
-              value={batchClearCacheType}
-              onChange={(e) => setBatchClearCacheType(e.target.value)}
-              style={{ width: '100%' }}
-            >
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Radio value="all">清除所有缓存</Radio>
-                <Radio value="url">指定 URL 清除</Radio>
-                <Radio value="directory">清除目录</Radio>
+        <Form layout="vertical">
+          <Form.Item label="清除类型">
+            <Radio.Group value={batchClearCacheType} onChange={(e) => setBatchClearCacheType(e.target.value)}>
+              <Space direction="vertical">
+                <Radio value="all">全部缓存</Radio>
+                <Radio value="url">指定 URL</Radio>
+                <Radio value="directory">指定目录</Radio>
               </Space>
             </Radio.Group>
-          </div>
+          </Form.Item>
 
-          {/* URL 输入框 */}
           {batchClearCacheType === 'url' && (
-            <div>
-              <div style={{ marginBottom: 8, fontWeight: 500 }}>URL 地址</div>
+            <Form.Item label="URL" required>
               <Input
+                placeholder="https://example.com/path/to/file.jpg"
                 value={batchClearCacheUrl}
                 onChange={(e) => setBatchClearCacheUrl(e.target.value)}
-                placeholder="例如: https://example.com/path/to/file.html"
               />
-            </div>
+            </Form.Item>
           )}
 
-          {/* 目录输入框 */}
           {batchClearCacheType === 'directory' && (
-            <div>
-              <div style={{ marginBottom: 8, fontWeight: 500 }}>目录路径</div>
+            <Form.Item label="目录" required>
               <Input
+                placeholder="/images/"
                 value={batchClearCacheDirectory}
                 onChange={(e) => setBatchClearCacheDirectory(e.target.value)}
-                placeholder="例如: /images/ 或 /static/"
               />
-            </div>
+            </Form.Item>
           )}
-
-          {/* 提示信息 */}
-          <Alert
-            message={
-              batchClearCacheType === 'all'
-                ? `将清除 ${selectedRowKeys.length} 个网站的所有缓存，需要重新生成。`
-                : batchClearCacheType === 'url'
-                ? `将清除 ${selectedRowKeys.length} 个网站的指定 URL 缓存。`
-                : `将清除 ${selectedRowKeys.length} 个网站的指定目录缓存。`
-            }
-            type="warning"
-            showIcon
-          />
-        </Space>
+        </Form>
       </Modal>
     </>
   );

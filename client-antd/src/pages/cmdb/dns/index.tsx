@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from '@umijs/max';
-import { ProTable } from '@ant-design/pro-components';
+import { ProTable, ActionType } from '@ant-design/pro-components';
 import { Button, Drawer, Form, Input, Switch, Space, message, Popconfirm, Tag, Typography } from 'antd';
 import { PlusOutlined, EyeOutlined, EyeInvisibleOutlined, CopyOutlined, FileTextOutlined } from '@ant-design/icons';
+import { dnsAPI } from '@/services/api';
+import { connectWebSocket, subscribe, unsubscribe, WebSocketEvent } from '@/utils/websocket';
 
 const { Text } = Typography;
 
@@ -15,28 +17,44 @@ interface DNSConfig {
 }
 
 const DNSConfigPage = () => {
-  const [dataSource, setDataSource] = useState<DNSConfig[]>([
-    {
-      id: '1',
-      domain: 'example.com',
-      token: 'dns_token_mock_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-      status: 'active',
-      createdAt: '2024-01-01 10:00:00',
-    },
-    {
-      id: '2',
-      domain: 'test.com',
-      token: 'dns_token_mock_yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy',
-      status: 'active',
-      createdAt: '2024-01-02 11:00:00',
-    },
-  ]);
-
-  const [drawerVisible, setDrawerVisible] = useState(false);
+  const actionRef = useRef<ActionType>();
   const navigate = useNavigate();
+  const [drawerVisible, setDrawerVisible] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [showTokens, setShowTokens] = useState<Set<string>>(new Set());
+  const [wsConnected, setWsConnected] = useState(false);
+
+  /**
+   * 初始化 WebSocket 连接
+   */
+  useEffect(() => {
+    try {
+      connectWebSocket();
+      setWsConnected(true);
+    } catch (error) {
+      console.warn('WebSocket 连接失败:', error);
+      setWsConnected(false);
+    }
+
+    // 订阅 DNS 相关事件
+    const handleDNSCreated = () => {
+      message.info('检测到新 DNS 配置创建');
+      actionRef.current?.reload();
+    };
+    const handleDNSDeleted = () => {
+      message.info('检测到 DNS 配置删除');
+      actionRef.current?.reload();
+    };
+
+    subscribe(WebSocketEvent.DNS_CREATED, handleDNSCreated);
+    subscribe(WebSocketEvent.DNS_DELETED, handleDNSDeleted);
+
+    return () => {
+      unsubscribe(WebSocketEvent.DNS_CREATED, handleDNSCreated);
+      unsubscribe(WebSocketEvent.DNS_DELETED, handleDNSDeleted);
+    };
+  }, []);
 
   const handleAdd = () => {
     setEditingId(null);
@@ -54,9 +72,14 @@ const DNSConfigPage = () => {
     setDrawerVisible(true);
   };
 
-  const handleDelete = (id: string) => {
-    setDataSource(dataSource.filter((item) => item.id !== id));
-    message.success('删除成功');
+  const handleDelete = async (id: string) => {
+    try {
+      await dnsAPI.delete([Number(id)]);
+      message.success('删除成功');
+      actionRef.current?.reload();
+    } catch (error) {
+      // 错误已由 request 工具自动处理
+    }
   };
 
   const handleSubmit = async () => {
@@ -64,35 +87,27 @@ const DNSConfigPage = () => {
       const values = await form.validateFields();
 
       if (editingId) {
-        setDataSource(
-          dataSource.map((item) =>
-            item.id === editingId
-              ? {
-                  ...item,
-                  domain: values.domain,
-                  token: values.token,
-                  status: values.status ? 'active' : 'inactive',
-                }
-              : item
-          )
-        );
-        message.success('编辑成功');
-      } else {
-        const newConfig: DNSConfig = {
-          id: Date.now().toString(),
+        await dnsAPI.update({
+          id: Number(editingId),
           domain: values.domain,
           token: values.token,
           status: values.status ? 'active' : 'inactive',
-          createdAt: new Date().toLocaleString('zh-CN'),
-        };
-        setDataSource([newConfig, ...dataSource]);
+        });
+        message.success('编辑成功');
+      } else {
+        await dnsAPI.create({
+          domain: values.domain,
+          token: values.token,
+          status: values.status ? 'active' : 'inactive',
+        });
         message.success('添加成功');
       }
 
       setDrawerVisible(false);
       form.resetFields();
+      actionRef.current?.reload();
     } catch (error) {
-      console.error('表单验证失败:', error);
+      // 错误已由 request 工具自动处理
     }
   };
 
@@ -106,160 +121,197 @@ const DNSConfigPage = () => {
     setShowTokens(newShowTokens);
   };
 
-  const copyToken = (token: string) => {
-    navigator.clipboard.writeText(token);
-    message.success('Token 已复制到剪贴板');
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    message.success('已复制到剪贴板');
+  };
+
+  const viewRecords = (record: DNSConfig) => {
+    navigate(`/cmdb/dns/records?domainId=${record.id}&domain=${record.domain}`);
+  };
+
+  /**
+   * ProTable 数据请求
+   */
+  const request = async (params: any, sort: any, filter: any) => {
+    try {
+      const response = await dnsAPI.list({
+        page: params.current,
+        pageSize: params.pageSize,
+        domain: params.domain,
+        status: params.status,
+        sortBy: sort && Object.keys(sort).length > 0 ? Object.keys(sort)[0] : undefined,
+        order: sort && Object.keys(sort).length > 0 ? (sort[Object.keys(sort)[0]] === 'ascend' ? 'asc' : 'desc') : undefined,
+      });
+
+      return {
+        data: response.data.items,
+        success: response.code === 0,
+        total: response.data.total,
+      };
+    } catch (error) {
+      return {
+        data: [],
+        success: false,
+        total: 0,
+      };
+    }
   };
 
   const columns = [
     {
+      title: 'ID',
+      dataIndex: 'id',
+      width: 80,
+      search: false,
+      sorter: true,
+    },
+    {
       title: '域名',
       dataIndex: 'domain',
-      key: 'domain',
       width: 200,
-      render: (domain: string, record: DNSConfig) => (
-        <Space>
-          <span>{domain}</span>
-          <Button
-            type="link"
-            size="small"
-            icon={<FileTextOutlined />}
-            onClick={() => {
-              // 跳转到解析记录页面
-              navigate(`/website/dns/records/${record.id}`);
-            }}
-            title="查看解析记录"
-          />
-        </Space>
+      copyable: true,
+      ellipsis: true,
+      render: (text: string, record: DNSConfig) => (
+        <a onClick={() => viewRecords(record)}>{text}</a>
       ),
     },
     {
       title: 'Token',
       dataIndex: 'token',
-      key: 'token',
-      render: (token: string, record: DNSConfig) => (
-        <Space>
-          <Text code style={{ fontFamily: 'monospace', fontSize: 12 }}>
-            {showTokens.has(record.id) ? token : '••••••••••••••••'}
-          </Text>
-          <Button
-            type="text"
-            size="small"
-            icon={showTokens.has(record.id) ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-            onClick={() => toggleShowToken(record.id)}
-          />
-          <Button
-            type="text"
-            size="small"
-            icon={<CopyOutlined />}
-            onClick={() => copyToken(token)}
-          />
-        </Space>
-      ),
+      width: 300,
+      search: false,
+      render: (text: string, record: DNSConfig) => {
+        const isVisible = showTokens.has(record.id);
+        return (
+          <Space>
+            <Text code style={{ maxWidth: 200 }} ellipsis>
+              {isVisible ? text : '••••••••••••••••••••'}
+            </Text>
+            <Button
+              type="text"
+              size="small"
+              icon={isVisible ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+              onClick={() => toggleShowToken(record.id)}
+            />
+            <Button
+              type="text"
+              size="small"
+              icon={<CopyOutlined />}
+              onClick={() => copyToClipboard(text)}
+            />
+          </Space>
+        );
+      },
     },
     {
       title: '状态',
       dataIndex: 'status',
-      key: 'status',
       width: 100,
-      render: (status: string) => (
-        <Tag color={status === 'active' ? 'green' : 'default'}>
-          {status === 'active' ? '启用' : '禁用'}
-        </Tag>
-      ),
+      valueType: 'select',
+      valueEnum: {
+        active: { text: '启用', status: 'Success' },
+        inactive: { text: '停用', status: 'Default' },
+      },
     },
     {
       title: '创建时间',
       dataIndex: 'createdAt',
-      key: 'createdAt',
       width: 180,
+      search: false,
+      sorter: true,
     },
     {
       title: '操作',
-      key: 'action',
-      width: 150,
-      render: (_: any, record: DNSConfig) => (
-        <Space>
-          <Button type="link" size="small" onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="确认删除？"
-            description="删除后无法恢复，是否继续？"
-            onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" danger size="small">
-              删除
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
+      valueType: 'option',
+      width: 200,
+      fixed: 'right',
+      render: (_: any, record: DNSConfig) => [
+        <a key="records" onClick={() => viewRecords(record)}>
+          <FileTextOutlined /> 解析记录
+        </a>,
+        <a key="edit" onClick={() => handleEdit(record)}>
+          编辑
+        </a>,
+        <Popconfirm
+          key="delete"
+          title="确定要删除这个 DNS 配置吗？"
+          onConfirm={() => handleDelete(record.id)}
+          okText="确定"
+          cancelText="取消"
+        >
+          <a style={{ color: 'red' }}>删除</a>
+        </Popconfirm>,
+      ],
     },
   ];
 
   return (
     <>
-      <ProTable
+      <ProTable<DNSConfig>
         columns={columns}
-        dataSource={dataSource}
+        actionRef={actionRef}
+        request={request}
         rowKey="id"
-        search={false}
+        search={{
+          labelWidth: 'auto',
+        }}
         pagination={{
           defaultPageSize: 15,
           showSizeChanger: true,
-          showTotal: (total) => `共 ${total} 条记录`,
+          showQuickJumper: true,
         }}
+        scroll={{ x: 1200 }}
         toolBarRender={() => [
           <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
             添加 DNS 配置
           </Button>,
         ]}
+        headerTitle={
+          <Space>
+            DNS 设置
+            {wsConnected && <Tag color="success">实时连接</Tag>}
+            {!wsConnected && <Tag color="warning">未连接</Tag>}
+          </Space>
+        }
       />
 
       <Drawer
         title={editingId ? '编辑 DNS 配置' : '添加 DNS 配置'}
-        width={600}
+        width={500}
         open={drawerVisible}
         onClose={() => setDrawerVisible(false)}
-        footer={
-          <Space style={{ float: 'right' }}>
+        extra={
+          <Space>
             <Button onClick={() => setDrawerVisible(false)}>取消</Button>
-            <Button onClick={() => form.resetFields()}>重置</Button>
             <Button type="primary" onClick={handleSubmit}>
-              {editingId ? '保存' : '提交'}
+              {editingId ? '保存' : '添加'}
             </Button>
           </Space>
         }
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            label="域名"
             name="domain"
+            label="域名"
             rules={[{ required: true, message: '请输入域名' }]}
           >
-            <Input placeholder="请输入域名，如：example.com" />
+            <Input placeholder="example.com" />
           </Form.Item>
 
           <Form.Item
-            label="Token"
             name="token"
+            label="Token"
             rules={[{ required: true, message: '请输入 Token' }]}
           >
             <Input.TextArea
               rows={3}
-              placeholder="请输入 DNS Token"
+              placeholder="dns_token_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
             />
           </Form.Item>
 
-          <Form.Item
-            label="状态"
-            name="status"
-            valuePropName="checked"
-            initialValue={true}
-          >
-            <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+          <Form.Item name="status" label="状态" valuePropName="checked" initialValue={true}>
+            <Switch checkedChildren="启用" unCheckedChildren="停用" />
           </Form.Item>
         </Form>
       </Drawer>

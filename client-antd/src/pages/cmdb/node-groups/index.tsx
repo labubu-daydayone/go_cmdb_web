@@ -1,8 +1,10 @@
-import { useState, useMemo } from 'react';
-import { ProTable } from '@ant-design/pro-components';
-import { Button, Drawer, Form, Input, Transfer, Space, message, Popconfirm } from 'antd';
+import { useState, useRef, useMemo, useEffect } from 'react';
+import { ProTable, ActionType } from '@ant-design/pro-components';
+import { Button, Drawer, Form, Input, Transfer, Space, message, Popconfirm, Tag } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import type { TransferDirection } from 'antd/es/transfer';
+import { nodeGroupsAPI, nodesAPI } from '@/services/api';
+import { connectWebSocket, subscribe, unsubscribe, WebSocketEvent } from '@/utils/websocket';
 
 interface SubIP {
   id: string;
@@ -26,51 +28,77 @@ interface TransferItem {
   disabled?: boolean;
 }
 
-// Mock 节点数据（用于穿梭框）
-const mockAvailableNodes = [
-  { id: 'node-1', name: 'Node-01', ip: '192.168.1.10', subIPs: ['192.168.1.11', '192.168.1.12'] },
-  { id: 'node-2', name: 'Node-02', ip: '192.168.1.20', subIPs: ['192.168.1.21'] },
-  { id: 'node-3', name: 'Node-03', ip: '192.168.1.30', subIPs: [] },
-  { id: 'node-4', name: 'Node-04', ip: '192.168.1.40', subIPs: ['192.168.1.41', '192.168.1.42', '192.168.1.43'] },
-  { id: 'node-5', name: 'Node-05', ip: '192.168.1.50', subIPs: ['192.168.1.51'] },
-];
+interface NodeItem {
+  id: string;
+  name: string;
+  ip: string;
+  subIPs?: Array<{ id: string; ip: string }>;
+}
 
 const NodeGroupsPage = () => {
-  const [dataSource, setDataSource] = useState<NodeGroupItem[]>([
-    {
-      id: '1',
-      name: '华东节点组',
-      description: '华东地区节点集合',
-      subIPCount: 3,
-      subIPs: [
-        { id: 'sub-1-1', ip: '192.168.1.11', createdAt: '2024-01-01' },
-        { id: 'sub-1-2', ip: '192.168.1.12', createdAt: '2024-01-01' },
-        { id: 'sub-1-3', ip: '192.168.1.21', createdAt: '2024-01-02' },
-      ],
-      createdAt: '2024-01-01 10:00:00',
-    },
-    {
-      id: '2',
-      name: '华北节点组',
-      description: '华北地区节点集合',
-      subIPCount: 2,
-      subIPs: [
-        { id: 'sub-2-1', ip: '192.168.1.41', createdAt: '2024-01-03' },
-        { id: 'sub-2-2', ip: '192.168.1.42', createdAt: '2024-01-03' },
-      ],
-      createdAt: '2024-01-02 11:00:00',
-    },
-  ]);
-
+  const actionRef = useRef<ActionType>();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [targetKeys, setTargetKeys] = useState<string[]>([]);
+  const [availableNodes, setAvailableNodes] = useState<NodeItem[]>([]);
+  const [wsConnected, setWsConnected] = useState(false);
+
+  /**
+   * 初始化 WebSocket 连接
+   */
+  useEffect(() => {
+    try {
+      connectWebSocket();
+      setWsConnected(true);
+    } catch (error) {
+      console.warn('WebSocket 连接失败:', error);
+      setWsConnected(false);
+    }
+
+    // 订阅节点分组相关事件
+    const handleGroupCreated = () => {
+      message.info('检测到新节点分组创建');
+      actionRef.current?.reload();
+    };
+    const handleGroupUpdated = () => {
+      message.info('检测到节点分组更新');
+      actionRef.current?.reload();
+    };
+    const handleGroupDeleted = () => {
+      message.info('检测到节点分组删除');
+      actionRef.current?.reload();
+    };
+
+    subscribe(WebSocketEvent.NODE_GROUP_CREATED, handleGroupCreated);
+    subscribe(WebSocketEvent.NODE_GROUP_UPDATED, handleGroupUpdated);
+    subscribe(WebSocketEvent.NODE_GROUP_DELETED, handleGroupDeleted);
+
+    return () => {
+      unsubscribe(WebSocketEvent.NODE_GROUP_CREATED, handleGroupCreated);
+      unsubscribe(WebSocketEvent.NODE_GROUP_UPDATED, handleGroupUpdated);
+      unsubscribe(WebSocketEvent.NODE_GROUP_DELETED, handleGroupDeleted);
+    };
+  }, []);
+
+  /**
+   * 加载可用节点列表
+   */
+  const loadAvailableNodes = async () => {
+    try {
+      const response = await nodesAPI.list({ page: 1, pageSize: 1000 });
+      if (response.code === 0) {
+        setAvailableNodes(response.data.items);
+      }
+    } catch (error) {
+      console.error('加载节点列表失败:', error);
+    }
+  };
 
   // 将节点数据转换为穿梭框数据格式
   const transferDataSource: TransferItem[] = useMemo(() => {
     const items: TransferItem[] = [];
-    mockAvailableNodes.forEach((node) => {
+    availableNodes.forEach((node) => {
       // 添加主节点
       items.push({
         key: `node-${node.id}`,
@@ -78,51 +106,82 @@ const NodeGroupsPage = () => {
         description: `主节点 - ${node.ip}`,
       });
       // 添加子 IP
-      node.subIPs.forEach((subIP, index) => {
-        items.push({
-          key: `subip-${node.id}-${index}`,
-          title: subIP,
-          description: `${node.name} 的子IP`,
+      if (node.subIPs && node.subIPs.length > 0) {
+        node.subIPs.forEach((subIP) => {
+          items.push({
+            key: `subip-${subIP.id}`,
+            title: subIP.ip,
+            description: `子 IP - ${node.name}`,
+          });
         });
-      });
+      }
     });
     return items;
-  }, []);
+  }, [availableNodes]);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
+    await loadAvailableNodes();
     setEditingId(null);
-    setTargetKeys([]);
     form.resetFields();
+    setTargetKeys([]);
     setDrawerVisible(true);
   };
 
-  const handleEdit = (record: NodeGroupItem) => {
+  const handleEdit = async (record: NodeGroupItem) => {
+    await loadAvailableNodes();
     setEditingId(record.id);
     form.setFieldsValue({
       name: record.name,
       description: record.description,
     });
-    
-    // 根据 subIPs 恢复已选择的节点
-    // 这里需要将 subIPs 映射回 transferDataSource 的 key
-    const selectedKeys: string[] = [];
-    record.subIPs.forEach((subIP) => {
-      // 在 transferDataSource 中查找匹配的 key
-      const matchedItem = transferDataSource.find(
-        (item) => item.title === subIP.ip || item.title.includes(subIP.ip)
-      );
-      if (matchedItem) {
-        selectedKeys.push(matchedItem.key);
-      }
-    });
-    
-    setTargetKeys(selectedKeys);
+    // 将已选择的子 IP 转换为 targetKeys
+    const keys = record.subIPs.map(subIP => `subip-${subIP.id}`);
+    setTargetKeys(keys);
     setDrawerVisible(true);
   };
 
-  const handleDelete = (id: string) => {
-    setDataSource(dataSource.filter((item) => item.id !== id));
-    message.success('删除成功');
+  const handleDelete = async (id: string) => {
+    try {
+      await nodeGroupsAPI.delete([Number(id)]);
+      message.success('删除成功');
+      actionRef.current?.reload();
+    } catch (error) {
+      // 错误已由 request 工具自动处理
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+
+      // 提取选中的子 IP ID
+      const subIPIds = targetKeys
+        .filter(key => key.startsWith('subip-'))
+        .map(key => Number(key.replace('subip-', '')));
+
+      const data = {
+        name: values.name,
+        description: values.description,
+        subIPIds,
+      };
+
+      if (editingId) {
+        await nodeGroupsAPI.update({
+          id: Number(editingId),
+          ...data,
+        });
+        message.success('编辑成功');
+      } else {
+        await nodeGroupsAPI.create(data);
+        message.success('添加成功');
+      }
+
+      setDrawerVisible(false);
+      form.resetFields();
+      actionRef.current?.reload();
+    } catch (error) {
+      // 错误已由 request 工具自动处理
+    }
   };
 
   const handleTransferChange = (
@@ -133,162 +192,136 @@ const NodeGroupsPage = () => {
     setTargetKeys(newTargetKeys);
   };
 
-  const handleSubmit = async () => {
+  /**
+   * ProTable 数据请求
+   */
+  const request = async (params: any, sort: any, filter: any) => {
     try {
-      const values = await form.validateFields();
+      const response = await nodeGroupsAPI.list({
+        page: params.current,
+        pageSize: params.pageSize,
+        name: params.name,
+        sortBy: sort && Object.keys(sort).length > 0 ? Object.keys(sort)[0] : undefined,
+        order: sort && Object.keys(sort).length > 0 ? (sort[Object.keys(sort)[0]] === 'ascend' ? 'asc' : 'desc') : undefined,
+      });
 
-      if (targetKeys.length === 0) {
-        message.warning('请至少选择一个节点');
-        return;
-      }
-
-      if (editingId) {
-        setDataSource(
-          dataSource.map((item) =>
-            item.id === editingId
-              ? {
-                  ...item,
-                  name: values.name,
-                  description: values.description,
-                  subIPCount: targetKeys.length,
-                  subIPs: targetKeys.map((key, index) => ({
-                    id: `${Date.now()}-${index}`,
-                    ip: transferDataSource.find((item) => item.key === key)?.title || key,
-                    createdAt: new Date().toISOString().split('T')[0],
-                  })),
-                }
-              : item
-          )
-        );
-        message.success('编辑成功');
-      } else {
-        const newGroup: NodeGroupItem = {
-          id: Date.now().toString(),
-          name: values.name,
-          description: values.description,
-          subIPCount: targetKeys.length,
-          subIPs: targetKeys.map((key, index) => ({
-            id: `${Date.now()}-${index}`,
-            ip: transferDataSource.find((item) => item.key === key)?.title || key,
-            createdAt: new Date().toISOString().split('T')[0],
-          })),
-          createdAt: new Date().toLocaleString('zh-CN'),
-        };
-        setDataSource([newGroup, ...dataSource]);
-        message.success('添加成功');
-      }
-
-      setDrawerVisible(false);
-      form.resetFields();
-      setTargetKeys([]);
+      return {
+        data: response.data.items,
+        success: response.code === 0,
+        total: response.data.total,
+      };
     } catch (error) {
-      console.error('表单验证失败:', error);
+      return {
+        data: [],
+        success: false,
+        total: 0,
+      };
     }
-  };
-
-  // 展开行渲染 - 使用表格样式
-  const expandedRowRender = (record: NodeGroupItem) => {
-    const subIPColumns = [
-      {
-        title: 'IP 地址',
-        dataIndex: 'ip',
-        key: 'ip',
-        width: 200,
-      },
-      {
-        title: '创建日期',
-        dataIndex: 'createdAt',
-        key: 'createdAt',
-        width: 150,
-      },
-    ];
-
-    return (
-      <div style={{ padding: '8px 48px', backgroundColor: '#fafafa' }}>
-        <ProTable
-          columns={subIPColumns}
-          dataSource={record.subIPs}
-          rowKey="id"
-          search={false}
-          pagination={false}
-          toolBarRender={false}
-          options={false}
-          showHeader={true}
-          size="small"
-        />
-      </div>
-    );
   };
 
   const columns = [
     {
+      title: 'ID',
+      dataIndex: 'id',
+      width: 80,
+      search: false,
+      sorter: true,
+    },
+    {
       title: '分组名称',
       dataIndex: 'name',
-      key: 'name',
       width: 200,
+      ellipsis: true,
     },
     {
       title: '描述',
       dataIndex: 'description',
-      key: 'description',
+      width: 300,
+      search: false,
+      ellipsis: true,
     },
     {
       title: '子 IP 数量',
       dataIndex: 'subIPCount',
-      key: 'subIPCount',
       width: 120,
+      search: false,
+      sorter: true,
     },
     {
       title: '创建时间',
       dataIndex: 'createdAt',
-      key: 'createdAt',
       width: 180,
+      search: false,
+      sorter: true,
     },
     {
       title: '操作',
-      key: 'action',
+      valueType: 'option',
       width: 150,
-      render: (_: any, record: NodeGroupItem) => (
-        <Space>
-          <Button type="link" size="small" onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="确认删除？"
-            description="删除后无法恢复，是否继续？"
-            onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" danger size="small">
-              删除
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
+      fixed: 'right',
+      render: (_: any, record: NodeGroupItem) => [
+        <a key="edit" onClick={() => handleEdit(record)}>
+          编辑
+        </a>,
+        <Popconfirm
+          key="delete"
+          title="确定要删除这个节点分组吗？"
+          onConfirm={() => handleDelete(record.id)}
+          okText="确定"
+          cancelText="取消"
+        >
+          <a style={{ color: 'red' }}>删除</a>
+        </Popconfirm>,
+      ],
     },
   ];
 
   return (
     <>
-      <ProTable
+      <ProTable<NodeGroupItem>
         columns={columns}
-        dataSource={dataSource}
+        actionRef={actionRef}
+        request={request}
         rowKey="id"
-        search={false}
-        expandable={{
-          expandedRowRender,
+        search={{
+          labelWidth: 'auto',
         }}
         pagination={{
           defaultPageSize: 15,
           showSizeChanger: true,
-          showTotal: (total) => `共 ${total} 条记录`,
+          showQuickJumper: true,
+        }}
+        scroll={{ x: 1200 }}
+        expandable={{
+          expandedRowRender: (record) => (
+            <div style={{ padding: '16px 48px' }}>
+              <h4>子 IP 列表</h4>
+              {record.subIPs && record.subIPs.length > 0 ? (
+                <Space wrap>
+                  {record.subIPs.map((subIP) => (
+                    <Tag key={subIP.id} color="blue">
+                      {subIP.ip}
+                    </Tag>
+                  ))}
+                </Space>
+              ) : (
+                <div style={{ color: '#999' }}>暂无子 IP</div>
+              )}
+            </div>
+          ),
         }}
         toolBarRender={() => [
           <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            添加分组
+            添加节点分组
           </Button>,
         ]}
+        headerTitle={
+          <Space>
+            节点分组管理
+            {wsConnected && <Tag color="success">实时连接</Tag>}
+            {!wsConnected && <Tag color="warning">未连接</Tag>}
+          </Space>
+        }
       />
 
       <Drawer
@@ -296,45 +329,49 @@ const NodeGroupsPage = () => {
         width={800}
         open={drawerVisible}
         onClose={() => setDrawerVisible(false)}
-        footer={
-          <Space style={{ float: 'right' }}>
+        extra={
+          <Space>
             <Button onClick={() => setDrawerVisible(false)}>取消</Button>
-            <Button onClick={() => form.resetFields()}>重置</Button>
             <Button type="primary" onClick={handleSubmit}>
-              {editingId ? '保存' : '提交'}
+              {editingId ? '保存' : '添加'}
             </Button>
           </Space>
         }
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            label="分组名称"
             name="name"
+            label="分组名称"
             rules={[{ required: true, message: '请输入分组名称' }]}
           >
-            <Input placeholder="请输入分组名称" />
+            <Input placeholder="华东节点组" />
           </Form.Item>
 
-          <Form.Item label="描述" name="description">
-            <Input.TextArea rows={2} placeholder="请输入描述信息" />
+          <Form.Item name="description" label="描述">
+            <Input.TextArea rows={3} placeholder="华东地区节点集合" />
           </Form.Item>
 
-          <Form.Item label="选择节点" required>
+          <Form.Item label="选择节点和子 IP" required>
             <Transfer
               dataSource={transferDataSource}
-              titles={['可选节点', '已选节点']}
+              titles={['可用节点', '已选节点']}
               targetKeys={targetKeys}
               onChange={handleTransferChange}
-              render={(item) => item.title}
-              showSearch
-              filterOption={(inputValue, item) =>
-                item.title.toLowerCase().indexOf(inputValue.toLowerCase()) !== -1 ||
-                (item.description?.toLowerCase().indexOf(inputValue.toLowerCase()) ?? -1) !== -1
-              }
+              render={(item) => (
+                <div>
+                  <div style={{ fontWeight: 500 }}>{item.title}</div>
+                  <div style={{ fontSize: 12, color: '#999' }}>{item.description}</div>
+                </div>
+              )}
               listStyle={{
                 width: 350,
                 height: 400,
               }}
+              showSearch
+              filterOption={(inputValue, item) =>
+                item.title.toLowerCase().includes(inputValue.toLowerCase()) ||
+                item.description.toLowerCase().includes(inputValue.toLowerCase())
+              }
             />
           </Form.Item>
         </Form>

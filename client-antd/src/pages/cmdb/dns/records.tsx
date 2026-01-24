@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from '@umijs/max';
-import { ProTable } from '@ant-design/pro-components';
+import { useState, useRef, useEffect } from 'react';
+import { useSearchParams, useNavigate } from '@umijs/max';
+import { ProTable, ActionType } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
 import { Button, Tag, Breadcrumb, Space, Card } from 'antd';
 import { ReloadOutlined, ArrowLeftOutlined, HomeOutlined } from '@ant-design/icons';
+import { dnsAPI } from '@/services/api';
+import { connectWebSocket, subscribe, unsubscribe, WebSocketEvent } from '@/utils/websocket';
 
 /**
  * DNS 解析记录数据类型
@@ -20,224 +22,228 @@ export type DNSRecord = {
 };
 
 /**
- * 生成 mock DNS 解析记录
- */
-const generateMockRecords = (domain: string): DNSRecord[] => {
-  return [
-    {
-      id: '1',
-      type: 'CNAME',
-      name: `www.${domain}`,
-      value: `cdn.example.com`,
-      ttl: 600,
-      status: 'active',
-      createdAt: '2024-01-01 10:00:00',
-      updatedAt: '2024-01-01 10:00:00',
-    },
-    {
-      id: '2',
-      type: 'CNAME',
-      name: `api.${domain}`,
-      value: `api-cdn.example.com`,
-      ttl: 300,
-      status: 'active',
-      createdAt: '2024-01-02 11:00:00',
-      updatedAt: '2024-01-02 11:00:00',
-    },
-    {
-      id: '3',
-      type: 'A',
-      name: domain,
-      value: '192.168.1.100',
-      ttl: 3600,
-      status: 'active',
-      createdAt: '2024-01-03 12:00:00',
-      updatedAt: '2024-01-03 12:00:00',
-    },
-    {
-      id: '4',
-      type: 'CNAME',
-      name: `cdn.${domain}`,
-      value: `cdn-backup.example.com`,
-      ttl: 600,
-      status: 'pending',
-      createdAt: '2024-01-04 13:00:00',
-      updatedAt: '2024-01-04 13:00:00',
-    },
-  ];
-};
-
-/**
  * DNS 解析记录页面
  */
 const DNSRecords: React.FC = () => {
-  const { domainId } = useParams<{ domainId: string }>();
+  const [searchParams] = useSearchParams();
+  const domainId = searchParams.get('domainId');
+  const domainParam = searchParams.get('domain');
   const navigate = useNavigate();
-  const [records, setRecords] = useState<DNSRecord[]>([]);
-  const [domainName, setDomainName] = useState<string>('');
-  const [loading, setLoading] = useState(true);
+  const actionRef = useRef<ActionType>();
+  const [domainName, setDomainName] = useState<string>(domainParam || '');
+  const [wsConnected, setWsConnected] = useState(false);
 
-  const loadRecords = () => {
-    setLoading(true);
-    // 模拟 API 调用延迟
-    setTimeout(() => {
-      if (domainId) {
-        // 根据 domainId 获取域名（这里简化处理）
-        const domain = domainId === '1' ? 'example.com' : domainId === '2' ? 'test.com' : 'demo.net';
-        setDomainName(domain);
-        setRecords(generateMockRecords(domain));
-      }
-      setLoading(false);
-    }, 500);
-  };
-
+  /**
+   * 初始化 WebSocket 连接
+   */
   useEffect(() => {
-    loadRecords();
-  }, [domainId]);
+    try {
+      connectWebSocket();
+      setWsConnected(true);
+    } catch (error) {
+      console.warn('WebSocket 连接失败:', error);
+      setWsConnected(false);
+    }
+
+    // 订阅 DNS 解析记录相关事件
+    const handleRecordCreated = () => {
+      actionRef.current?.reload();
+    };
+    const handleRecordUpdated = () => {
+      actionRef.current?.reload();
+    };
+    const handleRecordDeleted = () => {
+      actionRef.current?.reload();
+    };
+
+    subscribe(WebSocketEvent.DNS_RECORD_CREATED, handleRecordCreated);
+    subscribe(WebSocketEvent.DNS_RECORD_UPDATED, handleRecordUpdated);
+    subscribe(WebSocketEvent.DNS_RECORD_DELETED, handleRecordDeleted);
+
+    return () => {
+      unsubscribe(WebSocketEvent.DNS_RECORD_CREATED, handleRecordCreated);
+      unsubscribe(WebSocketEvent.DNS_RECORD_UPDATED, handleRecordUpdated);
+      unsubscribe(WebSocketEvent.DNS_RECORD_DELETED, handleRecordDeleted);
+    };
+  }, []);
 
   const handleRefresh = () => {
-    loadRecords();
+    actionRef.current?.reload();
   };
 
   const handleBack = () => {
-    navigate('/website/dns');
+    navigate('/cmdb/dns');
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'error':
-        return 'error';
-      default:
-        return 'default';
+  /**
+   * ProTable 数据请求
+   */
+  const request = async (params: any, sort: any, filter: any) => {
+    if (!domainId) {
+      return {
+        data: [],
+        success: false,
+        total: 0,
+      };
     }
-  };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active':
-        return '正常';
-      case 'pending':
-        return '待生效';
-      case 'error':
-        return '错误';
-      default:
-        return '未知';
+    try {
+      const response = await dnsAPI.getRecords(Number(domainId), {
+        page: params.current,
+        pageSize: params.pageSize,
+        type: params.type,
+        name: params.name,
+        status: params.status,
+        sortBy: sort && Object.keys(sort).length > 0 ? Object.keys(sort)[0] : undefined,
+        order: sort && Object.keys(sort).length > 0 ? (sort[Object.keys(sort)[0]] === 'ascend' ? 'asc' : 'desc') : undefined,
+      });
+
+      return {
+        data: response.data.items,
+        success: response.code === 0,
+        total: response.data.total,
+      };
+    } catch (error) {
+      return {
+        data: [],
+        success: false,
+        total: 0,
+      };
     }
   };
 
   const columns: ProColumns<DNSRecord>[] = [
     {
+      title: 'ID',
+      dataIndex: 'id',
+      width: 80,
+      search: false,
+      sorter: true,
+    },
+    {
       title: '记录类型',
       dataIndex: 'type',
-      key: 'type',
-      width: 100,
-      render: (type: any) => <Tag color="blue">{type}</Tag>,
+      width: 120,
+      valueType: 'select',
+      valueEnum: {
+        CNAME: { text: 'CNAME' },
+        A: { text: 'A' },
+        AAAA: { text: 'AAAA' },
+        MX: { text: 'MX' },
+        TXT: { text: 'TXT' },
+      },
+      render: (_, record) => {
+        const colorMap: Record<string, string> = {
+          CNAME: 'blue',
+          A: 'green',
+          AAAA: 'cyan',
+          MX: 'orange',
+          TXT: 'purple',
+        };
+        return <Tag color={colorMap[record.type]}>{record.type}</Tag>;
+      },
     },
     {
       title: '主机记录',
       dataIndex: 'name',
-      key: 'name',
-      width: 200,
+      width: 250,
+      copyable: true,
+      ellipsis: true,
     },
     {
       title: '记录值',
       dataIndex: 'value',
-      key: 'value',
       width: 250,
+      search: false,
+      copyable: true,
+      ellipsis: true,
     },
     {
       title: 'TTL',
       dataIndex: 'ttl',
-      key: 'ttl',
       width: 100,
-      render: (ttl: number) => `${ttl}s`,
+      search: false,
+      sorter: true,
+      render: (text) => `${text}s`,
     },
     {
       title: '状态',
       dataIndex: 'status',
-      key: 'status',
       width: 100,
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
-      ),
+      valueType: 'select',
+      valueEnum: {
+        active: { text: '正常', status: 'Success' },
+        pending: { text: '待生效', status: 'Processing' },
+        error: { text: '错误', status: 'Error' },
+      },
     },
     {
       title: '创建时间',
       dataIndex: 'createdAt',
-      key: 'createdAt',
       width: 180,
+      search: false,
+      sorter: true,
     },
     {
       title: '更新时间',
       dataIndex: 'updatedAt',
-      key: 'updatedAt',
       width: 180,
+      search: false,
+      sorter: true,
     },
   ];
 
   return (
-    <div style={{ padding: '24px' }}>
-      {/* 面包屑导航 */}
-      <Breadcrumb
-        style={{ marginBottom: 16 }}
-        items={[
-          {
-            href: '/',
-            title: <HomeOutlined />,
-          },
-          {
-            href: '/website/dns',
-            title: 'DNS 设置',
-          },
-          {
-            title: `${domainName} 的解析记录`,
-          },
-        ]}
-      />
+    <Card>
+      <Space direction="vertical" style={{ width: '100%' }} size="large">
+        <Breadcrumb
+          items={[
+            {
+              href: '/',
+              title: <HomeOutlined />,
+            },
+            {
+              href: '/cmdb/dns',
+              title: 'DNS 设置',
+            },
+            {
+              title: domainName || '解析记录',
+            },
+          ]}
+        />
 
-      <Card>
         <ProTable<DNSRecord>
-          headerTitle={
-            <Space>
-              <Button
-                type="text"
-                icon={<ArrowLeftOutlined />}
-                onClick={handleBack}
-              >
-                返回
-              </Button>
-              <span style={{ fontSize: 16, fontWeight: 500 }}>
-                {domainName} 的解析记录
-              </span>
-            </Space>
-          }
-          rowKey="id"
           columns={columns}
-          dataSource={records}
-          loading={loading}
-          search={false}
-          pagination={{
-            pageSize: 15,
-            showSizeChanger: true,
-            pageSizeOptions: ['15', '20', '50', '100'],
+          actionRef={actionRef}
+          request={request}
+          rowKey="id"
+          search={{
+            labelWidth: 'auto',
           }}
+          pagination={{
+            defaultPageSize: 15,
+            showSizeChanger: true,
+            showQuickJumper: true,
+          }}
+          scroll={{ x: 1400 }}
           toolBarRender={() => [
-            <Button
-              key="refresh"
-              icon={<ReloadOutlined />}
-              onClick={handleRefresh}
-            >
+            <Button key="back" icon={<ArrowLeftOutlined />} onClick={handleBack}>
+              返回
+            </Button>,
+            <Button key="refresh" icon={<ReloadOutlined />} onClick={handleRefresh}>
               刷新
             </Button>,
           ]}
-          options={false}
+          headerTitle={
+            <Space>
+              {domainName} - DNS 解析记录
+              {wsConnected && <Tag color="success">实时连接</Tag>}
+              {!wsConnected && <Tag color="warning">未连接</Tag>}
+            </Space>
+          }
         />
-      </Card>
-    </div>
+      </Space>
+    </Card>
   );
 };
 
