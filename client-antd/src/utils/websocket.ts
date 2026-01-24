@@ -10,7 +10,46 @@ const SOCKET_URL = process.env.SOCKET_URL || 'http://20.2.140.226:8080';
 /**
  * WebSocket 事件类型（必须在最前面导出）
  */
-export type WebSocketEvent = string;
+export type WebSocketEventType = string;
+
+/**
+ * WebSocket 事件常量
+ */
+export const WebSocketEvent = {
+  // 网站相关事件
+  WEBSITE_CREATED: 'website:created',
+  WEBSITE_UPDATED: 'website:updated',
+  WEBSITE_DELETED: 'website:deleted',
+  WEBSITE_CACHE_CLEARED: 'website:cache_cleared',
+  
+  // 节点相关事件
+  NODE_CREATED: 'node:created',
+  NODE_UPDATED: 'node:updated',
+  NODE_DELETED: 'node:deleted',
+  NODE_STATUS_CHANGED: 'node:status_changed',
+  
+  // 节点分组相关事件
+  NODE_GROUP_CREATED: 'node_group:created',
+  NODE_GROUP_UPDATED: 'node_group:updated',
+  NODE_GROUP_DELETED: 'node_group:deleted',
+  
+  // 回源分组相关事件
+  ORIGIN_GROUP_CREATED: 'origin_group:created',
+  ORIGIN_GROUP_UPDATED: 'origin_group:updated',
+  ORIGIN_GROUP_DELETED: 'origin_group:deleted',
+  
+  // 线路分组相关事件
+  LINE_GROUP_CREATED: 'line_group:created',
+  LINE_GROUP_UPDATED: 'line_group:updated',
+  LINE_GROUP_DELETED: 'line_group:deleted',
+  
+  // DNS 相关事件
+  DNS_CREATED: 'dns:created',
+  DNS_DELETED: 'dns:deleted',
+  DNS_RECORD_CREATED: 'dns_record:created',
+  DNS_RECORD_UPDATED: 'dns_record:updated',
+  DNS_RECORD_DELETED: 'dns_record:deleted',
+} as const;
 
 /**
  * WebSocket 管理器
@@ -157,13 +196,13 @@ export const connectWebSocket = (): Socket => {
 /**
  * 订阅事件（向后兼容）
  */
-export const subscribe = (event: WebSocketEvent, callback: (...args: any[]) => void): void => {
+export const subscribe = (event: WebSocketEventType, callback: (...args: any[]) => void): void => {
   websocketManager.on(event, callback);
 };
 
 /**
  * 取消订阅事件（向后兼容）
  */
-export const unsubscribe = (event: WebSocketEvent, callback?: (...args: any[]) => void): void => {
+export const unsubscribe = (event: WebSocketEventType, callback?: (...args: any[]) => void): void => {
   websocketManager.off(event, callback);
 };
