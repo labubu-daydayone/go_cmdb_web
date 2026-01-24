@@ -1,26 +1,17 @@
-import { LinkOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { SettingDrawer } from '@ant-design/pro-components';
-import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
-import { history, Link } from '@umijs/max';
-import React from 'react';
-import {
-  AvatarDropdown,
-  AvatarName,
-  Footer,
-  Question,
-  SelectLang,
-} from '@/components';
-import { currentUser as queryCurrentUser } from '@/services/ant-design-pro/api';
+import type { RunTimeLayoutConfig } from '@umijs/max';
+import { history } from '@umijs/max';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
+import { Footer } from '@/components';
+import React from 'react';
 
 const isDev = process.env.NODE_ENV === 'development';
-const isDevOrTest = isDev || process.env.CI;
 const loginPath = '/user/login';
 
 /**
- * @see https://umijs.org/docs/api/runtime-config#getinitialstate
+ * @see  https://umijs.org/zh-CN/plugins/plugin-initial-state
  * */
 export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
@@ -28,18 +19,40 @@ export async function getInitialState(): Promise<{
   loading?: boolean;
   fetchUserInfo?: () => Promise<API.CurrentUser | undefined>;
 }> {
+  /**
+   * 从 localStorage 获取用户信息
+   * 不再调用 /api/v1/auth/current-user 接口
+   */
   const fetchUserInfo = async () => {
     try {
-      const msg = await queryCurrentUser({
-        skipErrorHandler: true,
-      });
-      return msg.data;
-    } catch (_error) {
+      // 从 localStorage 读取用户信息
+      const userStr = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+      
+      if (!token || !userStr) {
+        // 没有 Token 或用户信息，跳转到登录页
+        history.push(loginPath);
+        return undefined;
+      }
+      
+      // 解析用户信息
+      const user = JSON.parse(userStr);
+      
+      // 转换为 API.CurrentUser 格式
+      return {
+        userid: user.id?.toString() || '0',
+        name: user.username || 'Unknown',
+        avatar: user.avatar || 'https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png',
+        access: user.role || 'user',
+      } as API.CurrentUser;
+    } catch (error) {
+      console.error('Failed to fetch user info:', error);
       history.push(loginPath);
+      return undefined;
     }
-    return undefined;
   };
-  // 如果不是登录页面，执行
+  
+  // 如果不是登录页面，获取用户信息
   const { location } = history;
   if (
     ![loginPath, '/user/register', '/user/register-result'].includes(
@@ -53,6 +66,7 @@ export async function getInitialState(): Promise<{
       settings: defaultSettings as Partial<LayoutSettings>,
     };
   }
+  
   return {
     fetchUserInfo,
     settings: defaultSettings as Partial<LayoutSettings>,
@@ -60,21 +74,15 @@ export async function getInitialState(): Promise<{
 }
 
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
-export const layout: RunTimeLayoutConfig = ({
-  initialState,
-  setInitialState,
-}) => {
+export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
   return {
-    actionsRender: () => [
-      <Question key="doc" />,
-      <SelectLang key="SelectLang" />,
-    ],
+    actionsRender: () => [],
     avatarProps: {
       src: initialState?.currentUser?.avatar,
-      title: <AvatarName />,
-      render: (_, avatarChildren) => (
-        <AvatarDropdown>{avatarChildren}</AvatarDropdown>
-      ),
+      title: initialState?.currentUser?.name,
+      render: (_, avatarChildren) => {
+        return avatarChildren;
+      },
     },
     waterMarkProps: {
       content: initialState?.currentUser?.name,
@@ -107,13 +115,8 @@ export const layout: RunTimeLayoutConfig = ({
         width: '331px',
       },
     ],
-    links: isDevOrTest
-      ? [
-          <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
-            <LinkOutlined />
-            <span>OpenAPI 文档</span>
-          </Link>,
-        ]
+    links: isDev
+      ? []
       : [],
     menuHeaderRender: undefined,
     // 自定义 403 页面
@@ -124,7 +127,7 @@ export const layout: RunTimeLayoutConfig = ({
       return (
         <>
           {children}
-          {isDevOrTest && (
+          {isDev && (
             <SettingDrawer
               disableUrlParams
               enableDarkTheme
@@ -149,7 +152,6 @@ export const layout: RunTimeLayoutConfig = ({
  * 它基于 axios 和 ahooks 的 useRequest 提供了一套统一的网络请求和错误处理方案。
  * @doc https://umijs.org/docs/max/request#配置
  */
-export const request: RequestConfig = {
-  baseURL: isDev ? '' : 'https://proapi.azurewebsites.net',
+export const request = {
   ...errorConfig,
 };
