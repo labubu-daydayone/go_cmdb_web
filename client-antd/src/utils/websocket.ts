@@ -1,188 +1,141 @@
 /**
- * WebSocket 工具（Socket.IO）
- * 符合 API v2.1 规范
+ * WebSocket 工具类
+ * 用于实时数据推送
  */
-
 import { io, Socket } from 'socket.io-client';
-import { message } from 'antd';
-import { getToken } from './request';
 
-// WebSocket 连接实例
-let socket: Socket | null = null;
-
-// WebSocket 连接配置
+// WebSocket 服务器地址
 const SOCKET_URL = process.env.SOCKET_URL || 'http://20.2.140.226:8080';
 
 /**
- * 连接 WebSocket
+ * WebSocket 管理器
  */
-export function connectWebSocket(): Socket {
-  if (socket?.connected) {
-    return socket;
-  }
+class WebSocketManager {
+  private socket: Socket | null = null;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectDelay = 3000;
 
-  const token = getToken();
-  if (!token) {
-    console.warn('No token found, WebSocket connection skipped');
-    throw new Error('未登录');
-  }
-
-  // 创建 Socket.IO 连接
-  socket = io(SOCKET_URL, {
-    auth: {
-      token,
-    },
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionAttempts: 5,
-  });
-
-  // 连接成功
-  socket.on('connect', () => {
-    console.log('WebSocket connected:', socket?.id);
-  });
-
-  // 连接错误
-  socket.on('connect_error', (error) => {
-    console.error('WebSocket connection error:', error);
-    message.error('实时连接失败');
-  });
-
-  // 断开连接
-  socket.on('disconnect', (reason) => {
-    console.log('WebSocket disconnected:', reason);
-    if (reason === 'io server disconnect') {
-      // 服务器主动断开，需要重新连接
-      socket?.connect();
+  /**
+   * 连接 WebSocket
+   */
+  connect(): Socket {
+    if (this.socket && this.socket.connected) {
+      return this.socket;
     }
-  });
 
-  // 认证错误
-  socket.on('error', (error: any) => {
-    console.error('WebSocket error:', error);
-    if (error.code === 1001 || error.code === 1002 || error.code === 1003) {
-      message.error('认证失败，请重新登录');
-      disconnectWebSocket();
+    // 从 localStorage 获取 Token
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      console.warn('[WebSocket] No token found, cannot connect');
+      throw new Error('No authentication token');
     }
-  });
 
-  return socket;
-}
+    // 创建 Socket.IO 连接，携带 Token
+    this.socket = io(SOCKET_URL, {
+      transports: ['websocket'],
+      auth: {
+        token: token,
+      },
+      reconnection: true,
+      reconnectionDelay: this.reconnectDelay,
+      reconnectionAttempts: this.maxReconnectAttempts,
+    });
 
-/**
- * 断开 WebSocket
- */
-export function disconnectWebSocket(): void {
-  if (socket) {
-    socket.disconnect();
-    socket = null;
+    // 连接成功
+    this.socket.on('connect', () => {
+      console.log('[WebSocket] Connected successfully');
+      this.reconnectAttempts = 0;
+    });
+
+    // 连接错误
+    this.socket.on('connect_error', (error) => {
+      console.error('[WebSocket] Connection error:', error);
+      this.reconnectAttempts++;
+
+      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        console.error('[WebSocket] Max reconnection attempts reached');
+        this.disconnect();
+      }
+    });
+
+    // 认证错误
+    this.socket.on('error', (error) => {
+      console.error('[WebSocket] Authentication error:', error);
+      // Token 可能过期，清除并跳转到登录页
+      if (error === 'Authentication failed' || error === 'No token') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/user/login';
+      }
+    });
+
+    // 断开连接
+    this.socket.on('disconnect', (reason) => {
+      console.log('[WebSocket] Disconnected:', reason);
+    });
+
+    return this.socket;
   }
-}
 
-/**
- * 获取 WebSocket 实例
- */
-export function getSocket(): Socket | null {
-  return socket;
-}
-
-/**
- * 订阅事件
- */
-export function subscribe(event: string, callback: (data: any) => void): void {
-  const ws = getSocket();
-  if (ws) {
-    ws.on(event, callback);
-  } else {
-    console.warn(`Cannot subscribe to ${event}: WebSocket not connected`);
+  /**
+   * 断开连接
+   */
+  disconnect(): void {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+      console.log('[WebSocket] Disconnected manually');
+    }
   }
-}
 
-/**
- * 取消订阅
- */
-export function unsubscribe(event: string, callback?: (data: any) => void): void {
-  const ws = getSocket();
-  if (ws) {
-    if (callback) {
-      ws.off(event, callback);
+  /**
+   * 获取当前连接
+   */
+  getSocket(): Socket | null {
+    return this.socket;
+  }
+
+  /**
+   * 订阅事件
+   */
+  on(event: string, callback: (...args: any[]) => void): void {
+    if (this.socket) {
+      this.socket.on(event, callback);
+    }
+  }
+
+  /**
+   * 取消订阅事件
+   */
+  off(event: string, callback?: (...args: any[]) => void): void {
+    if (this.socket) {
+      this.socket.off(event, callback);
+    }
+  }
+
+  /**
+   * 发送事件
+   */
+  emit(event: string, ...args: any[]): void {
+    if (this.socket && this.socket.connected) {
+      this.socket.emit(event, ...args);
     } else {
-      ws.off(event);
+      console.warn('[WebSocket] Cannot emit event, socket not connected');
     }
   }
-}
 
-/**
- * 发送消息
- */
-export function emit(event: string, data?: any): void {
-  const ws = getSocket();
-  if (ws) {
-    ws.emit(event, data);
-  } else {
-    console.warn(`Cannot emit ${event}: WebSocket not connected`);
+  /**
+   * 检查连接状态
+   */
+  isConnected(): boolean {
+    return this.socket !== null && this.socket.connected;
   }
 }
 
-/**
- * WebSocket 事件类型
- */
-export enum WebSocketEvent {
-  // 网站管理事件
-  WEBSITE_CREATED = 'website:created',
-  WEBSITE_UPDATED = 'website:updated',
-  WEBSITE_DELETED = 'website:deleted',
-  WEBSITE_CACHE_CLEARED = 'website:cache_cleared',
+// 导出单例
+export const websocketManager = new WebSocketManager();
 
-  // 域名管理事件
-  DOMAIN_CREATED = 'domain:created',
-  DOMAIN_DELETED = 'domain:deleted',
-
-  // 节点管理事件
-  NODE_CREATED = 'node:created',
-  NODE_UPDATED = 'node:updated',
-  NODE_DELETED = 'node:deleted',
-  NODE_STATUS_CHANGED = 'node:status_changed',
-
-  // 节点分组事件
-  NODE_GROUP_CREATED = 'node_group:created',
-  NODE_GROUP_UPDATED = 'node_group:updated',
-  NODE_GROUP_DELETED = 'node_group:deleted',
-
-  // 回源分组事件
-  ORIGIN_GROUP_CREATED = 'origin_group:created',
-  ORIGIN_GROUP_UPDATED = 'origin_group:updated',
-  ORIGIN_GROUP_DELETED = 'origin_group:deleted',
-
-  // 线路分组事件
-  LINE_GROUP_CREATED = 'line_group:created',
-  LINE_GROUP_UPDATED = 'line_group:updated',
-  LINE_GROUP_DELETED = 'line_group:deleted',
-
-  // DNS 设置事件
-  DNS_CREATED = 'dns:created',
-  DNS_DELETED = 'dns:deleted',
-  DNS_RECORD_CREATED = 'dns_record:created',
-  DNS_RECORD_UPDATED = 'dns_record:updated',
-  DNS_RECORD_DELETED = 'dns_record:deleted',
-
-  // 缓存设置事件
-  CACHE_RULE_CREATED = 'cache_rule:created',
-  CACHE_RULE_UPDATED = 'cache_rule:updated',
-  CACHE_RULE_DELETED = 'cache_rule:deleted',
-}
-
-/**
- * 使用 WebSocket 的 Hook
- */
-export function useWebSocket() {
-  return {
-    connect: connectWebSocket,
-    disconnect: disconnectWebSocket,
-    getSocket,
-    subscribe,
-    unsubscribe,
-    emit,
-  };
-}
+// 导出默认实例
+export default websocketManager;
