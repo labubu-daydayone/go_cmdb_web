@@ -165,9 +165,10 @@ export default defineConfig({
       projectName: 'swagger',
     },
   ],
-  mock: {
-    include: ['mock/**/*', 'src/pages/**/_mock.ts'],
-  },
+  // Mock 功能已禁用，使用真实 API
+  // mock: {
+  //   include: ['mock/**/*', 'src/pages/**/_mock.ts'],
+  // },
   utoopack: {},
   requestRecord: {},
   exportStatic: {},
