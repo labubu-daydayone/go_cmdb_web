@@ -3,7 +3,8 @@ import { ProTable } from '@ant-design/pro-components';
 import { Button, Tag, message, Popconfirm, Tabs, Space, Input, Select, InputNumber, Drawer, Form, Checkbox, Row, Col, Modal, Radio, Alert } from 'antd';
 import { useRef, useState, useEffect } from 'react';
 import { websitesAPI } from '@/services/api';
-import { connectWebSocket, subscribe, unsubscribe, WebSocketEvent } from '@/utils/websocket';
+import { connectWebSocket, subscribe, unsubscribe } from '@/utils/websocket';
+import type { WebSocketEvent } from '@/utils/websocket';
 
 const { TabPane } = Tabs;
 

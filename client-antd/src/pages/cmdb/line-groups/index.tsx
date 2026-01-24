@@ -3,7 +3,8 @@ import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { Button, Tag, message, Popconfirm, Space, Drawer, Form, Input, Select, Row, Col } from 'antd';
 import { lineGroupsAPI, nodeGroupsAPI, dnsAPI } from '@/services/api';
-import { connectWebSocket, subscribe, unsubscribe, WebSocketEvent } from '@/utils/websocket';
+import { connectWebSocket, subscribe, unsubscribe } from '@/utils/websocket';
+import type { WebSocketEvent } from '@/utils/websocket';
 
 /**
  * 线路分组类型

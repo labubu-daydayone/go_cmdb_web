@@ -4,7 +4,8 @@ import { ProTable, ActionType } from '@ant-design/pro-components';
 import { Button, Drawer, Form, Input, Switch, Space, message, Popconfirm, Tag, Typography } from 'antd';
 import { PlusOutlined, EyeOutlined, EyeInvisibleOutlined, CopyOutlined, FileTextOutlined } from '@ant-design/icons';
 import { dnsAPI } from '@/services/api';
-import { connectWebSocket, subscribe, unsubscribe, WebSocketEvent } from '@/utils/websocket';
+import { connectWebSocket, subscribe, unsubscribe } from '@/utils/websocket';
+import type { WebSocketEvent } from '@/utils/websocket';
 
 const { Text } = Typography;
 

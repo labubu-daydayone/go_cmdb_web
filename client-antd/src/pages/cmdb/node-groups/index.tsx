@@ -4,7 +4,8 @@ import { Button, Drawer, Form, Input, Transfer, Space, message, Popconfirm, Tag 
 import { PlusOutlined } from '@ant-design/icons';
 import type { TransferDirection } from 'antd/es/transfer';
 import { nodeGroupsAPI, nodesAPI } from '@/services/api';
-import { connectWebSocket, subscribe, unsubscribe, WebSocketEvent } from '@/utils/websocket';
+import { connectWebSocket, subscribe, unsubscribe } from '@/utils/websocket';
+import type { WebSocketEvent } from '@/utils/websocket';
 
 interface SubIP {
   id: string;
