@@ -10,32 +10,36 @@
  * @doc https://umijs.org/docs/guides/proxy
  */
 export default {
-  // 如果需要自定义本地开发服务器  请取消注释按需调整
-  // dev: {
-  //   // localhost:8000/api/** -> https://preview.pro.ant.design/api/**
-  //   '/api/': {
-  //     // 要代理的地址
-  //     target: 'https://preview.pro.ant.design',
-  //     // 配置了这个可以从 http 代理到 https
-  //     // 依赖 origin 的功能可能需要这个，比如 cookie
-  //     changeOrigin: true,
-  //   },
-  // },
   /**
-   * @name 详细的代理配置
-   * @doc https://github.com/chimurai/http-proxy-middleware
+   * @name 开发环境代理配置
+   * @description 开发环境下，将 /api 请求代理到后端服务器
+   */
+  dev: {
+    '/api/': {
+      // 后端服务器地址
+      target: 'http://20.2.140.226:8080',
+      // 允许跨域
+      changeOrigin: true,
+      // 不重写路径，保持 /api 前缀
+      pathRewrite: { '^': '' },
+    },
+  },
+  /**
+   * @name 测试环境代理配置
    */
   test: {
-    // localhost:8000/api/** -> https://preview.pro.ant.design/api/**
     '/api/': {
-      target: 'https://proapi.azurewebsites.net',
+      target: 'http://20.2.140.226:8080',
       changeOrigin: true,
       pathRewrite: { '^': '' },
     },
   },
+  /**
+   * @name 预发布环境代理配置
+   */
   pre: {
     '/api/': {
-      target: 'your pre url',
+      target: 'http://20.2.140.226:8080',
       changeOrigin: true,
       pathRewrite: { '^': '' },
     },

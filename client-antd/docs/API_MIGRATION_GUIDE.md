@@ -14,9 +14,47 @@
 
 ---
 
-## 1. 迁移概述
+## 1. 环境配置
 
-### 1.1 主要变化
+在开始迁移之前，请先配置前端连接到后端服务器。
+
+详细配置方法请参考：[环境配置说明](./ENVIRONMENT_CONFIG.md)
+
+### 快速配置
+
+**1. 修改 API 代理配置**
+
+文件：`config/proxy.ts`
+
+```typescript
+dev: {
+  '/api/': {
+    target: 'http://20.2.140.226:8080',  // 后端服务器地址
+    changeOrigin: true,
+    pathRewrite: { '^': '' },
+  },
+},
+```
+
+**2. 修改 WebSocket 连接地址**
+
+文件：`src/utils/websocket.ts`
+
+```typescript
+const SOCKET_URL = process.env.SOCKET_URL || 'http://20.2.140.226:8080';
+```
+
+**3. 重启开发服务器**
+
+```bash
+npm start
+```
+
+---
+
+## 2. 迁移概述
+
+### 2.1 主要变化
 
 | 项目 | 旧方式 | 新方式 |
 |------|--------|--------|
@@ -26,7 +64,7 @@
 | 认证方式 | 无 | JWT Bearer Token |
 | 数据源 | Mock 数据 | 后端 API |
 
-### 1.2 迁移优势
+### 2.2 迁移优势
 
 - ✅ 统一的 API 调用方式
 - ✅ 自动错误处理和提示
@@ -36,16 +74,16 @@
 
 ---
 
-## 2. 新的 API 工具
+## 3. 新的 API 工具
 
-### 2.1 核心工具
+### 3.1 核心工具
 
 ```typescript
 // src/utils/request.ts
 import { get, post, createResourceAPI } from '@/utils/request';
 ```
 
-### 2.2 API 服务层
+### 3.2 API 服务层
 
 ```typescript
 // src/services/api.ts
@@ -54,7 +92,7 @@ import { websitesAPI, nodesAPI, ... } from '@/services/api';
 
 ---
 
-## 3. 迁移步骤
+## 4. 迁移步骤
 
 ### 步骤 1：导入新的 API 工具
 
@@ -243,9 +281,9 @@ const handleClearCache = async (params: any) => {
 
 ---
 
-## 4. 示例对比
+## 5. 示例对比
 
-### 4.1 完整的网站列表页面
+### 5.1 完整的网站列表页面
 
 **旧代码**（使用 Mock 数据）：
 
@@ -352,7 +390,7 @@ const WebsitesPage = () => {
 
 ---
 
-### 4.2 代码对比总结
+### 5.2 代码对比总结
 
 | 项目 | 旧代码 | 新代码 |
 |------|--------|--------|
@@ -365,9 +403,9 @@ const WebsitesPage = () => {
 
 ---
 
-## 5. 常见问题
+## 6. 常见问题
 
-### 5.1 如何处理 API 错误？
+### 6.1 如何处理 API 错误？
 
 **问题**：API 调用失败时如何处理？
 
@@ -385,7 +423,7 @@ try {
 
 ---
 
-### 5.2 如何添加 JWT Token？
+### 6.2 如何添加 JWT Token？
 
 **问题**：如何在请求中添加 JWT Token？
 
@@ -403,7 +441,7 @@ const handleLogin = async (values: any) => {
 
 ---
 
-### 5.3 如何刷新列表？
+### 6.3 如何刷新列表？
 
 **问题**：创建、更新、删除后如何刷新列表？
 
@@ -422,7 +460,7 @@ return <ProTable actionRef={actionRef} ... />;
 
 ---
 
-### 5.4 如何处理分页参数？
+### 6.4 如何处理分页参数？
 
 **问题**：ProTable 的分页参数如何传递给 API？
 
@@ -440,7 +478,7 @@ const request = async (params: any) => {
 
 ---
 
-### 5.5 如何使用动作型接口？
+### 6.5 如何使用动作型接口？
 
 **问题**：如何调用清除缓存、设置状态等动作型接口？
 
@@ -459,7 +497,7 @@ await nodesAPI.setStatus(1, 'online');
 
 ---
 
-### 5.6 如何处理认证失败？
+### 6.6 如何处理认证失败？
 
 **问题**：Token 过期或无效时如何处理？
 
@@ -467,7 +505,7 @@ await nodesAPI.setStatus(1, 'online');
 
 ---
 
-### 5.7 如何迁移现有页面？
+### 6.7 如何迁移现有页面？
 
 **问题**：有很多页面使用 Mock 数据，如何逐步迁移？
 
@@ -486,7 +524,7 @@ await nodesAPI.setStatus(1, 'online');
 
 ---
 
-## 6. 迁移检查清单
+## 7. 迁移检查清单
 
 迁移完成后，请检查以下项目：
 

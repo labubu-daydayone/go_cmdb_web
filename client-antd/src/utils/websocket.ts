@@ -11,7 +11,7 @@ import { getToken } from './request';
 let socket: Socket | null = null;
 
 // WebSocket 连接配置
-const SOCKET_URL = process.env.SOCKET_URL || 'http://localhost:8080';
+const SOCKET_URL = process.env.SOCKET_URL || 'http://20.2.140.226:8080';
 
 /**
  * 连接 WebSocket
