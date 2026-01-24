@@ -123,12 +123,19 @@ const Login: React.FC = () => {
         });
         message.success(defaultLoginSuccessMessage);
         
-        // 获取用户信息
-        await fetchUserInfo();
+        // 存储用户信息到 localStorage
+        if (msg.data && msg.data.user) {
+          localStorage.setItem('user', JSON.stringify(msg.data.user));
+        }
         
-        // 跳转到首页或重定向页面
+        // 直接跳转到首页，不等待 fetchUserInfo
         const urlParams = new URL(window.location.href).searchParams;
-        window.location.href = urlParams.get('redirect') || '/';
+        const redirect = urlParams.get('redirect') || '/';
+        
+        // 使用 setTimeout 确保消息显示后再跳转
+        setTimeout(() => {
+          window.location.href = redirect;
+        }, 500);
         return;
       }
       
