@@ -58,6 +58,6 @@ export const authAPI = {
    * 获取当前用户信息
    */
   getCurrentUser: (): Promise<ApiResponse<CurrentUser>> => {
-    return request.get('/api/v1/auth/current-user');
+    return request.get('/api/v1/me');
   },
 };

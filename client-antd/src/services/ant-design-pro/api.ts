@@ -2,11 +2,11 @@
 /* eslint-disable */
 import { request } from '@umijs/max';
 
-/** 获取当前的用户 GET /api/v1/auth/current-user */
+/** 获取当前的用户 GET /api/v1/me */
 export async function currentUser(options?: { [key: string]: any }) {
   return request<{
     data: API.CurrentUser;
-  }>('/api/v1/auth/current-user', {
+  }>('/api/v1/me', {
     method: 'GET',
     ...(options || {}),
   });
