@@ -8,6 +8,11 @@ import { io, Socket } from 'socket.io-client';
 const SOCKET_URL = process.env.SOCKET_URL || 'http://20.2.140.226:8080';
 
 /**
+ * WebSocket 事件类型
+ */
+export type WebSocketEvent = string;
+
+/**
  * WebSocket 管理器
  */
 class WebSocketManager {
@@ -139,3 +144,26 @@ export const websocketManager = new WebSocketManager();
 
 // 导出默认实例
 export default websocketManager;
+
+// ========== 向后兼容的导出 ==========
+
+/**
+ * 连接 WebSocket（向后兼容）
+ */
+export const connectWebSocket = (): Socket => {
+  return websocketManager.connect();
+};
+
+/**
+ * 订阅事件（向后兼容）
+ */
+export const subscribe = (event: WebSocketEvent, callback: (...args: any[]) => void): void => {
+  websocketManager.on(event, callback);
+};
+
+/**
+ * 取消订阅事件（向后兼容）
+ */
+export const unsubscribe = (event: WebSocketEvent, callback?: (...args: any[]) => void): void => {
+  websocketManager.off(event, callback);
+};
